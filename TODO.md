@@ -17,26 +17,26 @@
 
 ---
 
-## 2. Solana Program — Security Deposit Escrow (Core)
+## 2. Solana Program — Security Deposit Escrow (Core) — DONE (Devnet: `F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a`)
 
 > Start here. Everything else depends on a working escrow contract.
 
-- [ ] Scaffold Anchor workspace: `programs/deposit-guard/`, `tests/`, `Anchor.toml`, `Cargo.toml`.
-- [ ] Define the `EscrowState` PDA account struct: `lease_id`, `landlord`, `tenant`, `token_mint`, `deposit_amount`, `status` enum, `deadline_ts`, `jurisdiction_code`.
-- [ ] Define the `LeaseConfig` PDA account struct: landlord and tenant pubkeys, token mint, deposit amount, `dispute_threshold_pct`, `contract_hash`, `landlord_signed`, `tenant_signed`.
-- [ ] Define the `ClaimRecord` PDA account struct: itemized damage list hashes, `disputed_total`, `undisputed_total`, `tenant_estimate`, `landlord_estimate`, `tenant_estimate_sealed_ts`, `landlord_estimate_sealed_ts`, `max_fine`.
-- [ ] Implement `initialize_escrow` instruction: creates `EscrowState` and `LeaseConfig` PDAs; sets `status = CREATED`.
-- [ ] Implement `fund_escrow` instruction: tenant transfers USDC from connected wallet into PDA-owned token account; sets `status = FUNDED`; validate both parties have signed before allowing funding.
-- [ ] Implement `propose_release` instruction: landlord proposes a deduction split; sets `status = PENDING_APPROVAL`.
-- [ ] Implement `approve_release` instruction: tenant approves; releases undisputed portion to tenant immediately on-chain.
-- [ ] Implement `claim_timeout` instruction: relayer calls after `deadline_ts` passes; releases full remaining balance to tenant; validate `deadline_ts < Clock::unix_timestamp` on-chain.
-- [ ] Implement `close_escrow` instruction: closes PDA accounts and reclaims rent after all funds have been disbursed.
-- [ ] Implement `record_contract_hash` instruction: stores SHA-256 hash of lease PDF in `LeaseConfig` PDA.
-- [ ] Implement `record_photo_hash` instruction: stores SHA-256 hash of a party's photo set in `ClaimRecord` PDA; require both parties to sign before advancing lease to `ACTIVE`.
-- [ ] Implement the full `EscrowState` status enum and enforce valid state transitions: `CREATED → FUNDED → PENDING_DOCUMENTATION → ACTIVE → PENDING_APPROVAL → RELEASED / DISPUTED → RESOLVED`.
-- [ ] Write Anchor unit tests for all instructions and all valid/invalid state transitions.
-- [ ] Deploy program to Solana Devnet; record program ID.
-- [ ] Verify all instruction accounts, seeds, and constraints compile cleanly under `anchor build`.
+- [x] Scaffold Anchor workspace: `programs/deposit-guard/`, `tests/`, `Anchor.toml`, `Cargo.toml`.
+- [x] Define the `EscrowState` PDA account struct: `lease_id`, `landlord`, `tenant`, `token_mint`, `deposit_amount`, `status` enum, `deadline_ts`, `jurisdiction_code`.
+- [x] Define the `LeaseConfig` PDA account struct: landlord and tenant pubkeys, token mint, deposit amount, `dispute_threshold_pct`, `contract_hash`, `landlord_signed`, `tenant_signed`.
+- [x] Define the `ClaimRecord` PDA account struct: itemized damage list hashes, `disputed_total`, `undisputed_total`, `tenant_estimate`, `landlord_estimate`, `tenant_estimate_sealed_ts`, `landlord_estimate_sealed_ts`, `max_fine`.
+- [x] Implement `initialize_escrow` instruction: creates `EscrowState` and `LeaseConfig` PDAs; sets `status = CREATED`.
+- [x] Implement `fund_escrow` instruction: tenant transfers USDC from connected wallet into PDA-owned token account; sets `status = FUNDED`; validate both parties have signed before allowing funding.
+- [x] Implement `propose_release` instruction: landlord proposes a deduction split; sets `status = PENDING_APPROVAL`.
+- [x] Implement `approve_release` instruction: tenant approves; releases undisputed portion to tenant immediately on-chain.
+- [x] Implement `claim_timeout` instruction: relayer calls after `deadline_ts` passes; releases full remaining balance to tenant; validate `deadline_ts < Clock::unix_timestamp` on-chain.
+- [x] Implement `close_escrow` instruction: closes PDA accounts and reclaims rent after all funds have been disbursed.
+- [x] Implement `record_contract_hash` instruction: stores SHA-256 hash of lease PDF in `LeaseConfig` PDA.
+- [x] Implement `record_photo_hash` instruction: stores SHA-256 hash of a party's photo set in `ClaimRecord` PDA; require both parties to sign before advancing lease to `ACTIVE`.
+- [x] Implement the full `EscrowState` status enum and enforce valid state transitions: `CREATED → FUNDED → PENDING_DOCUMENTATION → ACTIVE → PENDING_APPROVAL → RELEASED / DISPUTED → RESOLVED`.
+- [x] Write Anchor unit tests for all instructions and all valid/invalid state transitions.
+- [x] Deploy program to Solana Devnet; record program ID (`F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a`).
+- [x] Verify all instruction accounts, seeds, and constraints compile cleanly under `anchor build` (warnings only — no errors; `.so` artifact produced).
 
 ---
 
