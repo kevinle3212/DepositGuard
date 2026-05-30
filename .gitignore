@@ -112,7 +112,7 @@ Desktop.ini
 .serena/
 .sixth/
 .agents/
-.claude/settings.local.json
+.claude/
 
 # Base44 CLI local cache
 base44/
