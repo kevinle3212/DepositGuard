@@ -57,43 +57,44 @@
 
 ---
 
-## 4. Solana Program — Dispute and Fine Calculation
+## 4. Solana Program — Dispute and Fine Calculation — DONE
 
 > Depends on Section 2. Add dispute and arbitration instructions to the same Anchor program.
+> Fine model: Gemini computes the fine off-chain and the `oracle` relays it via `post_oracle_fine` (advisory); every resolution path independently hard-caps at `max_fine`.
 
-- [ ] Implement `open_dispute` instruction: set `status = DISPUTED`; release undisputed portion to tenant immediately; lock disputed remainder in PDA.
-- [ ] Implement `submit_estimate` instruction: each party independently submits their damage estimate; seal in `ClaimRecord`; prevent revision after submission; require both estimates before revealing either.
-- [ ] Implement `reveal_estimates` instruction: called after both estimates are sealed; sets `max_fine = (tenant_estimate + landlord_estimate) / 2` on-chain in `ClaimRecord`.
-- [ ] Implement `resolve_dispute` instruction (solo arbitrator): validate `fine_amount <= max_fine` before executing; transfer USDC from escrow to recipient; set `status = RESOLVED`.
-- [ ] Write on-chain tests confirming that `resolve_dispute` rejects any `fine_amount` exceeding `max_fine`.
-- [ ] Write on-chain tests for sealed estimate reveal ordering and prevention of estimate revision after sealing.
+- [x] Implement `open_dispute` instruction: set `status = DISPUTED`; release undisputed portion to tenant immediately; lock disputed remainder in PDA.
+- [x] Implement `submit_estimate` instruction: each party independently submits their damage estimate; seal in `ClaimRecord`; prevent revision after submission; require both estimates before revealing either.
+- [x] Implement `reveal_estimates` instruction: called after both estimates are sealed; sets `max_fine = (tenant_estimate + landlord_estimate) / 2` on-chain in `ClaimRecord`.
+- [x] Implement `resolve_dispute` instruction (solo arbitrator): validate `fine_amount <= max_fine` before executing; transfer USDC from escrow to recipient; set `status = RESOLVED`. (Added `post_oracle_fine` so the Gemini/oracle fine is relayed on-chain and re-checked against `max_fine`.)
+- [x] Write on-chain tests confirming that `resolve_dispute` rejects any `fine_amount` exceeding `max_fine`.
+- [x] Write on-chain tests for sealed estimate reveal ordering and prevention of estimate revision after sealing.
 
 ---
 
-## 5. Solana Program — Arbitration Fee Escrow
+## 5. Solana Program — Arbitration Fee Escrow — DONE
 
 > Depends on Section 4.
 
-- [ ] Define the `ArbitrationEscrow` PDA account struct: `lease_id`, `landlord_paid`, `tenant_paid`, `landlord_fee_amount` (`50_000_000` — $50 USDC, 6 decimals), `tenant_fee_amount` (`50_000_000`), `panel_upgrade_paid`, `total`, `status` enum, `arbitrator_pubkey`, `payment_deadline_ts`.
-- [ ] Implement `pay_arbitration_fee` instruction: transfer $50 USDC from party's connected wallet into `ArbitrationEscrow` PDA; set `landlord_paid` or `tenant_paid`; enforce 72-hour payment deadline.
-- [ ] Implement `pay_panel_upgrade_fee` instruction: transfer $25 USDC from party's wallet; both parties must pay to activate the panel track.
-- [ ] Implement `refund_arbitration_fees` instruction: callable by relayer when dispute resolves before arbitrator is assigned; return $50 to each party's wallet.
-- [ ] Implement `consume_arbitration_fees` instruction: callable only by the assigned arbitrator pubkey; transfer fee pool to arbitrator or platform fee address.
-- [ ] Handle the one-party-defaults case: if only one party pays within 72 hours, refund the paying party and close the arbitration track.
-- [ ] Write Anchor tests for all fee states: both pay, one pays, neither pays, resolve before assignment (refund), resolve after assignment (consume).
+- [x] Define the `ArbitrationEscrow` PDA account struct: `lease_id`, `landlord_paid`, `tenant_paid`, `landlord_fee_amount` (`50_000_000` — $50 USDC, 6 decimals), `tenant_fee_amount` (`50_000_000`), `panel_upgrade_paid`, `total`, `status` enum, `arbitrator_pubkey`, `payment_deadline_ts`. (Added `landlord_panel_paid`/`tenant_panel_paid` granular flags + `open_arbitration` initializer.)
+- [x] Implement `pay_arbitration_fee` instruction: transfer $50 USDC from party's connected wallet into `ArbitrationEscrow` PDA; set `landlord_paid` or `tenant_paid`; enforce 72-hour payment deadline.
+- [x] Implement `pay_panel_upgrade_fee` instruction: transfer $25 USDC from party's wallet; both parties must pay to activate the panel track.
+- [x] Implement `refund_arbitration_fees` instruction: callable by relayer when dispute resolves before arbitrator is assigned; return $50 to each party's wallet.
+- [x] Implement `consume_arbitration_fees` instruction: callable only by the assigned arbitrator pubkey; transfer fee pool to arbitrator or platform fee address.
+- [x] Handle the one-party-defaults case: if only one party pays within 72 hours, refund the paying party and close the arbitration track. (`refund_arbitration_fees` returns only what each party actually paid.)
+- [x] Write Anchor tests for all fee states: both pay, one pays, neither pays, resolve before assignment (refund), resolve after assignment (consume).
 
 ---
 
-## 6. Solana Program — Arbitration Panel and Minority Voting
+## 6. Solana Program — Arbitration Panel and Minority Voting — DONE
 
 > Depends on Section 5.
 
-- [ ] Define the `ArbitrationPanel` PDA account struct: `lease_id`, `panelists[3]`, `rulings[3]` (each with `panelist_pubkey`, `fine_amount`, `recipient`, `ruling_hash`, `submitted_ts`), `outcome` enum (`unanimous | majority | median`), `adopted_fine`, `minority_dissent_flag`, `escalation_deadline_ts`.
-- [ ] Implement `submit_panel_ruling` instruction: each panelist submits a sealed ruling (fine amount + recipient + SHA-256 hash of written reasoning); prevent submission after all three are in.
-- [ ] Implement `resolve_dispute_panel` instruction: validate all three rulings are submitted; apply Case A (unanimous), Case B (2-1 majority with 20% dissent check), or Case C (three-way median) logic on-chain; validate `adopted_fine <= max_fine`; execute USDC transfer; mark `ArbitrationEscrow` as consumed; set `escalation_deadline_ts = now + 14 days`.
-- [ ] Enforce the minority protection rule: in Case B, record the minority ruling hash and panelist pubkey permanently in `ClaimRecord`; set `minority_dissent_flag = true` when dissent exceeds 20%.
-- [ ] Write on-chain tests for all three panel outcome cases: unanimous, 2-1 majority with dissent below 20%, 2-1 majority with dissent above 20%, and three-way split.
-- [ ] Write tests confirming `resolve_dispute_panel` rejects `adopted_fine > max_fine` in all three cases.
+- [x] Define the `ArbitrationPanel` PDA account struct: `lease_id`, `panelists[3]`, `rulings[3]` (each with `panelist_pubkey`, `fine_amount`, `recipient`, `ruling_hash`, `submitted_ts`), `outcome` enum (`unanimous | majority | median`), `adopted_fine`, `minority_dissent_flag`, `escalation_deadline_ts`. (Added `open_panel` initializer + `Pending` outcome variant + `adopted_recipient`/`resolved`.)
+- [x] Implement `submit_panel_ruling` instruction: each panelist submits a sealed ruling (fine amount + recipient + SHA-256 hash of written reasoning); prevent submission after all three are in.
+- [x] Implement `resolve_dispute_panel` instruction: validate all three rulings are submitted; apply Case A (unanimous), Case B (2-1 majority with 20% dissent check), or Case C (three-way median) logic on-chain; validate `adopted_fine <= max_fine`; execute USDC transfer; mark `ArbitrationEscrow` as consumed; set `escalation_deadline_ts = now + 14 days`.
+- [x] Enforce the minority protection rule: in Case B, record the minority ruling hash and panelist pubkey permanently in `ClaimRecord`; set `minority_dissent_flag = true` when dissent exceeds 20%.
+- [x] Write on-chain tests for all three panel outcome cases: unanimous, 2-1 majority with dissent below 20%, 2-1 majority with dissent above 20%, and three-way split.
+- [x] Write tests confirming `resolve_dispute_panel` rejects `adopted_fine > max_fine` in all three cases.
 
 ---
 

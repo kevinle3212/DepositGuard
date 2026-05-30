@@ -49,6 +49,17 @@ pub fn handler(
     claim.tenant_photo_hash = [0u8; 32];
     claim.landlord_photos_submitted = false;
     claim.tenant_photos_submitted = false;
+    claim.tenant_estimate_submitted = false;
+    claim.landlord_estimate_submitted = false;
+    claim.estimates_revealed = false;
+    claim.arbitrator = Pubkey::default();
+    claim.oracle = Pubkey::default();
+    claim.oracle_fine = 0;
+    claim.oracle_fine_posted = false;
+    claim.resolved_fine = 0;
+    claim.minority_panelist = Pubkey::default();
+    claim.minority_ruling_hash = [0u8; 32];
+    claim.minority_dissent_flag = false;
     claim.bump = ctx.bumps.claim_record;
 
     Ok(())
