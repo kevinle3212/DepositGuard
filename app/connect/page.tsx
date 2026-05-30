@@ -112,8 +112,12 @@ function ConnectInner() {
     if (!signMessage) { setError('Wallet does not support message signing.'); return }
     try {
       setStep('signing')
-      const nonce = await fetchNonce(pubkey)
-      const message = `DepositGuard identity verification ${nonce}`
+      // Generate client-side nonce + timestamp — no round-trip to /api/nonce needed
+      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+      const unix_ts = Math.floor(Date.now() / 1000)
+      const message = `DepositGuard identity verification ${nonce} ${unix_ts}`
       const sigBytes = await signMessage(new TextEncoder().encode(message))
       const signature = Buffer.from(sigBytes).toString('base64')
       setStep('verifying')
@@ -133,7 +137,11 @@ function ConnectInner() {
 
   function handleEvmConnect() {
     setSelectedChain('evm')
-    setError('EVM support via RainbowKit — coming in next sprint.')
+    // TODO: wagmi integration — install wagmi + viem + @rainbow-me/rainbowkit then:
+    //   const { signMessageAsync } = useSignMessage()  (wagmi)
+    //   const sig = await signMessageAsync({ message })
+    //   await verifyMutation.mutateAsync({ signature: sig, pubkey: address, message, chain: 'evm' })
+    setError('EVM signing requires wagmi — add it via: npm install wagmi viem @rainbow-me/rainbowkit')
   }
 
   function handleHardwareConnect() {
