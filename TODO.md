@@ -44,16 +44,16 @@
 
 > Depends on Section 2 (photo hashes must be committed on-chain before assessment runs).
 
-- [ ] Create the `/api/assess-damage` Cloud Run service (TypeScript, Node.js 20).
-- [ ] Set up Vertex AI client (`@google-cloud/vertexai`) with IAM service account; store API key in Google Cloud Secret Manager.
-- [ ] Write the Gemini 2.0 Flash system prompt: constrain output to advisory visual comparison only; explicitly forbid legal liability determinations; temperature `0.0` for determinism.
-- [ ] Build the request handler: fetch signed photo URLs from Firebase Cloud Storage, construct the multimodal prompt with move-in and move-out photo sets, call Gemini via Vertex AI.
-- [ ] Define and apply a `zod` schema to validate Gemini's JSON response: `items[]` with `description`, `estimatedAmountUsdc`, `severity` (`minor | moderate | major`), `observedDifference`; `totalEstimatedDamageUsd`; `summary`.
-- [ ] Write Firestore document on successful assessment: store `geminiRaw` (immutable), set `advisoryLabel = "Estimate Only – Not Legally Binding"`, advance lease status to `assessed`.
-- [ ] Implement the 15% dispute auto-flag: if `|landlord_total - gemini_total| / gemini_total > disputeThresholdPct`, surface a dispute prompt to the tenant in the UI.
-- [ ] Handle unparseable or error responses: flag the case, notify both parties, do not write a partial assessment to Firestore.
-- [ ] Write unit tests for the Gemini prompt construction, Zod schema validation, Firestore write, and auto-flag logic.
-- [ ] Add Cloud Armor rate limiting to the `/api/assess-damage` route.
+- [x] Create the `/api/assess-damage` Cloud Run service (TypeScript, Node.js 20).
+- [x] Set up Vertex AI client (`@google-cloud/vertexai`) with IAM service account; store API key in Google Cloud Secret Manager.
+- [x] Write the Gemini 2.0 Flash system prompt: constrain output to advisory visual comparison only; explicitly forbid legal liability determinations; temperature `0.0` for determinism.
+- [x] Build the request handler: fetch signed photo URLs from Firebase Cloud Storage, construct the multimodal prompt with move-in and move-out photo sets, call Gemini via Vertex AI.
+- [x] Define and apply a `zod` schema to validate Gemini's JSON response: `items[]` with `description`, `estimatedAmountUsdc`, `severity` (`minor | moderate | major`), `observedDifference`; `totalEstimatedDamageUsd`; `summary`.
+- [x] Write Firestore document on successful assessment: store `geminiRaw` (immutable), set `advisoryLabel = "Estimate Only - Not Legally Binding"`, advance lease status to `assessed`.
+- [x] Implement the 15% dispute auto-flag: if `|landlord_total - gemini_total| / gemini_total > disputeThresholdPct`, surface a dispute prompt to the tenant in the UI.
+- [x] Handle unparseable or error responses: flag the case, notify both parties, do not write a partial assessment to Firestore.
+- [x] Write unit tests for the Gemini prompt construction, Zod schema validation, Firestore write, and auto-flag logic.
+- [x] Add Cloud Armor rate limiting to the `/api/assess-damage` route.
 
 ---
 
