@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { useCreateLease } from '@/src/hooks/useLeaseApi'
 
 // ── Schema ─────────────────────────────────────────────────────────────────
 
@@ -160,9 +161,9 @@ function ThresholdSlider({
 export default function LeaseSetupPage() {
   const router = useRouter()
   const [contractFile, setContractFile] = useState<{ name: string; hash: string } | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitProgress, setSubmitProgress] = useState(0)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const createLease = useCreateLease()
 
   const {
     register,
@@ -183,30 +184,22 @@ export default function LeaseSetupPage() {
 
   async function onSubmit(data: LeaseSetupInput) {
     setSubmitError(null)
-    setSubmitting(true)
-
     try {
-      // Simulate multi-step escrow initialization
-      setSubmitProgress(10)
-      await new Promise((r) => setTimeout(r, 400))
-      setSubmitProgress(35) // Validate contract hash
-      await new Promise((r) => setTimeout(r, 500))
-      setSubmitProgress(65) // Initialize escrow on-chain
-      await new Promise((r) => setTimeout(r, 600))
-      setSubmitProgress(90) // Record metadata
-      await new Promise((r) => setTimeout(r, 400))
-      setSubmitProgress(100)
-
-      console.log('[LeaseSetup] Submitted:', { ...data, contractHash: contractFile?.hash })
-      await new Promise((r) => setTimeout(r, 300))
-      router.push(`/lease/lease_new/sign`)
+      const lease = await createLease.mutateAsync({
+        propertyAddress: `${data.streetAddress}, ${data.city}, ${data.state} ${data.zip}`,
+        depositAmount: data.depositAmount,
+        currency: data.currency,
+        tenantAddress: data.tenantAddress,
+        jurisdiction: data.state,
+        contractHash: contractFile?.hash,
+      })
+      router.push(`/lease/${lease.id}/sign`)
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Submission failed. Please try again.')
-    } finally {
-      setSubmitting(false)
-      setSubmitProgress(0)
     }
   }
+
+  const submitting = createLease.isPending
 
   return (
     <main className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
@@ -380,27 +373,6 @@ export default function LeaseSetupPage() {
             </p>
           </CardContent>
         </Card>
-
-        {/* Progress bar */}
-        {submitting && (
-          <div className="space-y-2">
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${submitProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              {submitProgress < 35
-                ? 'Validating contract hash…'
-                : submitProgress < 65
-                ? 'Initializing escrow program…'
-                : submitProgress < 90
-                ? 'Recording metadata on-chain…'
-                : 'Finalizing…'}
-            </p>
-          </div>
-        )}
 
         {submitError && (
           <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">

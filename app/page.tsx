@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
 import {
   PlusCircle,
   Building2,
@@ -24,22 +23,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, shortenAddress, formatDate } from '@/lib/utils'
 import { useWalletStore } from '@/src/store/useWalletStore'
-import {
-  MOCK_LEASES,
-  getActiveLeases,
-  getHistoricLeases,
-  type MockLease,
-} from '@/src/lib/lease-mock-data'
+import { getActiveLeases, getHistoricLeases } from '@/src/lib/lease-mock-data'
+import { useFetchLeases } from '@/src/hooks/useLeaseApi'
+import type { Lease } from '@/src/types/api'
 
-async function fetchLeases(): Promise<MockLease[]> {
-  await new Promise((r) => setTimeout(r, 500))
-  return MOCK_LEASES
-}
-
-function LeaseCard({ lease, role }: { lease: MockLease; role: 'landlord' | 'tenant' }) {
+function LeaseCard({ lease, role }: { lease: Lease; role: 'landlord' | 'tenant' }) {
   const isActionRequired =
     (role === 'tenant' && lease.status === 'Created') ||
     (role === 'landlord' && lease.status === 'Move-Out Pending')
+
+  const counterpartyAddress =
+    role === 'landlord' ? lease.tenantAddress : lease.landlordAddress
 
   return (
     <Link href={`/lease/${lease.id}/sign`}>
@@ -58,16 +52,16 @@ function LeaseCard({ lease, role }: { lease: MockLease; role: 'landlord' | 'tena
               </div>
               <div className="flex items-start gap-1.5 mb-1">
                 <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-sm font-medium truncate">{lease.propertyName}</p>
+                <p className="text-sm font-medium truncate">{lease.propertyName ?? lease.propertyAddress}</p>
               </div>
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                <p className="text-xs text-muted-foreground">Counterparty: {shortenAddress(lease.counterpartyAddress)}</p>
+                <p className="text-xs text-muted-foreground">Counterparty: {shortenAddress(counterpartyAddress)}</p>
               </div>
             </div>
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
               <span className="text-lg font-bold tabular-nums">{lease.depositAmount.toLocaleString()} {lease.currency}</span>
-              <span className="text-xs text-muted-foreground">{formatDate(lease.leaseStart)} – {formatDate(lease.leaseEnd)}</span>
+              <span className="text-xs text-muted-foreground">{formatDate(lease.leaseStart ?? '')} – {formatDate(lease.leaseEnd ?? '')}</span>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-border flex justify-end">
@@ -106,11 +100,7 @@ export default function DashboardPage() {
   const { walletPubkey, userRole, setUserRole } = useWalletStore()
   const [devRole, setDevRole] = useState<'landlord' | 'tenant'>(userRole ?? 'landlord')
 
-  const { data: leases, isLoading } = useQuery({
-    queryKey: ['leases', walletPubkey],
-    queryFn: fetchLeases,
-    enabled: !!walletPubkey,
-  })
+  const { data: leases, isLoading, isError } = useFetchLeases(walletPubkey ?? '')
 
   const activeLeases = useMemo(() => getActiveLeases(leases ?? []), [leases])
   const historicLeases = useMemo(() => getHistoricLeases(leases ?? []), [leases])
@@ -129,6 +119,13 @@ export default function DashboardPage() {
       <TopNav />
       <WalletGate>
         <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+          {isError && (
+            <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
+              <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+              <p className="text-sm text-destructive">Failed to load leases. Please refresh.</p>
+            </div>
+          )}
+
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>

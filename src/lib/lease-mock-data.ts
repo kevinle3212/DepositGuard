@@ -98,13 +98,13 @@ export const MOCK_LEASES: MockLease[] = [
   },
 ]
 
-export function getActiveLeases(leases: MockLease[]): MockLease[] {
+export function getActiveLeases<T extends { status: string }>(leases: T[]): T[] {
   return leases.filter((l) =>
     ['Created', 'Funded', 'Pending Documentation', 'Active', 'Move-Out Pending', 'Assessed'].includes(l.status)
   )
 }
 
-export function getHistoricLeases(leases: MockLease[]): MockLease[] {
+export function getHistoricLeases<T extends { status: string }>(leases: T[]): T[] {
   return leases.filter((l) => ['Approved', 'Resolved', 'Disputed'].includes(l.status))
 }
 
