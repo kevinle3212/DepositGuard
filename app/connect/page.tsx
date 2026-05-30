@@ -142,11 +142,17 @@ function ConnectInner() {
     }
   }
 
-  function handleSolanaConnect() {
+  async function handleSolanaConnect() {
     setSelectedChain('solana')
     setError(null)
-    pendingSolanaSign.current = true
-    setVisible(true)
+    if (!connected || !publicKey) {
+      console.log('[ConnectPage] Wallet not yet connected — opening wallet modal')
+      pendingSolanaSign.current = true
+      setVisible(true)
+      return
+    }
+    console.log('[ConnectPage] Wallet already connected — signing directly', publicKey.toBase58())
+    await signAndVerify('solana', publicKey.toBase58())
   }
 
   function handleEvmConnect() {
