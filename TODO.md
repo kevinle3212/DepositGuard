@@ -102,13 +102,13 @@
 
 > Depends on Sections 2-6 (Firestore schema mirrors on-chain account structures).
 
-- [ ] Create Firebase project; enable Firebase Authentication, Firestore, and Firebase Cloud Storage.
-- [ ] Define the full Firestore data model: `leases/{leaseId}`, `users/{uid}`, `voiceScripts/{scriptKey}`, `signingTokens/{token}` — matching the schema in the architecture doc exactly.
-- [ ] Write Firestore security rules: reject all writes without a verified `walletPubkey` claim on the Firebase Auth JWT; enforce write-once rules for `geminiRaw`, photo URLs, and contract hashes; prevent estimate revision after sealing.
-- [ ] Configure Firebase Cloud Storage buckets: `contracts/{leaseId}/`, `photos/{leaseId}/move-in/`, `photos/{leaseId}/move-out/`; set versioning and WORM (write-once) object policies; restrict uploads to one per role per lease per event.
-- [ ] Set up Firebase Extensions: Trigger Email extension pointed at Gmail SMTP or SendGrid for transactional email.
-- [ ] Configure `firebase-admin` in Cloud Run services with a dedicated service account; store service account key in Google Cloud Secret Manager.
-- [ ] Write integration tests for Firestore security rules covering wallet-verified writes, unauthorized writes, and write-once enforcement.
+- [x] Create Firebase project; enable Firebase Authentication, Firestore, and Firebase Cloud Storage.
+- [x] Define the full Firestore data model: `leases/{leaseId}`, `users/{uid}`, `voiceScripts/{scriptKey}`, `signingTokens/{token}` — matching the schema in the architecture doc exactly.
+- [x] Write Firestore security rules: reject all writes without a verified `walletPubkey` claim on the Firebase Auth JWT; enforce write-once rules for `geminiRaw`, photo URLs, and contract hashes; prevent estimate revision after sealing.
+- [x] Configure Firebase Cloud Storage buckets: `contracts/{leaseId}/`, `photos/{leaseId}/move-in/`, `photos/{leaseId}/move-out/`; set versioning and WORM (write-once) object policies; restrict uploads to one per role per lease per event.
+- [x] Set up Firebase Extensions: Trigger Email extension pointed at Gmail SMTP or SendGrid for transactional email.
+- [x] Configure `firebase-admin` in Cloud Run services with a dedicated service account; store service account key in Google Cloud Secret Manager.
+- [x] Write integration tests for Firestore security rules covering wallet-verified writes, unauthorized writes, and write-once enforcement.
 
 ---
 
@@ -119,10 +119,10 @@
 - [x] Create the `/api/verify-wallet` Cloud Run service (TypeScript, Node.js 20). (`services/verify-wallet/`)
 - [x] Generate a server-side nonce per request; return it to the client for signing. (`/api/nonce` + `lib/nonce-store.ts`)
 - [x] Accept `{ walletPubkey, signature, nonce }` in the request body; validate with Ed25519 (Web Crypto API) and `@solana/web3.js` `PublicKey`.
-- [ ] On valid signature: mint a Firebase Auth custom JWT with `walletPubkey` embedded as a custom claim; write `walletPubkey` and `walletVerifiedAt` to `users/{uid}` in Firestore. (Blocked on §7 — mock JWT in place)
-- [ ] Reject all other `/api/*` routes with a 401 if the Firebase Auth JWT is missing or lacks a `walletPubkey` claim.
+- [x] On valid signature: mint a Firebase Auth custom JWT with `walletPubkey` embedded as a custom claim; write `walletPubkey` and `walletVerifiedAt` to `users/{uid}` in Firestore.
+- [x] Reject all other `/api/*` routes with a 401 if the Firebase Auth JWT is missing or lacks a `walletPubkey` claim.
 - [x] Add middleware to all Cloud Run services that validates the JWT and extracts `walletPubkey` before any handler runs. (`services/verify-wallet/src/middleware/require-auth.ts`)
-- [ ] Write unit tests: valid signature accepted, invalid signature rejected, missing nonce rejected, expired nonce rejected.
+- [x] Write unit tests: valid signature accepted, invalid signature rejected, missing nonce rejected, expired nonce rejected.
 
 ---
 
@@ -130,13 +130,13 @@
 
 > Depends on Sections 7 and 8.
 
-- [ ] Create the `/api/upload-contract` Cloud Run route: validate file type (PDF/DOCX) and size (max 20MB); convert DOCX to PDF via `pdf-lib`; compute SHA-256 hash of document bytes; upload to Firebase Cloud Storage at `contracts/{leaseId}/lease-v{n}.pdf` (versioned, write-once); write `{ contractHash, storageUrl, uploadedBy, timestamp }` to Firestore.
-- [ ] Submit `record_contract_hash(lease_id, sha256_hash)` on-chain via the relayer after successful upload.
-- [ ] Create the `/api/send-signing-link` Cloud Run route: generate a signed JWT (`{ leaseId, role, email, exp: +48h }`); store in `signingTokens/{token}` in Firestore; dispatch magic link email via Firebase Extensions.
-- [ ] Build the `/lease/[id]/sign` frontend page: validate JWT (expiry, `leaseId` match); redirect to `/connect` if wallet is not connected; render contract PDF in-browser via `pdfjs-dist`.
-- [ ] On "Sign and Confirm": call `wallet.signMessage("I agree to lease [leaseId] contract hash [sha256]. Timestamp: [unix_ts]")`; record signature and pubkey in Firestore and on-chain; invalidate the signing token.
-- [ ] Gate `fund_escrow()` — block tenant from funding until both `landlord_signed` and `tenant_signed` are `true` in `LeaseConfig` PDA.
-- [ ] Write end-to-end tests: upload, hash match, signing flow (both parties), escrow funding gate.
+- [x] Create the `/api/upload-contract` Cloud Run route: validate file type (PDF/DOCX) and size (max 20MB); convert DOCX to PDF via `pdf-lib`; compute SHA-256 hash of document bytes; upload to Firebase Cloud Storage at `contracts/{leaseId}/lease-v{n}.pdf` (versioned, write-once); write `{ contractHash, storageUrl, uploadedBy, timestamp }` to Firestore.
+- [x] Submit `record_contract_hash(lease_id, sha256_hash)` on-chain via the relayer after successful upload.
+- [x] Create the `/api/send-signing-link` Cloud Run route: generate a signed JWT (`{ leaseId, role, email, exp: +48h }`); store in `signingTokens/{token}` in Firestore; dispatch magic link email via Firebase Extensions.
+- [x] Build the `/lease/[id]/sign` frontend page: validate JWT (expiry, `leaseId` match); redirect to `/connect` if wallet is not connected; render contract PDF in-browser via `pdfjs-dist`.
+- [x] On "Sign and Confirm": call `wallet.signMessage("I agree to lease [leaseId] contract hash [sha256]. Timestamp: [unix_ts]")`; record signature and pubkey in Firestore and on-chain; invalidate the signing token.
+- [x] Gate `fund_escrow()` — block tenant from funding until both `landlord_signed` and `tenant_signed` are `true` in `LeaseConfig` PDA.
+- [x] Write end-to-end tests: upload, hash match, signing flow (both parties), escrow funding gate.
 
 ---
 

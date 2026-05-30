@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import nacl from 'tweetnacl'
 import bs58 from 'bs58'
+import admin from 'firebase-admin'
 import * as nonceStore from '../nonce.js'
 
 export const verifyRouter = Router()
@@ -50,9 +51,14 @@ verifyRouter.post('/', async (req: Request, res: Response) => {
     }
   }
 
-  // TODO(§7): replace with firebase-admin.auth().createCustomToken(pubkey, { walletPubkey: pubkey, chain })
-  const payload = Buffer.from(JSON.stringify({ pubkey, chain, iat: Math.floor(Date.now() / 1000) })).toString('base64')
-  const jwt = `dg.${payload}.sig`
+  let customToken: string
+  try {
+    if (!admin.apps.length) admin.initializeApp()
+    customToken = await admin.auth().createCustomToken(pubkey, { walletPubkey: pubkey, chain })
+  } catch {
+    res.status(500).json({ error: 'Failed to mint auth token' })
+    return
+  }
 
-  res.json({ jwt, pubkey, chain })
+  res.json({ customToken, pubkey, chain })
 })

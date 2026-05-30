@@ -8,6 +8,7 @@
   - "I hope you're having a great day!" -> (Omit entirely)
 - Output code blocks immediately.
 - Avoid long paragraphs. Explain logic using short, bulleted fragments only.
+- If a command runs for more than 2 minutes without output or completion, stop waiting and prompt the user to run it manually with `! <command>`.
 
 ## Checking off TODO.md
 

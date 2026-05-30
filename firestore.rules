@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Caller is authenticated and has a walletPubkey custom claim (set by /api/verify-wallet).
+    function hasWallet() {
+      return request.auth != null
+          && 'walletPubkey' in request.auth.token
+          && request.auth.token.walletPubkey is string
+          && request.auth.token.walletPubkey.size() > 0;
+    }
+
+    // The named field is absent in the existing document (enforces write-once).
+    function isAbsent(field) {
+      return !(field in resource.data);
+    }
+
+    // The named field's value is unchanged (allows the field to exist but not change).
+    function unchanged(field) {
+      return isAbsent(field) || request.resource.data[field] == resource.data[field];
+    }
+
+    // Caller is the landlord of the given lease.
+    function isLandlord(leaseId) {
+      return get(/databases/$(database)/documents/leases/$(leaseId)).data.landlordUid == request.auth.uid;
+    }
+
+    // Caller is the tenant of the given lease.
+    function isTenant(leaseId) {
+      return get(/databases/$(database)/documents/leases/$(leaseId)).data.tenantUid == request.auth.uid;
+    }
+
+    // Caller is either party on the lease.
+    function isParty(leaseId) {
+      return isLandlord(leaseId) || isTenant(leaseId);
+    }
+
+    // -------------------------------------------------------------------------
+    // users/{uid}
+    // -------------------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Wallet verification is required to create the user document.
+      allow create: if hasWallet() && request.auth.uid == uid;
+
+      // walletPubkey and walletVerifiedAt are write-once after initial creation.
+      allow update: if hasWallet()
+          && request.auth.uid == uid
+          && unchanged('walletPubkey')
+          && unchanged('walletVerifiedAt');
+
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // leases/{leaseId}
+    // -------------------------------------------------------------------------
+    match /leases/{leaseId} {
+      allow read: if hasWallet() && isParty(leaseId);
+
+      allow create: if hasWallet();
+
+      // contractHash, photo hashes, and sealed estimates are write-once.
+      allow update: if hasWallet()
+          && isParty(leaseId)
+          && unchanged('contractHash')
+          && unchanged('moveInPhotoHash')
+          && unchanged('moveOutPhotoHash')
+          // Tenant estimate is locked once tenantEstimateSealed == true.
+          && (isAbsent('tenantEstimateSealed')
+              || !resource.data.tenantEstimateSealed
+              || unchanged('tenantEstimate'))
+          // Landlord estimate is locked once landlordEstimateSealed == true.
+          && (isAbsent('landlordEstimateSealed')
+              || !resource.data.landlordEstimateSealed
+              || unchanged('landlordEstimate'));
+
+      allow delete: if false;
+
+      // assessments/{assessmentId} — geminiRaw is immutable after the first write.
+      match /assessments/{assessmentId} {
+        allow read: if hasWallet() && isParty(leaseId);
+        allow create: if hasWallet() && isParty(leaseId);
+        // geminiRaw must never change after creation.
+        allow update: if hasWallet()
+            && isParty(leaseId)
+            && unchanged('geminiRaw');
+        allow delete: if false;
+      }
+
+      // assessmentErrors — readable by parties; written only by the server SDK (bypasses rules).
+      match /assessmentErrors/{errorId} {
+        allow read: if hasWallet() && isParty(leaseId);
+        allow create: if hasWallet();
+        allow update, delete: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // voiceScripts/{scriptKey} — read by any authenticated user; written only via Admin SDK.
+    // -------------------------------------------------------------------------
+    match /voiceScripts/{scriptKey} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // signingTokens/{token} — readable only by the intended recipient; immutable once created.
+    // -------------------------------------------------------------------------
+    match /signingTokens/{token} {
+      allow read: if request.auth != null
+          && resource.data.recipientUid == request.auth.uid;
+      allow create: if hasWallet();
+      allow update, delete: if false;
+    }
+  }
+}
