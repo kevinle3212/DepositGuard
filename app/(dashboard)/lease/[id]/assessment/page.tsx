@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import {
   AlertTriangle,
@@ -19,30 +19,17 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { useWalletStore } from '@/src/store/useWalletStore'
+import { useFetchAssessment } from '@/src/hooks/useLeaseApi'
+import type { DamageItem as ApiDamageItem } from '@/src/types/api'
+import { Skeleton } from '@/components/ui/skeleton'
 
-// ── Mock AI report ─────────────────────────────────────────────────────────
-
-type Severity = 'Minor' | 'Moderate' | 'Major'
+type Severity = ApiDamageItem['severity']
 type ItemAction = 'accept' | 'modify' | 'reject' | null
 
-interface DamageItem {
-  id: string
-  description: string
-  severity: Severity
-  estimatedCost: number
+interface DamageItem extends ApiDamageItem {
   action: ItemAction
   modifiedCost?: number
 }
-
-const AI_ITEMS: Omit<DamageItem, 'action' | 'modifiedCost'>[] = [
-  { id: 'dmg_1', description: 'Carpet staining in living room — 12 sq ft affected', severity: 'Moderate', estimatedCost: 320 },
-  { id: 'dmg_2', description: 'Broken window blind — bedroom 2', severity: 'Minor', estimatedCost: 85 },
-  { id: 'dmg_3', description: 'Hole in drywall — hallway (6" diameter)', severity: 'Moderate', estimatedCost: 210 },
-  { id: 'dmg_4', description: 'Oven grease buildup requiring professional cleaning', severity: 'Minor', estimatedCost: 150 },
-  { id: 'dmg_5', description: 'Cracked tile in bathroom — 3 tiles', severity: 'Major', estimatedCost: 480 },
-]
-
-const AI_TOTAL = AI_ITEMS.reduce((s, i) => s + i.estimatedCost, 0)
 
 const SEVERITY_STYLES: Record<Severity, string> = {
   Minor: 'bg-slate-100 text-slate-700',
@@ -67,9 +54,9 @@ export default function AssessmentPage() {
   const { userRole } = useWalletStore()
   const isLandlord = userRole !== 'tenant'
 
-  const [items, setItems] = useState<DamageItem[]>(
-    AI_ITEMS.map((i) => ({ ...i, action: null }))
-  )
+  const { data: assessmentItems, isLoading: assessmentLoading, isError: assessmentError } = useFetchAssessment(id)
+
+  const [items, setItems] = useState<DamageItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const [estimate, setEstimate] = useState<EstimateState>({
@@ -77,15 +64,22 @@ export default function AssessmentPage() {
     myValue: '',
     counterpartySubmitted: false,
     revealed: false,
-    counterpartyValue: 875, // mock
+    counterpartyValue: 875,
   })
 
-  // Accepted total from AI items
+  // Sync fetched assessment items into local state
+  useEffect(() => {
+    if (assessmentItems) {
+      setItems(assessmentItems.map((i) => ({ ...i, action: null })))
+    }
+  }, [assessmentItems])
+
+  const AI_TOTAL = assessmentItems?.reduce((s, i) => s + i.estimatedCost, 0) ?? 0
+
   const acceptedTotal = items
     .filter((i) => i.action !== 'reject')
     .reduce((s, i) => s + (i.action === 'modify' ? (i.modifiedCost ?? i.estimatedCost) : i.estimatedCost), 0)
 
-  // Variance vs AI benchmark
   const myNumeric = parseFloat(estimate.myValue) || 0
   const variance = AI_TOTAL > 0 ? Math.abs((myNumeric - AI_TOTAL) / AI_TOTAL) * 100 : 0
   const showVarianceWarning = estimate.mySubmitted && variance > 15
@@ -111,7 +105,6 @@ export default function AssessmentPage() {
     if (!estimate.myValue) return
     setEstimate((prev) => {
       const next = { ...prev, mySubmitted: true, counterpartySubmitted: true }
-      // Auto-reveal after both submitted (mock)
       setTimeout(() => setEstimate((s) => ({ ...s, revealed: true })), 1200)
       return next
     })
@@ -132,6 +125,13 @@ export default function AssessmentPage() {
         <p className="mt-1 text-sm text-muted-foreground">Lease ID: {id}</p>
       </div>
 
+      {assessmentError && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
+          <Info className="h-4 w-4 text-destructive flex-shrink-0" />
+          <p className="text-sm text-destructive">Failed to load assessment data. Please refresh.</p>
+        </div>
+      )}
+
       {/* ── AI Report ── */}
       <Card className="mb-6">
         <CardHeader className="pb-4">
@@ -147,90 +147,98 @@ export default function AssessmentPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" role="table">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-2 text-left font-semibold text-muted-foreground text-xs uppercase tracking-wide">Description</th>
-                  <th className="pb-2 text-left font-semibold text-muted-foreground text-xs uppercase tracking-wide w-28">Severity</th>
-                  <th className="pb-2 text-right font-semibold text-muted-foreground text-xs uppercase tracking-wide w-28">Est. Cost (USDC)</th>
-                  {isLandlord && (
-                    <th className="pb-2 text-center font-semibold text-muted-foreground text-xs uppercase tracking-wide w-52">Action</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((item) => (
-                  <tr key={item.id} className={cn('transition-colors', item.action === 'reject' && 'opacity-40')}>
-                    <td className="py-3 pr-4">
-                      <p className={cn('text-sm', item.action === 'reject' && 'line-through')}>{item.description}</p>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold', SEVERITY_STYLES[item.severity])}>
-                        {item.severity}
-                      </span>
-                    </td>
-                    <td className="py-3 text-right tabular-nums font-medium">
-                      {item.action === 'modify' && editingId === item.id ? (
-                        <Input
-                          type="number"
-                          defaultValue={item.modifiedCost ?? item.estimatedCost}
-                          onChange={(e) => setModifiedCost(item.id, e.target.value)}
-                          className="w-24 h-7 text-xs text-right ml-auto"
-                          onBlur={() => setEditingId(null)}
-                          autoFocus
-                        />
-                      ) : (
-                        <span>
-                          ${(item.action === 'modify' ? (item.modifiedCost ?? item.estimatedCost) : item.estimatedCost).toLocaleString()}
-                        </span>
-                      )}
-                    </td>
+          {assessmentLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" role="table">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="pb-2 text-left font-semibold text-muted-foreground text-xs uppercase tracking-wide">Description</th>
+                    <th className="pb-2 text-left font-semibold text-muted-foreground text-xs uppercase tracking-wide w-28">Severity</th>
+                    <th className="pb-2 text-right font-semibold text-muted-foreground text-xs uppercase tracking-wide w-28">Est. Cost (USDC)</th>
                     {isLandlord && (
-                      <td className="py-3">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setAction(item.id, 'accept')}
-                            className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'accept' ? 'bg-emerald-100 text-emerald-700' : 'bg-muted hover:bg-emerald-50 hover:text-emerald-700')}
-                            aria-label="Accept item"
-                          >
-                            <Check className="h-3 w-3" />Accept
-                          </button>
-                          <button
-                            onClick={() => setAction(item.id, 'modify')}
-                            className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'modify' ? 'bg-blue-100 text-blue-700' : 'bg-muted hover:bg-blue-50 hover:text-blue-700')}
-                            aria-label="Modify cost"
-                          >
-                            <Edit3 className="h-3 w-3" />Modify
-                          </button>
-                          <button
-                            onClick={() => setAction(item.id, 'reject')}
-                            className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'reject' ? 'bg-red-100 text-red-700' : 'bg-muted hover:bg-red-50 hover:text-red-700')}
-                            aria-label="Reject item"
-                          >
-                            <X className="h-3 w-3" />Reject
-                          </button>
-                        </div>
+                      <th className="pb-2 text-center font-semibold text-muted-foreground text-xs uppercase tracking-wide w-52">Action</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {items.map((item) => (
+                    <tr key={item.id} className={cn('transition-colors', item.action === 'reject' && 'opacity-40')}>
+                      <td className="py-3 pr-4">
+                        <p className={cn('text-sm', item.action === 'reject' && 'line-through')}>{item.description}</p>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold', SEVERITY_STYLES[item.severity])}>
+                          {item.severity}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right tabular-nums font-medium">
+                        {item.action === 'modify' && editingId === item.id ? (
+                          <Input
+                            type="number"
+                            defaultValue={item.modifiedCost ?? item.estimatedCost}
+                            onChange={(e) => setModifiedCost(item.id, e.target.value)}
+                            className="w-24 h-7 text-xs text-right ml-auto"
+                            onBlur={() => setEditingId(null)}
+                            autoFocus
+                          />
+                        ) : (
+                          <span>
+                            ${(item.action === 'modify' ? (item.modifiedCost ?? item.estimatedCost) : item.estimatedCost).toLocaleString()}
+                          </span>
+                        )}
+                      </td>
+                      {isLandlord && (
+                        <td className="py-3">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => setAction(item.id, 'accept')}
+                              className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'accept' ? 'bg-emerald-100 text-emerald-700' : 'bg-muted hover:bg-emerald-50 hover:text-emerald-700')}
+                              aria-label="Accept item"
+                            >
+                              <Check className="h-3 w-3" />Accept
+                            </button>
+                            <button
+                              onClick={() => setAction(item.id, 'modify')}
+                              className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'modify' ? 'bg-blue-100 text-blue-700' : 'bg-muted hover:bg-blue-50 hover:text-blue-700')}
+                              aria-label="Modify cost"
+                            >
+                              <Edit3 className="h-3 w-3" />Modify
+                            </button>
+                            <button
+                              onClick={() => setAction(item.id, 'reject')}
+                              className={cn('flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors', item.action === 'reject' ? 'bg-red-100 text-red-700' : 'bg-muted hover:bg-red-50 hover:text-red-700')}
+                              aria-label="Reject item"
+                            >
+                              <X className="h-3 w-3" />Reject
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-border">
+                    <td colSpan={isLandlord ? 2 : 1} className="pt-3 text-sm font-semibold text-muted-foreground">
+                      AI Benchmark Total
+                    </td>
+                    <td className="pt-3 text-right text-sm font-bold tabular-nums">${AI_TOTAL.toLocaleString()}</td>
+                    {isLandlord && (
+                      <td className="pt-3 text-right">
+                        <span className="text-xs text-muted-foreground">Adjusted: ${acceptedTotal.toLocaleString()}</span>
                       </td>
                     )}
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-border">
-                  <td colSpan={isLandlord ? 2 : 1} className="pt-3 text-sm font-semibold text-muted-foreground">
-                    AI Benchmark Total
-                  </td>
-                  <td className="pt-3 text-right text-sm font-bold tabular-nums">${AI_TOTAL.toLocaleString()}</td>
-                  {isLandlord && (
-                    <td className="pt-3 text-right">
-                      <span className="text-xs text-muted-foreground">Adjusted: ${acceptedTotal.toLocaleString()}</span>
-                    </td>
-                  )}
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                </tfoot>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -280,8 +288,6 @@ export default function AssessmentPage() {
                       <p className="text-xs text-slate-600 mt-0.5">Waiting for the counterparty submission…</p>
                     </div>
                   </div>
-
-                  {/* Dev trigger for demo */}
                   <button onClick={mockReveal} className="text-xs text-muted-foreground underline">
                     [Demo] Simulate counterparty submission &amp; reveal
                   </button>
