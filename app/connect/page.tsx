@@ -31,6 +31,13 @@ interface WalletCategory {
   border: string
 }
 
+async function fetchNonce(pubkey: string): Promise<string> {
+  const res = await fetch(`/api/nonce?pubkey=${encodeURIComponent(pubkey)}`)
+  if (!res.ok) throw new Error('Failed to obtain signing nonce')
+  const { nonce } = await res.json()
+  return nonce as string
+}
+
 async function verifyWallet(payload: { signature: string; pubkey: string; message: string; chain: Chain }) {
   const res = await fetch('/api/verify-wallet', {
     method: 'POST',
@@ -105,9 +112,8 @@ function ConnectInner() {
     if (!signMessage) { setError('Wallet does not support message signing.'); return }
     try {
       setStep('signing')
-      const nonce = Math.random().toString(36).substring(2, 10)
-      const unixTs = Math.floor(Date.now() / 1000)
-      const message = `DepositGuard identity verification ${nonce} ${unixTs}`
+      const nonce = await fetchNonce(pubkey)
+      const message = `DepositGuard identity verification ${nonce}`
       const sigBytes = await signMessage(new TextEncoder().encode(message))
       const signature = Buffer.from(sigBytes).toString('base64')
       setStep('verifying')

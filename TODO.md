@@ -116,12 +116,12 @@
 
 > Depends on Section 7. This endpoint gates every other API route.
 
-- [ ] Create the `/api/verify-wallet` Cloud Run service (TypeScript, Node.js 20).
-- [ ] Generate a server-side nonce per request; return it to the client for signing.
-- [ ] Accept `{ walletPubkey, signature, nonce }` in the request body; validate with `tweetnacl` (Ed25519) and `bs58`.
-- [ ] On valid signature: mint a Firebase Auth custom JWT with `walletPubkey` embedded as a custom claim; write `walletPubkey` and `walletVerifiedAt` to `users/{uid}` in Firestore.
+- [x] Create the `/api/verify-wallet` Cloud Run service (TypeScript, Node.js 20). (`services/verify-wallet/`)
+- [x] Generate a server-side nonce per request; return it to the client for signing. (`/api/nonce` + `lib/nonce-store.ts`)
+- [x] Accept `{ walletPubkey, signature, nonce }` in the request body; validate with Ed25519 (Web Crypto API) and `@solana/web3.js` `PublicKey`.
+- [ ] On valid signature: mint a Firebase Auth custom JWT with `walletPubkey` embedded as a custom claim; write `walletPubkey` and `walletVerifiedAt` to `users/{uid}` in Firestore. (Blocked on §7 — mock JWT in place)
 - [ ] Reject all other `/api/*` routes with a 401 if the Firebase Auth JWT is missing or lacks a `walletPubkey` claim.
-- [ ] Add middleware to all Cloud Run services that validates the JWT and extracts `walletPubkey` before any handler runs.
+- [x] Add middleware to all Cloud Run services that validates the JWT and extracts `walletPubkey` before any handler runs. (`services/verify-wallet/src/middleware/require-auth.ts`)
 - [ ] Write unit tests: valid signature accepted, invalid signature rejected, missing nonce rejected, expired nonce rejected.
 
 ---
@@ -228,7 +228,7 @@
 
 ## 17. Repository Structure
 
-- [ ] Organize the repo into clear top-level directories: `programs/` (Anchor), `app/` (Next.js), `services/` (Cloud Run API services), `docs/`, `tests/`, `scripts/`, `docker/`.
+- [x] Organize the repo into clear top-level directories: `programs/` (Anchor), `app/` (Next.js), `services/` (Cloud Run API services), `docs/`, `tests/`, `scripts/`, `docker/`. (`services/` scaffolded with 7 services)
 - [ ] Add a `scripts/` directory for setup, test, and deploy utility scripts; document each one.
 - [ ] Add a `docker/` directory with Docker config for local development and Cloud Run deployment across environments.
 - [ ] Add an automated test framework and a starter test suite covering the Anchor program, Cloud Run services, and Next.js pages.
