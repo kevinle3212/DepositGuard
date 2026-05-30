@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Calm fintech palette — slate · emerald · amber */
+
+    /* Backgrounds */
+    --background: 210 20% 98%;        /* slate-50 tint */
+    --foreground: 215 25% 12%;        /* slate-900 */
+
+    /* Card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 12%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 12%;
+
+    /* Primary — slate-700 (trustworthy, calm) */
+    --primary: 215 28% 30%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary — slate-100 */
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 215 25% 25%;
+
+    /* Muted */
+    --muted: 210 18% 93%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent — emerald tint */
+    --accent: 152 60% 94%;
+    --accent-foreground: 152 55% 20%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & inputs */
+    --border: 214 22% 88%;
+    --input: 214 22% 88%;
+    --ring: 215 28% 30%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 215 30% 8%;
+    --foreground: 210 40% 96%;
+    --card: 215 28% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 215 28% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 152 50% 48%;           /* emerald in dark mode */
+    --primary-foreground: 215 30% 8%;
+    --secondary: 215 26% 18%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 215 26% 18%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 152 40% 18%;
+    --accent-foreground: 152 55% 80%;
+    --destructive: 0 63% 42%;
+    --destructive-foreground: 210 40% 96%;
+    --border: 215 26% 20%;
+    --input: 215 26% 20%;
+    --ring: 152 50% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Generous whitespace defaults for fintech feel */
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
+  }
+}
+
+/* Mobile-first: prevent horizontal overflow at 320px */
+html, body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+/* Responsive typography scaling */
+@media (max-width: 400px) {
+  .text-2xl { font-size: 1.25rem; }
+  .text-3xl { font-size: 1.5rem; }
+}
+
+/* Solana wallet modal — blend with our theme */
+.wallet-adapter-modal-wrapper {
+  border-radius: 1rem !important;
+  font-family: inherit !important;
+}
+
+.wallet-adapter-button {
+  font-family: inherit !important;
+  border-radius: 0.75rem !important;
+}

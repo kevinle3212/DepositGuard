@@ -1,48 +1,22 @@
 {
-    "compilerOptions": {
-        // ── Targeting ─────────────────────────────────────────────────────────
-        "target": "ES2022",
-        "lib": ["ES2022"],
-        "module": "CommonJS",
-        "moduleResolution": "Node10",
-
-        // ── Strict type-checking ──────────────────────────────────────────────
-        // "strict" enables: noImplicitAny, strictNullChecks, strictFunctionTypes,
-        // strictBindCallApply, strictPropertyInitialization, noImplicitThis,
-        // alwaysStrict, useUnknownInCatchVariables
-        "strict": true,
-        "exactOptionalPropertyTypes": true,       // undefined ≠ absent property
-        "noUncheckedIndexedAccess": true,          // array[i] is T | undefined
-        "noImplicitOverride": true,                // require `override` keyword
-        "noPropertyAccessFromIndexSignature": true, // require bracket notation for index types
-
-        // ── Additional error checks ───────────────────────────────────────────
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "allowUnusedLabels": false,
-        "allowUnreachableCode": false,
-
-        // ── Interop / portability ─────────────────────────────────────────────
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "isolatedModules": true,                   // safe for transpilers; catches const-enum misuse
-
-        // ── Type roots ────────────────────────────────────────────────────────
-        "types": ["mocha", "chai", "node"],
-        "typeRoots": ["./node_modules/@types"],
-
-        // ── Output ───────────────────────────────────────────────────────────
-        "sourceMap": true,
-        "declaration": true,
-        "declarationMap": true,
-        "outDir": "./dist"
-
-        // Tip: add "skipLibCheck": true only if a dependency ships broken .d.ts files.
-    },
-    "include": ["tests/**/*.ts"],
-    "exclude": ["node_modules", "dist", "target"]
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "programs", "tests", "target", "DepositGuard"]
 }
-
