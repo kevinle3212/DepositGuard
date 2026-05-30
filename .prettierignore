@@ -1,0 +1,20 @@
+# Build outputs
+dist/
+target/
+.anchor/
+coverage/
+out/
+build/
+
+# Dependencies
+node_modules/
+
+# Lock files (preserve exact formatting)
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+Cargo.lock
+
+# Generated / binary
+*.min.js
+*.min.css

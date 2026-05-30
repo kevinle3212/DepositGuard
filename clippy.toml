@@ -1,0 +1,35 @@
+# Clippy threshold configuration.
+# These values tune how aggressively clippy flags complexity issues.
+# Pair with the `cargo lint` alias in .cargo/config.toml.
+
+# Minimum supported Rust version — keep in sync with Cargo.toml rust-version
+msrv = "1.75.0"
+
+# Flag functions whose cyclomatic complexity exceeds this value
+cognitive-complexity-threshold = 10
+
+# Flag types whose nesting depth exceeds this value
+type-complexity-threshold = 200
+
+# Flag functions with more than this many parameters.
+# Anchor instruction handlers can be verbose — use context objects if this fires.
+too-many-arguments-threshold = 7
+
+# Flag functions longer than this many lines
+too-many-lines-threshold = 80
+
+# Domain-specific identifiers that clippy should not flag as misspellings
+doc-valid-idents = [
+    "DepositGuard",
+    "USDC",
+    "PDA",
+    "PDAs",
+    "CPI",
+    "CPIs",
+    "SPL",
+    "BN",
+    "SHA",
+    "SHA-256",
+    "devnet",
+    "mainnet",
+]

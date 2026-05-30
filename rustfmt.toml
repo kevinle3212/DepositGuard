@@ -1,0 +1,23 @@
+# Rust edition — must match Cargo.toml workspace edition
+edition = "2021"
+
+# ── Line width ────────────────────────────────────────────────────────────────
+max_width = 100
+use_small_heuristics = "Max"   # applies max_width to all heuristic locations
+
+# ── Indentation ───────────────────────────────────────────────────────────────
+tab_spaces = 4
+hard_tabs = false
+
+# ── Newlines ──────────────────────────────────────────────────────────────────
+newline_style = "Unix"
+
+# ── Imports ───────────────────────────────────────────────────────────────────
+reorder_imports = true
+reorder_modules = true
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+remove_nested_parens = true
+merge_derives = true
+use_field_init_shorthand = true
+force_explicit_abi = true

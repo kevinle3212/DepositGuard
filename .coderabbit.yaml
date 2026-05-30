@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+tone_instructions: "Be precise and direct. Flag every potential issue regardless of severity."
+early_access: false
+
+reviews:
+    profile: "assertive"
+    request_changes_workflow: true
+    high_level_summary: true
+    high_level_summary_placeholder: "@coderabbitai summary"
+    auto_title_placeholder: "@coderabbitai"
+    poem: false
+    review_status: true
+    collapse_walkthrough: false
+    sequence_diagrams: true
+    changed_files_summary: true
+
+    path_filters:
+        - "!target/**"
+        - "!node_modules/**"
+        - "!dist/**"
+        - "!.anchor/**"
+        - "!**/*.lock"
+        - "!**/Cargo.lock"
+
+    path_instructions:
+        - path: "programs/**/*.rs"
+          instructions: |
+              Review Anchor/Solana program code with extreme care for:
+              - Missing signer checks on privileged instructions
+              - PDA seed derivation correctness and canonical bump usage
+              - CPI signer privilege escalation
+              - Integer overflow/underflow in all token arithmetic (use checked_* or saturating_*)
+              - State machine: only valid transitions per the EscrowStatus enum
+              - Reentrancy via CPI (verify no mutable state written before CPI returns)
+              - Account discriminator validation (Anchor handles this, but flag manual deserialization)
+              - Rent exemption: all new accounts must be rent-exempt
+              - Close account: verify lamports transferred and discriminator zeroed
+              - Timestamp manipulation: Clock::unix_timestamp is validator-controlled, flag unsafe reliance
+
+        - path: "tests/**/*.ts"
+          instructions: |
+              Review Anchor integration tests for:
+              - Full coverage of all instruction happy paths and error paths
+              - Negative tests: invalid signers, wrong PDAs, wrong state transitions
+              - BN arithmetic correctness for u64/i64 values (6 decimal USDC)
+              - No hardcoded pubkeys or amounts that belong in constants
+              - Assertions on emitted events and account state post-instruction
+
+        - path: "app/**/*.ts"
+          instructions: |
+              Review frontend TypeScript for:
+              - No private keys, mnemonics, or secrets in client-side code
+              - Wallet adapter usage follows standard patterns
+              - Transaction simulation before sending
+              - Proper error handling for RPC failures and wallet rejections
+
+        - path: "**/*.md"
+          instructions: |
+              Review documentation for accuracy, grammar, and completeness.
+              Flag any instructions that could lead users to perform insecure operations.
+
+    auto_review:
+        enabled: true
+        drafts: false
+        base_branches:
+            - "main"
+
+    tools:
+        github-checks:
+            enabled: true
+        shellcheck:
+            enabled: true
+        clippy:
+            enabled: true
+        eslint:
+            enabled: true
+        markdownlint:
+            enabled: true
+        prettier:
+            enabled: true
+        ast-grep:
+            enabled: true
+
+chat:
+    auto_reply: true
+
+knowledge_base:
+    opt_out: false
+    learnings:
+        scope: "auto"
+    issues:
+        scope: "auto"

@@ -1,0 +1,48 @@
+# Project-level Cargo configuration.
+# These settings apply to the workspace when building locally.
+
+[build]
+# Faster incremental linking on macOS
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# ── Strict-lint alias ─────────────────────────────────────────────────────────
+# Run with: cargo lint
+# Applies all clippy lint groups + denies the most dangerous patterns.
+# Intentionally NOT set as default rustflags to avoid penalising dependencies.
+[alias]
+lint = [
+    "clippy",
+    "--workspace",
+    "--all-targets",
+    "--all-features",
+    "--",
+    # Lint groups
+    "-W", "clippy::all",
+    "-W", "clippy::pedantic",
+    "-W", "clippy::nursery",
+    # Deny dangerous patterns outright
+    "-D", "warnings",
+    "-D", "clippy::unwrap_used",
+    "-D", "clippy::expect_used",
+    "-D", "clippy::panic",
+    "-D", "clippy::todo",
+    "-D", "clippy::unimplemented",
+    "-D", "clippy::unreachable",
+    "-D", "clippy::indexing_slicing",
+    "-D", "clippy::integer_arithmetic",
+    # Rust edition idioms
+    "-W", "rust_2018_idioms",
+    "-W", "rust_2021_compatibility",
+]
+lint-fix = [
+    "clippy",
+    "--workspace",
+    "--all-targets",
+    "--all-features",
+    "--fix",
+    "--allow-dirty",
+    "--",
+    "-W", "clippy::all",
+    "-W", "clippy::pedantic",
+    "-W", "clippy::nursery",
+]
