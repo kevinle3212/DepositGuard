@@ -121,3 +121,6 @@ base44/
 # Local-only notes that should not be public
 NOTES.md
 TODO.local.md
+
+# Temporary files
+.tmp/
