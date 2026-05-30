@@ -5,7 +5,7 @@ const TTL_MS = 5 * 60 * 1000
 
 export function issue(pubkey: string): string {
   const now = Date.now()
-  for (const [k, v] of store) if (v.expiresAt < now) store.delete(k)
+  store.forEach((v, k) => {if (v.expiresAt < now) store.delete(k)})
   const nonce = randomBytes(16).toString('hex')
   store.set(pubkey, { nonce, expiresAt: now + TTL_MS })
   return nonce
