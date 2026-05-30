@@ -94,4 +94,91 @@ pub mod deposit_guard {
     pub fn close_escrow(ctx: Context<CloseEscrow>) -> Result<()> {
         instructions::close_escrow::handler(ctx)
     }
+
+    // ── Dispute and fine calculation (Section 4) ─────────────────────────────────
+
+    /// Tenant rejects the proposed deduction; undisputed funds go to the tenant,
+    /// disputed funds stay locked. Records the solo arbitrator and fine oracle.
+    /// Status: PENDING_APPROVAL → DISPUTED.
+    pub fn open_dispute(
+        ctx: Context<OpenDispute>,
+        arbitrator: Pubkey,
+        oracle: Pubkey,
+    ) -> Result<()> {
+        instructions::open_dispute::handler(ctx, arbitrator, oracle)
+    }
+
+    /// Each party seals an independent damage estimate; revision is forbidden and
+    /// neither is revealed until both are in.
+    pub fn submit_estimate(ctx: Context<SubmitEstimate>, estimate: u64) -> Result<()> {
+        instructions::submit_estimate::handler(ctx, estimate)
+    }
+
+    /// Computes `max_fine = (tenant_estimate + landlord_estimate) / 2` once both
+    /// estimates are sealed.
+    pub fn reveal_estimates(ctx: Context<RevealEstimates>) -> Result<()> {
+        instructions::reveal_estimates::handler(ctx)
+    }
+
+    /// Oracle relays the Gemini-computed fine on-chain (advisory, re-checked
+    /// against `max_fine`).
+    pub fn post_oracle_fine(ctx: Context<PostOracleFine>, fine: u64) -> Result<()> {
+        instructions::post_oracle_fine::handler(ctx, fine)
+    }
+
+    /// Solo arbitrator executes the resolution; `fine_amount` is capped at
+    /// `max_fine`. Status: DISPUTED → RESOLVED.
+    pub fn resolve_dispute(ctx: Context<ResolveDispute>, fine_amount: u64) -> Result<()> {
+        instructions::resolve_dispute::handler(ctx, fine_amount)
+    }
+
+    // ── Arbitration fee escrow (Section 5) ───────────────────────────────────────
+
+    /// Opens the arbitration fee track: $50/party, 72-hour window, assigned arbitrator.
+    pub fn open_arbitration(ctx: Context<OpenArbitration>, arbitrator: Pubkey) -> Result<()> {
+        instructions::open_arbitration::handler(ctx, arbitrator)
+    }
+
+    /// A party pays its fixed $50 USDC arbitration fee.
+    pub fn pay_arbitration_fee(ctx: Context<PayArbitrationFee>) -> Result<()> {
+        instructions::pay_arbitration_fee::handler(ctx)
+    }
+
+    /// A party pays the optional $25 USDC panel-upgrade fee (both must pay to activate).
+    pub fn pay_panel_upgrade_fee(ctx: Context<PayPanelUpgradeFee>) -> Result<()> {
+        instructions::pay_panel_upgrade_fee::handler(ctx)
+    }
+
+    /// Returns paid fees to the payers (early resolution or one-party default).
+    pub fn refund_arbitration_fees(ctx: Context<RefundArbitrationFees>) -> Result<()> {
+        instructions::refund_arbitration_fees::handler(ctx)
+    }
+
+    /// Assigned arbitrator claims the fee pool after both parties pay.
+    pub fn consume_arbitration_fees(ctx: Context<ConsumeArbitrationFees>) -> Result<()> {
+        instructions::consume_arbitration_fees::handler(ctx)
+    }
+
+    // ── Arbitration panel and minority voting (Section 6) ────────────────────────
+
+    /// Creates the three-arbitrator panel (requires both panel-upgrade fees paid).
+    pub fn open_panel(ctx: Context<OpenPanel>, panelists: [Pubkey; 3]) -> Result<()> {
+        instructions::open_panel::handler(ctx, panelists)
+    }
+
+    /// A panelist submits a sealed ruling (fine, recipient, reasoning hash).
+    pub fn submit_panel_ruling(
+        ctx: Context<SubmitPanelRuling>,
+        fine_amount: u64,
+        recipient: Pubkey,
+        ruling_hash: [u8; 32],
+    ) -> Result<()> {
+        instructions::submit_panel_ruling::handler(ctx, fine_amount, recipient, ruling_hash)
+    }
+
+    /// Reconciles the three rulings (unanimous / majority / median), enforces the
+    /// `max_fine` cap and minority protection, and pays out. Status: DISPUTED → RESOLVED.
+    pub fn resolve_dispute_panel(ctx: Context<ResolveDisputePanel>) -> Result<()> {
+        instructions::resolve_dispute_panel::handler(ctx)
+    }
 }
