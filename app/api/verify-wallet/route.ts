@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
-import { consume } from '@/lib/nonce-store'
+const CLOCK_SKEW_SECS = 300
 
 const MSG_PREFIX = 'DepositGuard identity verification '
 
 async function verifySolanaSignature(pubkey: string, signature: string, message: string): Promise<boolean> {
   try {
-    const pubkeyBytes = new PublicKey(pubkey).toBytes()
-    const sigBytes = Buffer.from(signature, 'base64')
-    const msgBytes = new TextEncoder().encode(message)
+    // Wrap in new Uint8Array() to ensure ArrayBuffer-backed views (TS 5.x strict check)
+    const pubkeyBytes = new Uint8Array(new PublicKey(pubkey).toBytes())
+    const sigBytes = new Uint8Array(Buffer.from(signature, 'base64'))
+    const msgBytes = new Uint8Array(new TextEncoder().encode(message))
     const cryptoKey = await crypto.subtle.importKey('raw', pubkeyBytes, { name: 'Ed25519' }, false, ['verify'])
     return await crypto.subtle.verify({ name: 'Ed25519' }, cryptoKey, sigBytes, msgBytes)
   } catch {
@@ -29,9 +30,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
     }
 
-    const nonce = message.slice(MSG_PREFIX.length).trim()
-    if (!consume(pubkey, nonce)) {
-      return NextResponse.json({ error: 'Invalid or expired nonce' }, { status: 401 })
+    // Expected format: "DepositGuard identity verification <nonce> <unix_ts>"
+    const payload = message.slice(MSG_PREFIX.length).trim()
+    const parts = payload.split(' ')
+    if (parts.length !== 2) {
+      return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
+    }
+    const ts = parseInt(parts[1], 10)
+    const now = Math.floor(Date.now() / 1000)
+    if (isNaN(ts) || Math.abs(now - ts) > CLOCK_SKEW_SECS) {
+      return NextResponse.json({ error: 'Challenge expired or clock skew too large' }, { status: 401 })
     }
 
     if (chain === 'solana') {
