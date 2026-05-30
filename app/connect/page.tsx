@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
@@ -94,9 +94,23 @@ function ConnectInner() {
   const [step, setStep] = useState<Step>('select')
   const [error, setError] = useState<string | null>(null)
 
+  // Tracks whether we opened the wallet modal and are waiting for the user to approve
+  const pendingSolanaSign = useRef(false)
+
+  // After the Phantom/Solana modal connects the wallet, auto-proceed to signing
+  useEffect(() => {
+    if (connected && publicKey && pendingSolanaSign.current) {
+      pendingSolanaSign.current = false
+      console.log('[ConnectPage] Wallet connected via modal — proceeding to sign-and-verify', publicKey.toBase58())
+      signAndVerify('solana', publicKey.toBase58())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, publicKey])
+
   const verifyMutation = useMutation({
     mutationFn: verifyWallet,
     onSuccess: (data) => {
+      console.log('[ConnectPage] Verification success — dg-session cookie set, navigating to', from)
       setFirebaseJwt(data.jwt)
       storeConnect(data.pubkey)
       setStep('success')
@@ -131,7 +145,13 @@ function ConnectInner() {
   async function handleSolanaConnect() {
     setSelectedChain('solana')
     setError(null)
-    if (!connected || !publicKey) { setVisible(true); return }
+    if (!connected || !publicKey) {
+      console.log('[ConnectPage] Wallet not yet connected — opening wallet modal')
+      pendingSolanaSign.current = true
+      setVisible(true)
+      return
+    }
+    console.log('[ConnectPage] Wallet already connected — signing directly', publicKey.toBase58())
     await signAndVerify('solana', publicKey.toBase58())
   }
 
