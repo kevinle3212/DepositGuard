@@ -274,6 +274,8 @@ export default function DepositDetailPage() {
                     <CardContent>
                         <DamageCapturePanel
                             role={walletPubkey === deposit.landlordAddress ? "landlord" : "tenant"}
+                            leaseId={deposit.id}
+                            {...(walletPubkey != null ? { walletPubkey } : {})}
                         />
                     </CardContent>
                 </Card>

@@ -145,6 +145,15 @@ function TimerBadge({ label, endTs, accent }: { label: string; endTs: number; ac
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
 const SOLANA_NETWORK = process.env["NEXT_PUBLIC_SOLANA_NETWORK"] ?? "devnet";
 
+interface EstimateStatus {
+    landlordEstimateUsdc?: number;
+    tenantEstimateUsdc?: number;
+    maxFineUsdc?: number;
+    estimatesRevealed?: boolean;
+    landlordEstimateTxSig?: string;
+    tenantEstimateTxSig?: string;
+}
+
 export default function DisputePage() {
     const { id } = useParams<{ id: string }>();
     const wallet = useWallet();
@@ -153,6 +162,25 @@ export default function DisputePage() {
     const [landlordPaid, setLandlordPaid] = useState(true);
     const [tenantPaid, setTenantPaid] = useState(false);
     const [stakingRole, setStakingRole] = useState<"Landlord" | "Tenant" | null>(null);
+    const [estimateStatus, setEstimateStatus] = useState<EstimateStatus>({});
+
+    // Load real estimate data from Firestore via the deposit API
+    useEffect(() => {
+        void fetch(`/api/deposits/${id}`)
+            .then(async (r) => {
+                if (!r.ok) return;
+                const data = (await r.json()) as EstimateStatus & Record<string, unknown>;
+                const s: EstimateStatus = {};
+                if (typeof data.landlordEstimateUsdc === "number") s.landlordEstimateUsdc = data.landlordEstimateUsdc;
+                if (typeof data.tenantEstimateUsdc === "number") s.tenantEstimateUsdc = data.tenantEstimateUsdc;
+                if (typeof data.maxFineUsdc === "number") s.maxFineUsdc = data.maxFineUsdc;
+                if (typeof data.estimatesRevealed === "boolean") s.estimatesRevealed = data.estimatesRevealed;
+                if (typeof data.landlordEstimateTxSig === "string") s.landlordEstimateTxSig = data.landlordEstimateTxSig;
+                if (typeof data.tenantEstimateTxSig === "string") s.tenantEstimateTxSig = data.tenantEstimateTxSig;
+                setEstimateStatus(s);
+            })
+            .catch(() => { /* non-fatal */ });
+    }, [id]);
 
     // Timers
     const arbitrationEnd = Date.now() + 72 * 60 * 60 * 1000; // 72h from now
@@ -242,6 +270,98 @@ export default function DisputePage() {
                     verdict.
                 </p>
             </div>
+
+            {/* ── Sealed Estimates (real Firestore data) ── */}
+            <Card className="mb-6">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Scale className="h-4 w-4 text-primary" />
+                        Damage Estimates
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                        Each party seals their own estimate independently. Amounts are hidden until both submit.
+                    </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {(["Landlord", "Tenant"] as const).map((party) => {
+                            const est = party === "Landlord"
+                                ? estimateStatus.landlordEstimateUsdc
+                                : estimateStatus.tenantEstimateUsdc;
+                            const sig = party === "Landlord"
+                                ? estimateStatus.landlordEstimateTxSig
+                                : estimateStatus.tenantEstimateTxSig;
+                            const submitted = est !== undefined;
+                            return (
+                                <div
+                                    key={party}
+                                    className={cn(
+                                        "rounded-xl border p-4 space-y-1",
+                                        submitted
+                                            ? "border-emerald-200 bg-emerald-50"
+                                            : "border-border bg-muted/20",
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                            {party}
+                                        </p>
+                                        {submitted ? (
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                        ) : (
+                                            <Clock className="h-4 w-4 text-amber-500" />
+                                        )}
+                                    </div>
+                                    {estimateStatus.estimatesRevealed === true && est !== undefined ? (
+                                        <p className="text-xl font-bold tabular-nums">
+                                            ${est.toLocaleString()} USDC
+                                        </p>
+                                    ) : submitted ? (
+                                        <p className="text-sm font-semibold text-emerald-800">
+                                            Estimate sealed ✓
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">Pending submission</p>
+                                    )}
+                                    {sig && sig !== "recorded" && (
+                                        <p className="text-xs font-mono text-muted-foreground truncate">
+                                            Tx: {sig.slice(0, 12)}…
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {estimateStatus.estimatesRevealed === true && estimateStatus.maxFineUsdc !== undefined && (
+                        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                                Max Fine (on-chain cap)
+                            </p>
+                            <p className="text-2xl font-bold tabular-nums text-primary">
+                                ${estimateStatus.maxFineUsdc.toLocaleString()} USDC
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Average of both estimates — the hard cap for any arbitration ruling.
+                            </p>
+                        </div>
+                    )}
+
+                    {!estimateStatus.landlordEstimateUsdc || !estimateStatus.tenantEstimateUsdc ? (
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-700">
+                                Both parties must submit a sealed estimate before arbitration proceeds.
+                                Use the{" "}
+                                <a href={`/lease/${id}/assessment`} className="underline font-semibold">
+                                    Assessment page
+                                </a>{" "}
+                                to take a damage photo, get a Gemini estimate, and commit it on-chain.
+                            </p>
+                        </div>
+                    ) : null}
+                </CardContent>
+            </Card>
 
             {/* ── Progress timeline ── */}
             <Card className="mb-6">
