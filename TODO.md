@@ -257,30 +257,30 @@
 ## 18. Project Docs (Root-Level Markdown)
 
 - [x] `README.md` — project overview, purpose, setup instructions, and contribution pointer.
-- [ ] `CONTRIBUTING.md` — coding standards, commit-message conventions, PR process.
-- [ ] `SECURITY.md` — security policy, how to report vulnerabilities, and handling process.
+- [x] `CONTRIBUTING.md` — coding standards, commit-message conventions, PR process.
+- [x] `SECURITY.md` — security policy, how to report vulnerabilities, and handling process.
 
 ---
 
 ## 19. GitHub Configuration (`.github/`)
 
-- [ ] `PULL_REQUEST_TEMPLATE.md` — standardized PR format.
-- [ ] `ISSUE_TEMPLATE.md` — standardized issue format.
-- [ ] GitHub Actions workflows: run Anchor tests, TypeScript linter, and Playwright E2E on all commits and PRs.
-- [ ] `dependabot.yml` — automatic dependency update checks for npm and Cargo.
-- [ ] Enable GitHub code scanning and vulnerability alerts.
-- [ ] Configure CodeRabbit and CodeQL to run on commits and PRs.
+- [x] `PULL_REQUEST_TEMPLATE.md` — standardized PR format.
+- [x] `ISSUE_TEMPLATE.md` — standardized issue format.
+- [x] GitHub Actions workflows: run Anchor tests, TypeScript linter, and Playwright E2E on all commits and PRs.
+- [x] `dependabot.yml` — automatic dependency update checks for npm and Cargo.
+- [x] Enable GitHub code scanning and vulnerability alerts.
+- [x] Configure CodeRabbit and CodeQL to run on commits and PRs.
 
 ---
 
 ## 20. Infrastructure and CI/CD (Terraform + Cloud Build)
 
-- [ ] Write Terraform HCL for all Google Cloud resources: Cloud Run services, Cloud Load Balancer, Cloud DNS zone (redirect-only), Cloud Armor policies, Cloud Scheduler job, Secret Manager secrets, Artifact Registry, Cloud Build triggers.
-- [ ] Configure Google Cloud Build: trigger on GitHub push to `main`; run tests; build Docker images; push to Artifact Registry; deploy to Cloud Run.
-- [ ] Set up Google-managed TLS certificate on the HTTPS load balancer for `nestcrow.tech`.
-- [ ] Configure Cloud DNS: `A @ → Load Balancer IP`, `A www → same IP`, `CNAME api → Cloud Run service URL`.
-- [ ] Configure Cloud Armor: rate limit 100 req/min per IP; enable OWASP Core Rule Set; configure geo-blocking per compliance requirements.
-- [ ] Store all secrets (relayer keypair, Gemini API key, Firebase service account, JWT signing secret, ElevenLabs API key) in Secret Manager; verify no secrets exist in env files or source control.
+- [x] Write Terraform HCL for all Google Cloud resources: Cloud Run services, Cloud Load Balancer, Cloud DNS zone (redirect-only), Cloud Armor policies, Cloud Scheduler job, Secret Manager secrets, Artifact Registry, Cloud Build triggers.
+- [x] Configure Google Cloud Build: trigger on GitHub push to `main`; run tests; build Docker images; push to Artifact Registry; deploy to Cloud Run.
+- [x] Set up Google-managed TLS certificate on the HTTPS load balancer for `nestcrow.tech`.
+- [x] Configure Cloud DNS: `A @ → Load Balancer IP`, `A www → same IP`, `CNAME api → Cloud Run service URL`.
+- [x] Configure Cloud Armor: rate limit 100 req/min per IP; enable OWASP Core Rule Set; configure geo-blocking per compliance requirements.
+- [x] Store all secrets (relayer keypair, Gemini API key, Firebase service account, JWT signing secret, ElevenLabs API key) in Secret Manager; verify no secrets exist in env files or source control.
 
 ---
 

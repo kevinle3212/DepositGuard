@@ -1,0 +1,108 @@
+version: 2
+
+updates:
+    # Root Next.js / Yarn workspace
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: "08:00"
+      open-pull-requests-limit: 10
+      groups:
+          next-and-react:
+              patterns:
+                  - "next"
+                  - "react"
+                  - "react-dom"
+                  - "@types/react*"
+          solana-adapters:
+              patterns:
+                  - "@solana/*"
+                  - "@coral-xyz/*"
+          firebase:
+              patterns:
+                  - "firebase*"
+                  - "@firebase/*"
+          tailwind-and-ui:
+              patterns:
+                  - "tailwindcss"
+                  - "@radix-ui/*"
+                  - "shadcn*"
+      ignore:
+          # Pin Next.js at 14.x until §22 migration
+          - dependency-name: "next"
+            update-types: ["version-update:semver-major"]
+
+    # services/assess-damage
+    - package-ecosystem: npm
+      directory: /services/assess-damage
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/notify
+    - package-ecosystem: npm
+      directory: /services/notify
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/send-signing-link
+    - package-ecosystem: npm
+      directory: /services/send-signing-link
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/tts
+    - package-ecosystem: npm
+      directory: /services/tts
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/upload-contract
+    - package-ecosystem: npm
+      directory: /services/upload-contract
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/verify-wallet
+    - package-ecosystem: npm
+      directory: /services/verify-wallet
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # services/webhook-deadline
+    - package-ecosystem: npm
+      directory: /services/webhook-deadline
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
+
+    # Cargo (Anchor / Rust program)
+    - package-ecosystem: cargo
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: "08:00"
+      open-pull-requests-limit: 5
+
+    # GitHub Actions
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+      open-pull-requests-limit: 5
