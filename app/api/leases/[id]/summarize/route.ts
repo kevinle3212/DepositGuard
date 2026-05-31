@@ -93,19 +93,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const raw = result.response.text().trim();
 
-    // Strip accidental markdown fences if Gemini wraps the JSON
-    const jsonText = raw
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
+    if (!raw) {
+        return NextResponse.json(
+            {
+                error: "Gemini returned an empty response — the PDF may have been blocked by a safety filter.",
+            },
+            { status: 502 },
+        );
+    }
+
+    // Extract the JSON object — handles markdown fences, leading/trailing prose,
+    // and truncated responses. Find the first { and last } to slice out the object.
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    const jsonText = start !== -1 && end > start ? raw.slice(start, end + 1) : raw;
 
     let summary: unknown;
     try {
         summary = JSON.parse(jsonText);
     } catch {
         return NextResponse.json(
-            { error: "Failed to parse Gemini response", raw },
-            { status: 500 },
+            {
+                error: "Could not parse the AI summary. The PDF may be too large, scanned/image-only, or Gemini truncated its response.",
+            },
+            { status: 502 },
         );
     }
 

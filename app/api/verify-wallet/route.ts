@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PublicKey } from "@solana/web3.js";
 import { sign } from "jsonwebtoken";
+import { verifyMessage } from "viem";
 import { consume } from "@/lib/nonce-store";
 
 const CLOCK_SKEW_SECS = 300;
@@ -78,6 +79,27 @@ export async function POST(req: NextRequest) {
             if (!valid) {
                 return NextResponse.json(
                     { error: "Signature verification failed" },
+                    { status: 401 },
+                );
+            }
+        } else if (chain === "evm") {
+            // EVM wallets (MetaMask, RainbowKit) sign with secp256k1 personal_sign (EIP-191).
+            // viem's verifyMessage recovers the signer address and compares it to pubkey.
+            try {
+                const valid = await verifyMessage({
+                    address: pubkey as `0x${string}`,
+                    message,
+                    signature: signature as `0x${string}`,
+                });
+                if (!valid) {
+                    return NextResponse.json(
+                        { error: "EVM signature verification failed" },
+                        { status: 401 },
+                    );
+                }
+            } catch {
+                return NextResponse.json(
+                    { error: "Invalid EVM signature format" },
                     { status: 401 },
                 );
             }
