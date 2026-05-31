@@ -88,7 +88,8 @@ function ConnectInner() {
     const from = searchParams.get("from") ?? "/";
 
     // Solana wallet
-    const { signMessage, publicKey, connected } = useWallet();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const { signMessage, publicKey, connected, connecting, wallet, select, connect } = useWallet();
     const { setVisible } = useWalletModal();
 
     // EVM wallet (wagmi + RainbowKit)
@@ -109,14 +110,31 @@ function ConnectInner() {
     // AbortController for the active Tangem NFC session
     const nfcAbort = useRef<AbortController | null>(null);
 
-    // After the Solana modal connects the wallet, auto-proceed to signing
+    // After the Solana modal connects the wallet, auto-proceed to signing.
+    // signMessage is included so the effect re-fires if it becomes available
+    // in a separate tick after connected/publicKey (adapter timing edge case).
     useEffect(() => {
-        if (connected && publicKey && pendingSolanaSign.current) {
+        if (connected && publicKey && signMessage && pendingSolanaSign.current) {
             pendingSolanaSign.current = false;
             void signAndVerify("solana", publicKey.toBase58());
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [connected, publicKey]);
+    }, [connected, publicKey, signMessage]);
+
+    // autoConnect is off, so the wallet-adapter modal's select() does not connect.
+    // When the user picks a wallet (wallet becomes set) while a Solana connect is
+    // pending, fire connect() explicitly. The signing effect above runs once
+    // `connected` flips true.
+    useEffect(() => {
+        if (pendingSolanaSign.current && wallet && !connected && !connecting) {
+            connect().catch((e: unknown) => {
+                pendingSolanaSign.current = false;
+                setError(e instanceof Error ? e.message : "Wallet connection failed.");
+                setStep("select");
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [wallet, connected, connecting]);
 
     // After EVM wallet connects via RainbowKit, auto-proceed to signing
     useEffect(() => {
@@ -189,7 +207,16 @@ function ConnectInner() {
     function handleSolanaConnect() {
         setSelectedChain("solana");
         setError(null);
+        if (connected && publicKey) {
+            // Already connected in this session — go straight to signing
+            void signAndVerify("solana", publicKey.toBase58());
+            return;
+        }
         pendingSolanaSign.current = true;
+        // Clear any stale (disconnected) selection lingering in localStorage so
+        // the user always picks fresh in the modal — and so re-picking the same
+        // wallet still registers as a change that triggers the connect effect.
+        if (wallet) select(null);
         setVisible(true);
     }
 

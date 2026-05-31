@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PublicKey } from "@solana/web3.js";
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import { sign } from "jsonwebtoken";
 import { consume } from "@/lib/nonce-store";
 
 const CLOCK_SKEW_SECS = 300;
 const MSG_PREFIX = "NestCrow identity verification ";
-
-function ensureAdminInit(): void {
-    if (!getApps().length) initializeApp();
-}
 
 async function verifySolanaSignature(
     pubkey: string,
@@ -88,16 +83,20 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Mint a Firebase Auth custom JWT with walletPubkey and chain as custom claims.
-        // The client exchanges this for a Firebase ID token via signInWithCustomToken().
-        ensureAdminInit();
-        const customToken = await getAuth().createCustomToken(pubkey, {
-            walletPubkey: pubkey,
-            chain,
+        const secret = process.env["JWT_SIGNING_SECRET"];
+        if (!secret) {
+            console.error("[verify-wallet] JWT_SIGNING_SECRET not set");
+            return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+        }
+
+        // Sign a self-contained session JWT. The client decodes the payload client-side
+        // (no SDK verification needed) to extract walletPubkey and chain claims.
+        const jwt = sign({ sub: pubkey, walletPubkey: pubkey, chain }, secret, {
+            expiresIn: "7d",
         });
 
-        const response = NextResponse.json({ jwt: customToken, pubkey, chain }, { status: 200 });
-        response.cookies.set("dg-session", customToken, {
+        const response = NextResponse.json({ jwt, pubkey, chain }, { status: 200 });
+        response.cookies.set("dg-session", jwt, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",

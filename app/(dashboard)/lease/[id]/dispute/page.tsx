@@ -6,6 +6,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
 import { deserializeAndSignSolanaTx } from "@/src/lib/txEngine";
 import { toast } from "@/hooks/use-toast";
+import { useVoice } from "@/src/hooks/useVoice";
 import {
     MessageSquare,
     Users,
@@ -146,6 +147,7 @@ const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana
 export default function DisputePage() {
     const { id } = useParams<{ id: string }>();
     const wallet = useWallet();
+    const { speak } = useVoice();
     const [activeTier] = useState<DisputeTier>("Arbitration");
     const [landlordPaid, setLandlordPaid] = useState(true);
     const [tenantPaid, setTenantPaid] = useState(false);
@@ -184,6 +186,7 @@ export default function DisputePage() {
                 const sig = await deserializeAndSignSolanaTx(transaction, wallet, connection);
 
                 markPaid();
+                void speak("arbitration.fee.paid");
                 toast({
                     title: `${role} Staking Fee Paid`,
                     description: `$50 USDC locked. Tx: ${sig.slice(0, 8)}…`,

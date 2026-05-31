@@ -22,6 +22,11 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
 
     return (
         <ConnectionProvider endpoint={endpoint}>
+            {/* autoConnect is intentionally false: with it true the provider
+                silently reconnects whatever wallet is saved in localStorage on
+                every load (e.g. Solflare), which then hijacks the "Solana"
+                button. The connect page drives connect() explicitly after the
+                user picks a wallet in the modal. */}
             <WalletProvider wallets={wallets} autoConnect={false}>
                 <WalletModalProvider>
                     <WalletSyncProvider>{children}</WalletSyncProvider>

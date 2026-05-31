@@ -6,6 +6,7 @@ import { useWalletStore } from "@/src/store/useWalletStore";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import { getConnection } from "@/lib/solana";
+import { useVoice } from "@/src/hooks/useVoice";
 
 type TokenStatus = "loading" | "valid" | "invalid" | "expired";
 type SignStatus = "idle" | "signing" | "submitting" | "done" | "error";
@@ -23,6 +24,7 @@ export default function SignPage() {
 
     const { walletConnected: connected } = useWalletStore();
     const wallet = useWallet();
+    const { speak } = useVoice();
 
     const [tokenStatus, setTokenStatus] = useState<TokenStatus>("loading");
     const [payload, setPayload] = useState<TokenPayload | null>(null);
@@ -193,6 +195,7 @@ export default function SignPage() {
         }
 
         setSignStatus("done");
+        void speak("contract.signed");
     }
 
     if (tokenStatus === "loading") {

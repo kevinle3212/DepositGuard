@@ -12,6 +12,7 @@ import { useWalletStore } from "@/src/store/useWalletStore";
 import { useFetchAssessment } from "@/src/hooks/useLeaseApi";
 import type { DamageItem as ApiDamageItem } from "@/src/types/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useVoice } from "@/src/hooks/useVoice";
 
 type Severity = ApiDamageItem["severity"];
 type ItemAction = "accept" | "modify" | "reject" | null;
@@ -42,6 +43,7 @@ interface EstimateState {
 export default function AssessmentPage() {
     const { id } = useParams<{ id: string }>();
     const { userRole } = useWalletStore();
+    const { speak } = useVoice();
     const isLandlord = userRole !== "tenant";
 
     const {
@@ -61,12 +63,13 @@ export default function AssessmentPage() {
         counterpartyValue: 875,
     });
 
-    // Sync fetched assessment items into local state
+    // Sync fetched assessment items into local state; announce when ready
     useEffect(() => {
         if (assessmentItems) {
             setItems(assessmentItems.map((i) => ({ ...i, action: null })));
+            void speak("assessment.ready");
         }
-    }, [assessmentItems]);
+    }, [assessmentItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const AI_TOTAL = assessmentItems?.reduce((s, i) => s + i.estimatedCost, 0) ?? 0;
 

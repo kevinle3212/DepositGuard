@@ -5,6 +5,26 @@ __metadata:
   version: 10
   cacheKey: 10c0
 
+"@11labs/client@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@11labs/client@npm:0.2.0"
+  dependencies:
+    livekit-client: "npm:^2.11.4"
+  checksum: 10c0/950c6311d5312a86720f6287406c5b46e87e9621605d6c41fb3aa77b5466e03991e83038551ab0ccee46a4ee6d55852822e6b0e94cd89f9ccd6089a32bba28e2
+  languageName: node
+  linkType: hard
+
+"@11labs/react@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@11labs/react@npm:0.2.0"
+  dependencies:
+    "@11labs/client": "npm:^0.2.0"
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: 10c0/4455a28b4797d205319a1e5d991ab39458ffacbde20bb2bcd07a1bde5296b8b50261b0816c485a24ef81fdb2c330d340fed45dd21af61d894f1b644ee043825a
+  languageName: node
+  linkType: hard
+
 "@adraffy/ens-normalize@npm:^1.10.1, @adraffy/ens-normalize@npm:^1.11.0":
   version: 1.11.1
   resolution: "@adraffy/ens-normalize@npm:1.11.1"
@@ -215,6 +235,13 @@ __metadata:
     viem: "npm:^2.31.7"
     zustand: "npm:5.0.3"
   checksum: 10c0/570a3134b81389f13a24c64e9b30b8e786dd34dfcfd59d56717352dfd892d484d49f7c57120d936f14f2e438ea11a2af543d985c90ceb3934c0e5b3deebab1f7
+  languageName: node
+  linkType: hard
+
+"@bufbuild/protobuf@npm:^1.10.0":
+  version: 1.10.1
+  resolution: "@bufbuild/protobuf@npm:1.10.1"
+  checksum: 10c0/a89572ae99aa193dd232fca0cdc9ece1dfe2f3d8b061be1f966a4f88fb63410aeb0fe7de927037e970aefcb52036eec58a7f89a40fe1286eed1448ea1bd2634e
   languageName: node
   linkType: hard
 
@@ -500,6 +527,23 @@ __metadata:
   peerDependencies:
     "@noble/ciphers": ^1.0.0
   checksum: 10c0/31cbfbaedae690e12344e49eb1b7fd0697f36cf4d03100df52b925e1f19d02a6f445834938ecdd1cd74154496a74fa9147cdda6209255512220e45eb9c693ca0
+  languageName: node
+  linkType: hard
+
+"@elevenlabs/client@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "@elevenlabs/client@npm:1.9.0"
+  dependencies:
+    "@elevenlabs/types": "npm:0.14.0"
+    livekit-client: "npm:2.16.1"
+  checksum: 10c0/d5d61c5e02c8e2cfdaec763fe96c362a5149bc338d4566df0be2b89f71f9ccf3d61f382685d79db453dd182a80abb0d2a5a14d9794be117db18f3a7daa604e93
+  languageName: node
+  linkType: hard
+
+"@elevenlabs/types@npm:0.14.0":
+  version: 0.14.0
+  resolution: "@elevenlabs/types@npm:0.14.0"
+  checksum: 10c0/543bceab8257ab88444497f7e6d72128494cb01bc5e377728b46db76cb319be15f37137f91268cd41d90c129604911942805dd6c3deec06da1391cfcd51ffc29
   languageName: node
   linkType: hard
 
@@ -1930,6 +1974,31 @@ __metadata:
   dependencies:
     "@lit-labs/ssr-dom-shim": "npm:^1.5.0"
   checksum: 10c0/557069ce6ebbbafb1140e1e0a25ce73d3501bf455cda231d42bb131baa9065c54b6b7ca1655507eede397decd7ddde16c84192cb72a07d4edf41d54e07725933
+  languageName: node
+  linkType: hard
+
+"@livekit/mutex@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@livekit/mutex@npm:1.1.1"
+  checksum: 10c0/d4bb1bd34e20939dfc8af0ae10b86918f3944336d0236d219e80a8c554207e8bfaf21e86794f0c56d2c28b43d74ca966111172a95eacb0e12b72133dd184d49a
+  languageName: node
+  linkType: hard
+
+"@livekit/protocol@npm:1.42.2":
+  version: 1.42.2
+  resolution: "@livekit/protocol@npm:1.42.2"
+  dependencies:
+    "@bufbuild/protobuf": "npm:^1.10.0"
+  checksum: 10c0/73e77e0975d4d8ca0baa23ad03cb9ac3a844e8d89e9cefbd17343131a774c7aeb4d190fd0397152fcf5a396d921af3eb83e83e660a4aa12215d9ac4e52bf037a
+  languageName: node
+  linkType: hard
+
+"@livekit/protocol@npm:1.45.8":
+  version: 1.45.8
+  resolution: "@livekit/protocol@npm:1.45.8"
+  dependencies:
+    "@bufbuild/protobuf": "npm:^1.10.0"
+  checksum: 10c0/fa89cfb86b4110649e0a00df88584ae08b8e5764657a469b57448ec9a88b7d2f3ef8752a8ef4af9a293d2b13330918ac2726a10cf3f55557909fd0a70a2fb57d
   languageName: node
   linkType: hard
 
@@ -12656,7 +12725,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^6.2.0":
+"jose@npm:^6.1.0, jose@npm:^6.2.0":
   version: 6.2.3
   resolution: "jose@npm:6.2.3"
   checksum: 10c0/aa91bccba22cc84d86308f833749bcb0b00441e35c24e0ac79abeac5f76dc62d47bdef9c1da6a0c609f5da6478595f52b252085888b89dbdb163861e40ea4188
@@ -13094,6 +13163,45 @@ __metadata:
   languageName: node
   linkType: hard
 
+"livekit-client@npm:2.16.1":
+  version: 2.16.1
+  resolution: "livekit-client@npm:2.16.1"
+  dependencies:
+    "@livekit/mutex": "npm:1.1.1"
+    "@livekit/protocol": "npm:1.42.2"
+    events: "npm:^3.3.0"
+    jose: "npm:^6.1.0"
+    loglevel: "npm:^1.9.2"
+    sdp-transform: "npm:^2.15.0"
+    ts-debounce: "npm:^4.0.0"
+    tslib: "npm:2.8.1"
+    typed-emitter: "npm:^2.1.0"
+    webrtc-adapter: "npm:^9.0.1"
+  peerDependencies:
+    "@types/dom-mediacapture-record": ^1
+  checksum: 10c0/a16f7e603730410b640991cdb1a9d5ad3b0b06b23b8fe2e76674e6a9ba54ed4c8e7e4f6ad15fe67c8de6557da161e1265b40802c4e3701db3fe0d7ea9250b1e2
+  languageName: node
+  linkType: hard
+
+"livekit-client@npm:^2.11.4":
+  version: 2.19.1
+  resolution: "livekit-client@npm:2.19.1"
+  dependencies:
+    "@livekit/mutex": "npm:1.1.1"
+    "@livekit/protocol": "npm:1.45.8"
+    events: "npm:^3.3.0"
+    jose: "npm:^6.1.0"
+    loglevel: "npm:^1.9.2"
+    sdp-transform: "npm:^2.15.0"
+    tslib: "npm:2.8.1"
+    typed-emitter: "npm:^2.1.0"
+    webrtc-adapter: "npm:9.0.5"
+  peerDependencies:
+    "@types/dom-mediacapture-record": ^1
+  checksum: 10c0/78c18e8d62de3158ccd68aa00505be51cf163fbf73225d320a7fedfeff5810a2a58bde05e2fca4912cbde18bf41843cc945265f9821ff00b250f2da261bebbaa
+  languageName: node
+  linkType: hard
+
 "locate-path@npm:^5.0.0":
   version: 5.0.0
   resolution: "locate-path@npm:5.0.0"
@@ -13284,7 +13392,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loglevel@npm:^1.9.1":
+"loglevel@npm:^1.9.1, loglevel@npm:^1.9.2":
   version: 1.9.2
   resolution: "loglevel@npm:1.9.2"
   checksum: 10c0/1e317fa4648fe0b4a4cffef6de037340592cee8547b07d4ce97a487abe9153e704b98451100c799b032c72bb89c9366d71c9fb8192ada8703269263ae77acdc7
@@ -14088,10 +14196,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "nestcrow@workspace:."
   dependencies:
+    "@11labs/react": "npm:^0.2.0"
     "@commitlint/cli": "npm:^19.8.1"
     "@commitlint/config-conventional": "npm:^19.8.0"
     "@commitlint/types": "npm:^19.8.0"
     "@coral-xyz/anchor": "npm:^0.31.1"
+    "@elevenlabs/client": "npm:^1.9.0"
     "@hookform/resolvers": "npm:^3.9.0"
     "@radix-ui/react-alert-dialog": "npm:^1.1.1"
     "@radix-ui/react-avatar": "npm:^1.1.0"
@@ -15902,7 +16012,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:7.8.2":
+"rxjs@npm:*, rxjs@npm:7.8.2":
   version: 7.8.2
   resolution: "rxjs@npm:7.8.2"
   dependencies:
@@ -15996,10 +16106,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sdp-transform@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "sdp-transform@npm:2.15.0"
+  bin:
+    sdp-verify: checker.js
+  checksum: 10c0/96c060f113a3d5418defa168db609f7e23e5bd7954fa1cf7784f103dbe702e24d667e5310d2ac6d88abdb32322af83d6ebd0df08e07f4f172d5ed5888f921386
+  languageName: node
+  linkType: hard
+
 "sdp@npm:^2.12.0, sdp@npm:^2.6.0":
   version: 2.12.0
   resolution: "sdp@npm:2.12.0"
   checksum: 10c0/1a2ffdc20d79711175f89e87a6ce8db9b4757e694bed9760e5f919eed5925c9fb43ea63c5fd38f428a3edd45baae826318153fdc1db590a504eed7a809a23e32
+  languageName: node
+  linkType: hard
+
+"sdp@npm:^3.2.0":
+  version: 3.2.2
+  resolution: "sdp@npm:3.2.2"
+  checksum: 10c0/62913cbd92b0cca8feb17850dee9e331d6e38402385d4985aac80bde6b35032bfb7453c00096c4d7e6a91a9d73a7ba6235c2368998a54a8edd1c0dd4ec94d9e3
   languageName: node
   linkType: hard
 
@@ -16844,6 +16970,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ts-debounce@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "ts-debounce@npm:4.0.0"
+  checksum: 10c0/1dfac630127d6982b4ad5114a12bd3e8febfd7a34615e6bf388eaf3a5c355f9ab2ef688688bb7e789bc9f0cabfd82e0a6b363efc451ee626b5722919f7f567cd
+  languageName: node
+  linkType: hard
+
 "ts-interface-checker@npm:^0.1.9":
   version: 0.1.13
   resolution: "ts-interface-checker@npm:0.1.13"
@@ -16950,7 +17083,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.0, tslib@npm:^2.1.0, tslib@npm:^2.3.0, tslib@npm:^2.4.0, tslib@npm:^2.6.0, tslib@npm:^2.7.0, tslib@npm:^2.8.0, tslib@npm:^2.8.1":
+"tslib@npm:2.8.1, tslib@npm:^2.0.0, tslib@npm:^2.1.0, tslib@npm:^2.3.0, tslib@npm:^2.4.0, tslib@npm:^2.6.0, tslib@npm:^2.7.0, tslib@npm:^2.8.0, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
@@ -17045,6 +17178,18 @@ __metadata:
     possible-typed-array-names: "npm:^1.1.0"
     reflect.getprototypeof: "npm:^1.0.10"
   checksum: 10c0/5319f740fc426a3217182c2f7c87656acb0903e046de5a938e30167337d26abf1bb3ad4b32833a72521a4cc58223aec80627b38b357d0a3d5fd64881427e77ab
+  languageName: node
+  linkType: hard
+
+"typed-emitter@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "typed-emitter@npm:2.1.0"
+  dependencies:
+    rxjs: "npm:*"
+  dependenciesMeta:
+    rxjs:
+      optional: true
+  checksum: 10c0/01fc354ba8e87bd39b1bf4fe1c96fe7ecff7fde83161003b0f8c7f4b285a368052e185ba655dd8c102c4445301b7a1e032c8972f181b440fc95bd810450f1314
   languageName: node
   linkType: hard
 
@@ -17691,6 +17836,15 @@ __metadata:
   version: 3.0.1
   resolution: "webidl-conversions@npm:3.0.1"
   checksum: 10c0/5612d5f3e54760a797052eb4927f0ddc01383550f542ccd33d5238cfd65aeed392a45ad38364970d0a0f4fea32e1f4d231b3d8dac4a3bdd385e5cf802ae097db
+  languageName: node
+  linkType: hard
+
+"webrtc-adapter@npm:9.0.5, webrtc-adapter@npm:^9.0.1":
+  version: 9.0.5
+  resolution: "webrtc-adapter@npm:9.0.5"
+  dependencies:
+    sdp: "npm:^3.2.0"
+  checksum: 10c0/81edc946315d1276ac3c9cb5cb66992305e8bd4acb1634b0eded28afe49c2b1a7f3bd31e180cca9d886ee2ffdf765c122f7d5ec6aa8558758f9daefe79f9a09a
   languageName: node
   linkType: hard
 
