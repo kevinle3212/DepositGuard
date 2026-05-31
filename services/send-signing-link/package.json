@@ -14,12 +14,15 @@
     "moduleNameMapper": {
       "^(\\.{1,2}/.+)\\.js$": "$1"
     },
-    "globals": {
-      "ts-jest": {
-        "diagnostics": {
-          "ignoreCodes": [7016]
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [7016]
+          }
         }
-      }
+      ]
     }
   },
   "dependencies": {
