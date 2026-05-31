@@ -24,7 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, shortenAddress, formatDate } from "@/lib/utils";
 import { useWalletStore } from "@/src/store/useWalletStore";
-import { getActiveLeases, getHistoricLeases } from "@/src/lib/lease-mock-data";
+import { getActiveLeases, getHistoricLeases } from "@/src/lib/lease-filters";
 import { useFetchLeases } from "@/src/hooks/useLeaseApi";
 import type { Lease } from "@/src/types/api";
 

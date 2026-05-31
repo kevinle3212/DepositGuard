@@ -7,65 +7,32 @@ import { Connection } from "@solana/web3.js";
 import { deserializeAndSignSolanaTx } from "@/src/lib/txEngine";
 import { toast } from "@/hooks/use-toast";
 import { useVoice } from "@/src/hooks/useVoice";
+import { useFetchLeaseById } from "@/src/hooks/useLeaseApi";
 import {
     MessageSquare,
     Users,
     Scale,
     Landmark,
     CheckCircle2,
-    XCircle,
-    AlertTriangle,
     Clock,
     ArrowLeft,
     Info,
     Gavel,
     Loader2,
+    AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type DisputeTier = "Negotiation" | "Mediation" | "Arbitration" | "Court";
-type ArbitratorVote = "landlord" | "tenant" | "split";
 
-interface Arbitrator {
-    id: string;
-    name: string;
-    credential: string;
-    vote: ArbitratorVote | null;
-    dissent?: string;
-    dissentVariance?: number;
-}
-
-// ── Mock data ──────────────────────────────────────────────────────────────
-
-const ARBITRATORS: Arbitrator[] = [
-    {
-        id: "arb_1",
-        name: "Dr. Patricia Nguyen",
-        credential: "Certified Property Arbitrator · 12 yrs",
-        vote: "landlord",
-    },
-    {
-        id: "arb_2",
-        name: "James O. Whitfield",
-        credential: "Licensed Mediator · Real Estate Law",
-        vote: "landlord",
-    },
-    {
-        id: "arb_3",
-        name: "Sofia Reyes, Esq.",
-        credential: "Consumer Tenancy Attorney · 8 yrs",
-        vote: "tenant",
-        dissent:
-            "The AI assessment substantially overvalued carpet replacement given standard wear-and-tear guidelines. The $320 estimate for 12 sq ft of carpet staining exceeds the documented depreciation schedule by 42%. I find for the tenant on this line item.",
-        dissentVariance: 42,
-    },
-];
+// ── Tier pipeline (static UI configuration, not lease data) ─────────────────
 
 const TIER_STEPS: {
     id: DisputeTier;
@@ -149,8 +116,16 @@ export default function DisputePage() {
     const { id } = useParams<{ id: string }>();
     const wallet = useWallet();
     const { speak } = useVoice();
-    const [activeTier] = useState<DisputeTier>("Arbitration");
-    const [landlordPaid, setLandlordPaid] = useState(true);
+
+    const { data: lease, isLoading, isError } = useFetchLeaseById(id);
+
+    // The dispute tier is driven by real lease status; arbitration is the active
+    // tier once a lease is in the Disputed state.
+    const activeTier: DisputeTier = lease?.status === "Disputed" ? "Arbitration" : "Negotiation";
+
+    // Real staking state is established on-chain; both parties start unpaid and
+    // each flag flips only after a confirmed staking transaction.
+    const [landlordPaid, setLandlordPaid] = useState(false);
     const [tenantPaid, setTenantPaid] = useState(false);
     const [stakingRole, setStakingRole] = useState<"Landlord" | "Tenant" | null>(null);
 
@@ -209,12 +184,42 @@ export default function DisputePage() {
                 setStakingRole(null);
             }
         },
-        [id, wallet],
+        [id, wallet, speak],
     );
 
     const activeTierIdx = TIER_STEPS.findIndex((t) => t.id === activeTier);
-    const prevailingVote = "landlord"; // 2-1 majority
-    const dissentingArbitrator = ARBITRATORS.find((a) => a.vote !== prevailingVote);
+
+    if (isLoading) {
+        return (
+            <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-40 w-full rounded-xl" />
+                <Skeleton className="h-56 w-full rounded-xl" />
+            </main>
+        );
+    }
+
+    if (isError || !lease) {
+        return (
+            <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+                <Link
+                    href={`/lease/${id}/assessment`}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+                >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back to assessment
+                </Link>
+                <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-4">
+                    <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-destructive">
+                        Could not load this lease. Please refresh or return to the assessment page.
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+    const depositLabel = `${lease.depositAmount.toLocaleString()} ${lease.currency}`;
 
     return (
         <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
@@ -227,7 +232,9 @@ export default function DisputePage() {
                     Back to assessment
                 </Link>
                 <h1 className="text-2xl font-bold tracking-tight">Dispute Resolution</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Lease ID: {id}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Lease ID: {id} · Deposit in escrow: {depositLabel}
+                </p>
             </div>
 
             {/* ── Escrow release banner ── */}
@@ -235,10 +242,10 @@ export default function DisputePage() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-emerald-800">
                     <span className="font-bold">
-                        Undisputed escrow balance allocations have been released immediately to both
-                        parties&apos; wallets.
+                        Undisputed escrow balance is released immediately to both parties&apos;
+                        wallets.
                     </span>{" "}
-                    Only the contested portion ($480 USDC) remains locked pending arbitration
+                    Only the contested portion remains locked on-chain pending the arbitration
                     verdict.
                 </p>
             </div>
@@ -435,87 +442,25 @@ export default function DisputePage() {
                         Arbitration Panel Verdict
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Panel votes */}
-                    <div className="space-y-3">
-                        {ARBITRATORS.map((arb) => (
-                            <div
-                                key={arb.id}
-                                className={cn(
-                                    "flex items-start justify-between gap-4 rounded-xl border p-3",
-                                    arb.vote !== prevailingVote &&
-                                        "border-amber-200 bg-amber-50/30",
-                                )}
-                            >
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">
-                                        {arb.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {arb.credential}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <span
-                                        className={cn(
-                                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
-                                            arb.vote === prevailingVote
-                                                ? "bg-emerald-50 text-emerald-700"
-                                                : "bg-amber-50 text-amber-700",
-                                        )}
-                                    >
-                                        {arb.vote === prevailingVote ? (
-                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                        ) : (
-                                            <XCircle className="h-3.5 w-3.5" />
-                                        )}
-                                        Finds for {arb.vote === "landlord" ? "Landlord" : "Tenant"}
-                                    </span>
-                                    {arb.dissent && (
-                                        <span className="text-[10px] text-amber-600 font-semibold">
-                                            Minority dissent
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Prevailing verdict */}
-                    <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Gavel className="h-4 w-4 text-primary" />
-                            <p className="text-sm font-bold text-primary">
-                                Prevailing Verdict: Finds for Landlord (2–1)
+                <CardContent>
+                    {/* The panel is convened on-chain once both parties stake. Rulings are
+                        revealed simultaneously after all three panelists submit; until then no
+                        verdict data exists to display. */}
+                    <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-4 py-4">
+                        <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-foreground">
+                                {landlordPaid && tenantPaid
+                                    ? "Panel convening — awaiting sealed rulings"
+                                    : "Panel not yet convened"}
+                            </p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                {landlordPaid && tenantPaid
+                                    ? "Both parties have staked. The three-arbitrator panel will submit sealed rulings, revealed simultaneously on-chain once all are in. Any minority dissent above the 20% variance threshold is recorded permanently in the claim record."
+                                    : "Both parties must stake the $50 arbitration fee before the panel is convened and rulings can be submitted."}
                             </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            $380 USDC deduction approved. Remaining $100 USDC disputed — subject to
-                            minority dissent review.
-                        </p>
                     </div>
-
-                    {/* Minority dissent block */}
-                    {dissentingArbitrator?.dissent && (
-                        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-2">
-                            <div className="flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                                <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">
-                                    Minority Dissent — {dissentingArbitrator.name}
-                                </p>
-                            </div>
-                            <p className="text-sm text-amber-900 leading-relaxed">
-                                {dissentingArbitrator.dissent}
-                            </p>
-                            {dissentingArbitrator.dissentVariance && (
-                                <div className="rounded-lg bg-amber-100 px-3 py-2 text-xs text-amber-800">
-                                    Variance documented:{" "}
-                                    <strong>{dissentingArbitrator.dissentVariance}%</strong> above
-                                    depreciation schedule
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </CardContent>
             </Card>
 
