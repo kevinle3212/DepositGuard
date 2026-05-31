@@ -204,6 +204,9 @@
 - [ ] Stream audio response to the browser; play via HTML5 `<audio>` or Web Audio API; ensure all voiced content is also available as visible text.
 - [ ] Apply Cloud Armor rate limiting to `/api/tts` (per-user, per-minute).
 - [ ] Wire ElevenLabs voice triggers into all relevant frontend pages: wallet connect prompt, contract signing, arbitration fee payment, dispute initiation, minority dissent surface, deposit release confirmation, deadline warning.
+- [x] Scaffold the ElevenLabs Conversational Agent module (`agent/`): `agents.ts` defines the `platform-guide` voice assistant ("Eryn") config and `getAgent()`; `context.ts` builds per-lease `dynamicVariables`; `client-tools.ts` exposes `openLeasePage`; `index.ts` barrel re-exports. (Conversational-agent approach; the `/api/tts` script-template items above remain open.)
+
+> Note: the Gemini fine-calculation oracle was split out of `agent/` into a separate `oracle/` folder (`agent.ts` + program `.rs` files) — it is unrelated to the ElevenLabs voice assistant. The `.rs` files are not yet wired into `programs/deposit-guard`.
 
 ---
 
