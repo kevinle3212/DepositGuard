@@ -1,48 +1,33 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Deposit, CreateDepositInput } from "@/types";
-import { MOCK_DEPOSITS } from "@/lib/mock-data";
 
 async function fetchDeposits(walletAddress?: string): Promise<Deposit[]> {
-    await new Promise((r) => setTimeout(r, 400));
     if (!walletAddress) return [];
-    return MOCK_DEPOSITS.filter(
-        (d) => d.landlordAddress === walletAddress || d.tenantAddress === walletAddress,
-    );
+    const res = await fetch(`/api/deposits?wallet=${walletAddress}`);
+    if (!res.ok) throw new Error("Failed to fetch deposits");
+    return res.json() as Promise<Deposit[]>;
 }
 
 async function fetchDeposit(id: string): Promise<Deposit | null> {
-    await new Promise((r) => setTimeout(r, 300));
-    return MOCK_DEPOSITS.find((d) => d.id === id) ?? null;
+    const res = await fetch(`/api/deposits/${id}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("Failed to fetch deposit");
+    return res.json() as Promise<Deposit>;
 }
 
 async function createDeposit(
     input: CreateDepositInput & { landlordAddress: string },
 ): Promise<Deposit> {
-    await new Promise((r) => setTimeout(r, 600));
-    const now = new Date().toISOString();
-    return {
-        id: `dep_${Date.now()}`,
-        status: "Created",
-        amountSol: input.amountSol,
-        landlordAddress: input.landlordAddress,
-        tenantAddress: input.tenantAddress,
-        propertyAddress: input.propertyAddress,
-        ...(input.propertyDescription !== undefined && {
-            propertyDescription: input.propertyDescription,
-        }),
-        escrowAddress: `EsCr0w${Math.random().toString(36).slice(2, 11)}`,
-        createdAt: now,
-        updatedAt: now,
-        moveInDate: input.moveInDate,
-        timeline: [
-            {
-                status: "Created",
-                timestamp: now,
-                actor: "Landlord",
-                note: "Awaiting tenant funding",
-            },
-        ],
-    };
+    const res = await fetch("/api/deposits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+        const { error } = (await res.json()) as { error?: string };
+        throw new Error(error ?? "Failed to create deposit");
+    }
+    return res.json() as Promise<Deposit>;
 }
 
 export function useDeposits(walletAddress?: string) {

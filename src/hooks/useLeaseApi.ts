@@ -8,7 +8,12 @@ export function useFetchLeases(walletAddress: string) {
         queryKey: ["leases", walletAddress],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(`/leases?wallet=${walletAddress}`);
-            return z.array(LeaseSchema).parse(data);
+            const raw = Array.isArray(data) ? data : [];
+            // Parse each lease individually so one bad doc doesn't crash the whole list
+            return raw
+                .map((item: unknown) => LeaseSchema.safeParse(item))
+                .filter((r) => r.success)
+                .map((r) => (r as { success: true; data: typeof LeaseSchema._type }).data);
         },
         enabled: !!walletAddress,
     });
@@ -31,6 +36,7 @@ interface CreateLeasePayload {
     currency: "USDC" | "SOL";
     tenantAddress: string;
     jurisdiction: string;
+    landlordAddress?: string;
     contractHash?: string;
     contractStorageUrl?: string;
     leaseStart?: string;

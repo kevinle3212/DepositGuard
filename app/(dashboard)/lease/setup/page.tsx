@@ -30,6 +30,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useCreateLease } from "@/src/hooks/useLeaseApi";
+import { useWalletStore } from "@/src/store/useWalletStore";
 import { storage } from "@/src/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -224,6 +225,7 @@ function ThresholdSlider({ value, onChange }: { value: number; onChange: (v: num
 
 export default function LeaseSetupPage() {
     const router = useRouter();
+    const { walletPubkey } = useWalletStore();
     const [contractFile, setContractFile] = useState<{ name: string; hash: string; storageUrl: string } | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -254,6 +256,7 @@ export default function LeaseSetupPage() {
                 jurisdiction: data.state,
                 leaseStart: data.leaseStart,
                 leaseEnd: data.leaseEnd,
+                landlordAddress: walletPubkey ?? "",
                 ...(contractFile ? { contractHash: contractFile.hash, contractStorageUrl: contractFile.storageUrl } : {}),
             });
 

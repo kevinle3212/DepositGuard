@@ -8,7 +8,7 @@ import { Transaction } from "@solana/web3.js";
 import { getConnection } from "@/lib/solana";
 import { useVoice } from "@/src/hooks/useVoice";
 
-type TokenStatus = "loading" | "valid" | "invalid" | "expired";
+type TokenStatus = "loading" | "valid" | "invalid" | "expired" | "already-signed";
 type SignStatus = "idle" | "signing" | "submitting" | "done" | "error";
 
 interface TokenPayload {
@@ -80,7 +80,13 @@ export default function SignPage() {
                     setTokenStatus("valid");
                 } else {
                     const { error } = (await r.json()) as { error: string };
-                    setTokenStatus(error.includes("expired") ? "expired" : "invalid");
+                    if (r.status === 409 || error.toLowerCase().includes("used") || error.toLowerCase().includes("already")) {
+                        setTokenStatus("already-signed");
+                    } else if (error.includes("expired")) {
+                        setTokenStatus("expired");
+                    } else {
+                        setTokenStatus("invalid");
+                    }
                 }
             })
             .catch(() => {
@@ -201,6 +207,22 @@ export default function SignPage() {
                     <p className="text-muted-foreground">
                         This signing link has expired. Please ask the landlord to send a new one.
                     </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (tokenStatus === "already-signed") {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center space-y-2 max-w-sm px-4">
+                    <h1 className="text-xl font-semibold text-green-700">Already Signed</h1>
+                    <p className="text-sm text-muted-foreground">
+                        This lease has already been signed with this link. Your signature is recorded.
+                    </p>
+                    <a href="/" className="inline-block mt-3 text-sm underline text-primary">
+                        Back to dashboard
+                    </a>
                 </div>
             </div>
         );

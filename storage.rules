@@ -2,45 +2,30 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Caller is authenticated and holds a walletPubkey custom claim.
-    function hasWallet() {
-      return request.auth != null
-          && 'walletPubkey' in request.auth.token
-          && request.auth.token.walletPubkey is string
-          && request.auth.token.walletPubkey.size() > 0;
-    }
-
-    // -------------------------------------------------------------------------
-    // contracts/{leaseId}/ — PDF uploads; write-once (WORM).
-    // -------------------------------------------------------------------------
+    // ── contracts/{leaseId}/{filename} ───────────────────────────────────────
+    // PDF uploads; write-once (no update/delete).
     match /contracts/{leaseId}/{filename} {
-      allow read: if hasWallet();
-      // One create per leaseId/filename; updates and deletes are forbidden.
-      allow create: if hasWallet()
-          && request.resource.contentType == 'application/pdf'
+      allow read: if true;
+      allow create: if request.resource.contentType == 'application/pdf'
           && request.resource.size <= 20 * 1024 * 1024;
       allow update, delete: if false;
     }
 
-    // -------------------------------------------------------------------------
-    // photos/{leaseId}/move-in/{filename} — write-once image uploads.
-    // -------------------------------------------------------------------------
-    match /photos/{leaseId}/move-in/{filename} {
-      allow read: if hasWallet();
-      allow create: if hasWallet()
-          && request.resource.contentType.matches('image/.*')
-          && request.resource.size <= 10 * 1024 * 1024;
+    // ── photos/{phase}/{filename} ────────────────────────────────────────────
+    // Move-in / move-out image uploads from PhotoVerification component.
+    match /photos/{phase}/{filename} {
+      allow read: if true;
+      allow create: if request.resource.contentType.matches('image/.*')
+          && request.resource.size <= 20 * 1024 * 1024;
       allow update, delete: if false;
     }
 
-    // -------------------------------------------------------------------------
-    // photos/{leaseId}/move-out/{filename} — write-once image uploads.
-    // -------------------------------------------------------------------------
-    match /photos/{leaseId}/move-out/{filename} {
-      allow read: if hasWallet();
-      allow create: if hasWallet()
-          && request.resource.contentType.matches('image/.*')
-          && request.resource.size <= 10 * 1024 * 1024;
+    // ── photos/{leaseId}/{phase}/{filename} ──────────────────────────────────
+    // Scoped per-lease photo uploads (alternate path shape).
+    match /photos/{leaseId}/{phase}/{filename} {
+      allow read: if true;
+      allow create: if request.resource.contentType.matches('image/.*')
+          && request.resource.size <= 20 * 1024 * 1024;
       allow update, delete: if false;
     }
   }

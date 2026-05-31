@@ -40,6 +40,16 @@
 
 ---
 
+## 2b. Mock Data Removal — DONE
+
+- [x] Create `/api/deposits/route.ts` (GET list + POST create) backed by Firestore leases collection.
+- [x] Rewrite `hooks/use-deposits.ts` to call real `/api/deposits` endpoints (removed all `MOCK_DEPOSITS` and `setTimeout` stubs).
+- [x] Replace fake hash generation in `PhotoVerification.tsx` with real SHA-256 (`crypto.subtle.digest`) and Firebase Storage upload.
+- [x] Remove hardcoded `counterpartyValue: 875` from assessment page; replace with `0` (value comes from Firestore when both parties submit).
+- [x] Remove `mockReveal()` function and its "[Demo] Simulate" button from assessment page.
+
+---
+
 ## 3. Gemini AI Damage Assessment (`/api/assess-damage` + in-app capture)
 
 > Depends on Section 2 (photo hashes must be committed on-chain before assessment runs).

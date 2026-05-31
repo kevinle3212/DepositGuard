@@ -1,14 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
-import { getStorage } from "firebase-admin/storage";
 import { initializeApp, getApps } from "firebase-admin/app";
 
 function ensureInit() {
     if (!getApps().length) initializeApp();
 }
 
-// Proxies the lease contract PDF from GCS so the browser can render it without
-// exposing a long-lived signed URL or requiring CORS configuration on the bucket.
+// Proxies the lease contract PDF from Firebase Storage so the browser can
+// render it inline without CORS issues or exposing raw download URLs.
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
     ensureInit();
     const db = getFirestore();
@@ -19,19 +18,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     if (!storageUrl)
         return NextResponse.json({ error: "No contract uploaded for this lease" }, { status: 404 });
 
-    // gs://bucket-name/path/to/file.pdf → bucket + object path
-    const withoutScheme = storageUrl.replace(/^gs:\/\//, "");
-    const slashIdx = withoutScheme.indexOf("/");
-    const bucketName = withoutScheme.slice(0, slashIdx);
-    const filePath = withoutScheme.slice(slashIdx + 1);
+    // contractStorageUrl is a Firebase Storage download URL (https://...).
+    // Fetch it server-side and stream the bytes back to the browser.
+    const upstream = await fetch(storageUrl);
+    if (!upstream.ok) {
+        return NextResponse.json(
+            { error: `Storage fetch failed: ${upstream.status}` },
+            { status: 502 },
+        );
+    }
 
-    const storage = getStorage();
-    const [pdfBytes] = await storage.bucket(bucketName).file(filePath).download();
-
-    return new NextResponse(new Uint8Array(pdfBytes), {
+    const pdfBytes = await upstream.arrayBuffer();
+    return new NextResponse(pdfBytes, {
         headers: {
             "Content-Type": "application/pdf",
             "Content-Disposition": `inline; filename="lease-${params.id}.pdf"`,
+            "Cache-Control": "private, max-age=300",
         },
     });
 }
