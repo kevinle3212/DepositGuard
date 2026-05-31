@@ -38,12 +38,25 @@ export default function SignPage() {
     const _canvasRef = useRef<HTMLCanvasElement>(null);
     const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
-    // Redirect to /connect if wallet is not connected
+    // Redirect to /connect if wallet is not connected — but never interrupt a
+    // completed signing flow (signStatus === "done" handles its own redirect).
     useEffect(() => {
+        if (signStatus === "done") return;
         if (tokenStatus !== "loading" && !connected) {
             router.push(`/connect?next=${encodeURIComponent(window.location.href)}`);
         }
-    }, [connected, tokenStatus, router]);
+    }, [connected, tokenStatus, signStatus, router]);
+
+    // Redirect to agreements list as soon as signing is confirmed.
+    useEffect(() => {
+        if (signStatus !== "done") return;
+        const id = setTimeout(() => {
+            router.replace("/deposits");
+        }, 2500);
+        return () => {
+            clearTimeout(id);
+        };
+    }, [signStatus, router]);
 
     // Validate the signing token server-side.
     // If no token is present (direct navigation from dashboard / back link),
@@ -199,9 +212,6 @@ export default function SignPage() {
 
         setSignStatus("done");
         void speak("contract.signed");
-        setTimeout(() => {
-            router.push("/deposits");
-        }, 3000);
     }
 
     if (tokenStatus === "loading") {
