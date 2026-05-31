@@ -4,6 +4,7 @@ export type LeaseStatus =
   | 'Created'
   | 'Funded'
   | 'Pending Documentation'
+  | 'Pending Signature'
   | 'Active'
   | 'Move-Out Pending'
   | 'Assessed'
@@ -32,6 +33,11 @@ const STATUS_STYLES: Record<LeaseStatus, { pill: string; dot: string; label: str
     pill: 'bg-slate-100 text-slate-700 ring-slate-200',
     dot: 'bg-slate-500',
     label: 'Pending Docs',
+  },
+  'Pending Signature': {
+    pill: 'bg-yellow-50 text-yellow-700 ring-yellow-200',
+    dot: 'bg-yellow-500',
+    label: 'Pending Signature',
   },
   Active: {
     pill: 'bg-green-50 text-green-700 ring-green-200',
