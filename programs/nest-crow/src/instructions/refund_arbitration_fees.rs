@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::NestCrowError;
-use crate::state::{
-    ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC,
-};
+use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC};
 
 /// Returns every fee a party actually paid (base $50 + optional $25 panel) back
 /// to that party. Used when the dispute resolves before the arbitrator is
@@ -19,7 +17,8 @@ pub fn handler(ctx: Context<RefundArbitrationFees>) -> Result<()> {
         NestCrowError::FeesAlreadyFinalized
     );
 
-    let landlord_refund = fee_total(arb.landlord_paid, arb.landlord_fee_amount, arb.landlord_panel_paid)?;
+    let landlord_refund =
+        fee_total(arb.landlord_paid, arb.landlord_fee_amount, arb.landlord_panel_paid)?;
     let tenant_refund = fee_total(arb.tenant_paid, arb.tenant_fee_amount, arb.tenant_panel_paid)?;
 
     let lease_id = arb.lease_id;
@@ -62,9 +61,8 @@ pub fn handler(ctx: Context<RefundArbitrationFees>) -> Result<()> {
 fn fee_total(base_paid: bool, base_amount: u64, panel_paid: bool) -> Result<u64> {
     let mut total = if base_paid { base_amount } else { 0 };
     if panel_paid {
-        total = total
-            .checked_add(PANEL_UPGRADE_FEE_USDC)
-            .ok_or(NestCrowError::ArithmeticOverflow)?;
+        total =
+            total.checked_add(PANEL_UPGRADE_FEE_USDC).ok_or(NestCrowError::ArithmeticOverflow)?;
     }
     Ok(total)
 }

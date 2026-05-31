@@ -23,16 +23,10 @@ pub fn handler(
     require!(!panel.resolved, NestCrowError::PanelAlreadyResolved);
 
     // Locate this signer's panel slot.
-    let idx = panel
-        .panelists
-        .iter()
-        .position(|p| *p == panelist)
-        .ok_or(NestCrowError::NotPanelist)?;
+    let idx =
+        panel.panelists.iter().position(|p| *p == panelist).ok_or(NestCrowError::NotPanelist)?;
 
-    require!(
-        !panel.rulings[idx].submitted,
-        NestCrowError::RulingAlreadySubmitted
-    );
+    require!(!panel.rulings[idx].submitted, NestCrowError::RulingAlreadySubmitted);
 
     let ruling = &mut panel.rulings[idx];
     ruling.panelist = panelist;

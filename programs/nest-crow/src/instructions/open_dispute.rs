@@ -12,14 +12,8 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 pub fn handler(ctx: Context<OpenDispute>, arbitrator: Pubkey, oracle: Pubkey) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
-    require!(
-        escrow.status == EscrowStatus::PendingApproval,
-        NestCrowError::NotPendingApproval
-    );
-    require!(
-        ctx.accounts.tenant.key() == escrow.tenant,
-        NestCrowError::NotTenant
-    );
+    require!(escrow.status == EscrowStatus::PendingApproval, NestCrowError::NotPendingApproval);
+    require!(ctx.accounts.tenant.key() == escrow.tenant, NestCrowError::NotTenant);
 
     // The contested amount is exactly what the landlord proposed to deduct.
     let disputed = ctx.accounts.claim_record.landlord_estimate;

@@ -28,11 +28,7 @@ pub fn handler(ctx: Context<CloseEscrow>) -> Result<()> {
         destination: ctx.accounts.landlord.to_account_info(),
         authority: ctx.accounts.escrow_state.to_account_info(),
     };
-    token::close_account(CpiContext::new_with_signer(
-        token::ID,
-        cpi_accounts,
-        signer_seeds,
-    ))?;
+    token::close_account(CpiContext::new_with_signer(token::ID, cpi_accounts, signer_seeds))?;
 
     // Anchor's `close = landlord` constraint on the PDA accounts handles
     // zeroing data and transferring remaining lamports.

@@ -11,33 +11,16 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 /// Status transitions: DISPUTED → RESOLVED.
 pub fn handler(ctx: Context<ResolveDispute>, fine_amount: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let claim = &ctx.accounts.claim_record;
-    require!(
-        ctx.accounts.arbitrator.key() == claim.arbitrator,
-        NestCrowError::NotArbitrator
-    );
-    require!(
-        claim.estimates_revealed,
-        NestCrowError::EstimatesNotRevealed
-    );
-    require!(
-        fine_amount <= claim.max_fine,
-        NestCrowError::FineExceedsMaxFine
-    );
-    require!(
-        fine_amount <= claim.disputed_total,
-        NestCrowError::FineExceedsDisputed
-    );
+    require!(ctx.accounts.arbitrator.key() == claim.arbitrator, NestCrowError::NotArbitrator);
+    require!(claim.estimates_revealed, NestCrowError::EstimatesNotRevealed);
+    require!(fine_amount <= claim.max_fine, NestCrowError::FineExceedsMaxFine);
+    require!(fine_amount <= claim.disputed_total, NestCrowError::FineExceedsDisputed);
 
-    let to_tenant = claim
-        .disputed_total
-        .checked_sub(fine_amount)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    let to_tenant =
+        claim.disputed_total.checked_sub(fine_amount).ok_or(NestCrowError::ArithmeticOverflow)?;
 
     let lease_id = escrow.lease_id;
     let bump = escrow.bump;
@@ -89,7 +72,7 @@ pub struct ResolveDispute<'info> {
         bump = escrow_state.bump,
         has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
-    pub escrow_state: Account<'info, EscrowState>,
+    pub escrow_state: Box<Account<'info, EscrowState>>,
 
     #[account(
         mut,
@@ -105,7 +88,7 @@ pub struct ResolveDispute<'info> {
         token::mint = token_mint,
         token::authority = escrow_state,
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: tenant token account; validated by mint and escrow tenant address.
     #[account(
@@ -113,7 +96,7 @@ pub struct ResolveDispute<'info> {
         token::mint = token_mint,
         token::authority = tenant,
     )]
-    pub tenant_token_account: Account<'info, TokenAccount>,
+    pub tenant_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: tenant pubkey validated against escrow_state.
     #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
@@ -125,7 +108,7 @@ pub struct ResolveDispute<'info> {
         token::mint = token_mint,
         token::authority = landlord,
     )]
-    pub landlord_token_account: Account<'info, TokenAccount>,
+    pub landlord_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: landlord pubkey validated against escrow_state.
     #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]

@@ -1,0 +1,6 @@
+{
+    "require": ["./tests/setup-env.ts", "ts-node/register/transpile-only"],
+    "extension": ["ts"],
+    "timeout": 1000000,
+    "spec": ["tests/*.ts"]
+}

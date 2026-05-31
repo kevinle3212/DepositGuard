@@ -13,16 +13,10 @@ use crate::state::{
 /// Callable by either party once the lease is DISPUTED.
 pub fn handler(ctx: Context<OpenArbitration>, arbitrator: Pubkey) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let signer = ctx.accounts.signer.key();
-    require!(
-        signer == escrow.landlord || signer == escrow.tenant,
-        NestCrowError::NotParty
-    );
+    require!(signer == escrow.landlord || signer == escrow.tenant, NestCrowError::NotParty);
 
     let now = Clock::get()?.unix_timestamp;
 

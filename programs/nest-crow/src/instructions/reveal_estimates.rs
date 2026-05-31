@@ -8,20 +8,14 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 /// `max_fine` is the hard cap every resolution path must respect.
 pub fn handler(ctx: Context<RevealEstimates>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let claim = &mut ctx.accounts.claim_record;
     require!(
         claim.tenant_estimate_submitted && claim.landlord_estimate_submitted,
         NestCrowError::EstimatesNotSubmitted
     );
-    require!(
-        !claim.estimates_revealed,
-        NestCrowError::EstimatesAlreadyRevealed
-    );
+    require!(!claim.estimates_revealed, NestCrowError::EstimatesAlreadyRevealed);
 
     let sum = claim
         .tenant_estimate

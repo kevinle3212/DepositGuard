@@ -50,6 +50,7 @@ pnpm-debug.log*
 # Test and coverage
 coverage/
 .nyc_output/
+tests/firestore-rules/node_modules/
 
 # -----------------------------------------------------------------------------
 # ANCHOR / RUST / SOLANA

@@ -19,10 +19,7 @@ pub fn handler(ctx: Context<RecordContractHash>, contract_hash: [u8; 32]) -> Res
         config.landlord_signed = true;
     } else if caller == escrow.tenant {
         require!(config.landlord_signed, NestCrowError::ContractHashNotSet);
-        require!(
-            config.contract_hash == contract_hash,
-            NestCrowError::ContractHashMismatch
-        );
+        require!(config.contract_hash == contract_hash, NestCrowError::ContractHashMismatch);
         config.tenant_signed = true;
     } else {
         return err!(NestCrowError::NotParty);

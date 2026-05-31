@@ -3,4 +3,4 @@
 cargo lint
 
 # Run Anchor/TypeScript tests
-yarn test:anchor
+yarn test-anchor

@@ -8,14 +8,8 @@ use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState};
 /// Only `arbitration_escrow.arbitrator_pubkey` may call this.
 pub fn handler(ctx: Context<ConsumeArbitrationFees>) -> Result<()> {
     let arb = &ctx.accounts.arbitration_escrow;
-    require!(
-        ctx.accounts.arbitrator.key() == arb.arbitrator_pubkey,
-        NestCrowError::NotArbitrator
-    );
-    require!(
-        arb.status == ArbitrationFeeStatus::BothPaid,
-        NestCrowError::FeesNotBothPaid
-    );
+    require!(ctx.accounts.arbitrator.key() == arb.arbitrator_pubkey, NestCrowError::NotArbitrator);
+    require!(arb.status == ArbitrationFeeStatus::BothPaid, NestCrowError::FeesNotBothPaid);
 
     let amount = ctx.accounts.arb_vault.amount;
     let lease_id = arb.lease_id;

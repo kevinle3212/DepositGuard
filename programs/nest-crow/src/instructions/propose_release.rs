@@ -9,22 +9,11 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 pub fn handler(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
-    require!(
-        escrow.status == EscrowStatus::Active,
-        NestCrowError::NotActive
-    );
-    require!(
-        ctx.accounts.landlord.key() == escrow.landlord,
-        NestCrowError::NotLandlord
-    );
-    require!(
-        deduction_amount <= escrow.deposit_amount,
-        NestCrowError::DeductionExceedsDeposit
-    );
+    require!(escrow.status == EscrowStatus::Active, NestCrowError::NotActive);
+    require!(ctx.accounts.landlord.key() == escrow.landlord, NestCrowError::NotLandlord);
+    require!(deduction_amount <= escrow.deposit_amount, NestCrowError::DeductionExceedsDeposit);
 
-    let undisputed = escrow.deposit_amount
-        .checked_sub(deduction_amount)
-        .unwrap();
+    let undisputed = escrow.deposit_amount.checked_sub(deduction_amount).unwrap();
 
     let claim = &mut ctx.accounts.claim_record;
     claim.landlord_estimate = deduction_amount;

@@ -14,7 +14,7 @@ pub mod state;
 use instructions::*;
 
 // Replace with the actual program ID after running `anchor keys sync`.
-declare_id!("F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a");
+declare_id!("Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi");
 
 #[program]
 pub mod nest_crow {
@@ -61,19 +61,13 @@ pub mod nest_crow {
     /// Stores the SHA-256 hash of a party's move-in photo set.
     /// Status: FUNDED → PENDING_DOCUMENTATION (first call),
     ///         PENDING_DOCUMENTATION → ACTIVE (both parties submitted).
-    pub fn record_photo_hash(
-        ctx: Context<RecordPhotoHash>,
-        photo_hash: [u8; 32],
-    ) -> Result<()> {
+    pub fn record_photo_hash(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()> {
         instructions::record_photo_hash::handler(ctx, photo_hash)
     }
 
     /// Landlord proposes a deduction from the deposit after move-out.
     /// Status: ACTIVE → PENDING_APPROVAL.
-    pub fn propose_release(
-        ctx: Context<ProposeRelease>,
-        deduction_amount: u64,
-    ) -> Result<()> {
+    pub fn propose_release(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()> {
         instructions::propose_release::handler(ctx, deduction_amount)
     }
 

@@ -9,16 +9,10 @@ use crate::state::{
 /// parties have paid the panel-upgrade fee. Callable by either party.
 pub fn handler(ctx: Context<OpenPanel>, panelists: [Pubkey; 3]) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let signer = ctx.accounts.signer.key();
-    require!(
-        signer == escrow.landlord || signer == escrow.tenant,
-        NestCrowError::NotParty
-    );
+    require!(signer == escrow.landlord || signer == escrow.tenant, NestCrowError::NotParty);
 
     require!(
         ctx.accounts.arbitration_escrow.panel_upgrade_paid,
@@ -28,11 +22,7 @@ pub fn handler(ctx: Context<OpenPanel>, panelists: [Pubkey; 3]) -> Result<()> {
     let panel = &mut ctx.accounts.arbitration_panel;
     panel.lease_id = escrow.lease_id;
     panel.panelists = panelists;
-    panel.rulings = [
-        PanelRuling::default(),
-        PanelRuling::default(),
-        PanelRuling::default(),
-    ];
+    panel.rulings = [PanelRuling::default(), PanelRuling::default(), PanelRuling::default()];
     panel.outcome = PanelOutcome::Pending;
     panel.adopted_fine = 0;
     panel.adopted_recipient = Pubkey::default();

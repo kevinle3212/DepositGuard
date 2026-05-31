@@ -3,6 +3,9 @@
     "version": "0.1.0",
     "private": true,
     "license": "Apache-2.0",
+    "engines": {
+        "node": ">=20 <26"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
@@ -17,7 +20,7 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "typecheck": "tsc --noEmit",
-        "test:anchor": "yarn run ts-mocha -p ./tsconfig.debug.json -t 1000000 tests/**/*.ts"
+        "test-anchor": "TS_NODE_PROJECT=./tsconfig.tests.json node ./node_modules/mocha/bin/mocha.js"
     },
     "lint-staged": {
         "*.{ts,tsx}": [
@@ -33,7 +36,7 @@
         ]
     },
     "dependencies": {
-        "@anchor-lang/core": "^0.0.0",
+        "@coral-xyz/anchor": "^0.31.1",
         "@hookform/resolvers": "^3.9.0",
         "@radix-ui/react-alert-dialog": "^1.1.1",
         "@radix-ui/react-avatar": "^1.1.0",
@@ -86,6 +89,7 @@
         "@types/react": "^18",
         "@types/react-dom": "^18",
         "autoprefixer": "^10.0.1",
+        "bn.js": "^5.2.1",
         "chai": "^4.5.0",
         "eslint": "^9.28.0",
         "eslint-config-next": "^16.2.6",

@@ -14,10 +14,7 @@ pub fn handler(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()
     let caller = ctx.accounts.caller.key();
 
     // Authorize caller before checking state (prevents state-machine information leakage).
-    require!(
-        caller == escrow.landlord || caller == escrow.tenant,
-        NestCrowError::NotParty
-    );
+    require!(caller == escrow.landlord || caller == escrow.tenant, NestCrowError::NotParty);
 
     require!(
         escrow.status == EscrowStatus::Funded
@@ -26,18 +23,12 @@ pub fn handler(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()
     );
 
     if caller == escrow.landlord {
-        require!(
-            !claim.landlord_photos_submitted,
-            NestCrowError::LandlordPhotosAlreadySubmitted
-        );
+        require!(!claim.landlord_photos_submitted, NestCrowError::LandlordPhotosAlreadySubmitted);
         claim.landlord_photo_hash = photo_hash;
         claim.landlord_photos_submitted = true;
     } else {
         // caller == escrow.tenant (validated above)
-        require!(
-            !claim.tenant_photos_submitted,
-            NestCrowError::TenantPhotosAlreadySubmitted
-        );
+        require!(!claim.tenant_photos_submitted, NestCrowError::TenantPhotosAlreadySubmitted);
         claim.tenant_photo_hash = photo_hash;
         claim.tenant_photos_submitted = true;
     }

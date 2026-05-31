@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::NestCrowError;
-use crate::state::{
-    ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC,
-};
+use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC};
 
 /// A party pays the optional $25 USDC panel-upgrade fee. Both parties must pay to
 /// activate the three-arbitrator panel track. The party must have paid its base
@@ -44,10 +42,8 @@ pub fn handler(ctx: Context<PayPanelUpgradeFee>) -> Result<()> {
     } else {
         arb.tenant_panel_paid = true;
     }
-    arb.total = arb
-        .total
-        .checked_add(PANEL_UPGRADE_FEE_USDC)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    arb.total =
+        arb.total.checked_add(PANEL_UPGRADE_FEE_USDC).ok_or(NestCrowError::ArithmeticOverflow)?;
     if arb.landlord_panel_paid && arb.tenant_panel_paid {
         arb.panel_upgrade_paid = true;
     }

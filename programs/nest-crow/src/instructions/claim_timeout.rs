@@ -11,8 +11,7 @@ pub fn handler(ctx: Context<ClaimTimeout>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
     require!(
-        escrow.status == EscrowStatus::Active
-            || escrow.status == EscrowStatus::PendingApproval,
+        escrow.status == EscrowStatus::Active || escrow.status == EscrowStatus::PendingApproval,
         NestCrowError::InvalidStatusTransition
     );
 

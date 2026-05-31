@@ -10,14 +10,8 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 pub fn handler(ctx: Context<ApproveRelease>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
-    require!(
-        escrow.status == EscrowStatus::PendingApproval,
-        NestCrowError::NotPendingApproval
-    );
-    require!(
-        ctx.accounts.tenant.key() == escrow.tenant,
-        NestCrowError::NotTenant
-    );
+    require!(escrow.status == EscrowStatus::PendingApproval, NestCrowError::NotPendingApproval);
+    require!(ctx.accounts.tenant.key() == escrow.tenant, NestCrowError::NotTenant);
 
     let undisputed = ctx.accounts.claim_record.undisputed_total;
     let deduction = ctx.accounts.claim_record.landlord_estimate;

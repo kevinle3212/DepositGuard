@@ -18,6 +18,7 @@ export default tseslint.config(
     // ── TypeScript files ──────────────────────────────────────────────────────
     {
         files: ["**/*.ts", "**/*.tsx"],
+        ignores: ["tests/**"],
         extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
         languageOptions: {
             parserOptions: {
@@ -77,6 +78,17 @@ export default tseslint.config(
             "@typescript-eslint/only-throw-error": "error",
             "no-shadow": "off",
             "@typescript-eslint/no-shadow": "error",
+        },
+    },
+
+    // ── Anchor integration tests (excluded from root tsconfig) ───────────────
+    {
+        files: ["tests/**/*.ts"],
+        extends: [...tseslint.configs.recommended, ...tseslint.configs.stylistic],
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-non-null-assertion": "off",
+            "no-console": "off",
         },
     },
 

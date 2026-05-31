@@ -8,35 +8,23 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 /// Requires status DISPUTED.
 pub fn handler(ctx: Context<SubmitEstimate>, estimate: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let is_landlord = ctx.accounts.signer.key() == escrow.landlord;
     let is_tenant = ctx.accounts.signer.key() == escrow.tenant;
     require!(is_landlord || is_tenant, NestCrowError::NotParty);
 
     let claim = &mut ctx.accounts.claim_record;
-    require!(
-        !claim.estimates_revealed,
-        NestCrowError::EstimatesAlreadyRevealed
-    );
+    require!(!claim.estimates_revealed, NestCrowError::EstimatesAlreadyRevealed);
 
     let now = Clock::get()?.unix_timestamp;
     if is_landlord {
-        require!(
-            !claim.landlord_estimate_submitted,
-            NestCrowError::EstimateAlreadySubmitted
-        );
+        require!(!claim.landlord_estimate_submitted, NestCrowError::EstimateAlreadySubmitted);
         claim.landlord_estimate = estimate;
         claim.landlord_estimate_sealed_ts = now;
         claim.landlord_estimate_submitted = true;
     } else {
-        require!(
-            !claim.tenant_estimate_submitted,
-            NestCrowError::EstimateAlreadySubmitted
-        );
+        require!(!claim.tenant_estimate_submitted, NestCrowError::EstimateAlreadySubmitted);
         claim.tenant_estimate = estimate;
         claim.tenant_estimate_sealed_ts = now;
         claim.tenant_estimate_submitted = true;

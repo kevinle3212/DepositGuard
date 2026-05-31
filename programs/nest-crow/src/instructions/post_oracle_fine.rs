@@ -8,20 +8,11 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 /// `max_fine` here, but every resolution path independently re-enforces the cap.
 pub fn handler(ctx: Context<PostOracleFine>, fine: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     let claim = &mut ctx.accounts.claim_record;
-    require!(
-        ctx.accounts.oracle.key() == claim.oracle,
-        NestCrowError::NotOracle
-    );
-    require!(
-        claim.estimates_revealed,
-        NestCrowError::EstimatesNotRevealed
-    );
+    require!(ctx.accounts.oracle.key() == claim.oracle, NestCrowError::NotOracle);
+    require!(claim.estimates_revealed, NestCrowError::EstimatesNotRevealed);
     require!(fine <= claim.max_fine, NestCrowError::FineExceedsMaxFine);
 
     claim.oracle_fine = fine;

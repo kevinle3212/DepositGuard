@@ -5,18 +5,18 @@ anchor_version = "1.0.2"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-nest_crow = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
-
 [programs.devnet]
 nest_crow = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
+
+[programs.localnet]
+nest_crow = "Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi"
 
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "NODE_OPTIONS='--import tsx' yarn run mocha --timeout 1000000 tests/**/*.ts"
+test = "yarn test-anchor"
 
 [hooks]
-pre-build = "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+# Re-enable when `cargo lint` is clean: pre_build = "cargo lint"

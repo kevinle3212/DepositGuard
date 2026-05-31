@@ -11,14 +11,8 @@ pub fn handler(ctx: Context<FundEscrow>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let config = &ctx.accounts.lease_config;
 
-    require!(
-        escrow.status == EscrowStatus::Created,
-        NestCrowError::NotCreated
-    );
-    require!(
-        config.landlord_signed && config.tenant_signed,
-        NestCrowError::LeaseNotSigned
-    );
+    require!(escrow.status == EscrowStatus::Created, NestCrowError::NotCreated);
+    require!(config.landlord_signed && config.tenant_signed, NestCrowError::LeaseNotSigned);
 
     let amount = escrow.deposit_amount;
 

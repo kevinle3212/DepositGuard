@@ -19,23 +19,14 @@ use crate::state::{
 /// Status transitions: DISPUTED → RESOLVED.
 pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
-    require!(
-        escrow.status == EscrowStatus::Disputed,
-        NestCrowError::NotDisputed
-    );
+    require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
     {
         let panel = &ctx.accounts.arbitration_panel;
         require!(!panel.resolved, NestCrowError::PanelAlreadyResolved);
-        require!(
-            panel.rulings.iter().all(|r| r.submitted),
-            NestCrowError::PanelNotComplete
-        );
+        require!(panel.rulings.iter().all(|r| r.submitted), NestCrowError::PanelNotComplete);
     }
-    require!(
-        ctx.accounts.claim_record.estimates_revealed,
-        NestCrowError::EstimatesNotRevealed
-    );
+    require!(ctx.accounts.claim_record.estimates_revealed, NestCrowError::EstimatesNotRevealed);
 
     // The panel track must have been funded (both upgrade fees paid).
     require!(
@@ -59,18 +50,11 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     let adopted_recipient = ctx.accounts.arbitration_panel.rulings[adopted_idx].recipient;
 
     let claim = &ctx.accounts.claim_record;
-    require!(
-        adopted_fine <= claim.max_fine,
-        NestCrowError::FineExceedsMaxFine
-    );
-    require!(
-        adopted_fine <= claim.disputed_total,
-        NestCrowError::FineExceedsDisputed
-    );
+    require!(adopted_fine <= claim.max_fine, NestCrowError::FineExceedsMaxFine);
+    require!(adopted_fine <= claim.disputed_total, NestCrowError::FineExceedsDisputed);
     let disputed_total = claim.disputed_total;
-    let to_other = disputed_total
-        .checked_sub(adopted_fine)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    let to_other =
+        disputed_total.checked_sub(adopted_fine).ok_or(NestCrowError::ArithmeticOverflow)?;
 
     // Minority-protection: in a 2-1 majority, evaluate the dissent magnitude.
     let mut dissent_flag = false;
@@ -139,9 +123,8 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     panel.adopted_fine = adopted_fine;
     panel.adopted_recipient = adopted_recipient;
     panel.minority_dissent_flag = dissent_flag;
-    panel.escalation_deadline_ts = now
-        .checked_add(PANEL_ESCALATION_WINDOW_SECS)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    panel.escalation_deadline_ts =
+        now.checked_add(PANEL_ESCALATION_WINDOW_SECS).ok_or(NestCrowError::ArithmeticOverflow)?;
     panel.resolved = true;
 
     // Persist minority protection on the immutable claim record.
@@ -175,38 +158,18 @@ struct Decision {
 /// three-way split adopting the median (Case C).
 fn reconcile(fines: &[u64; 3]) -> Decision {
     if fines[0] == fines[1] && fines[1] == fines[2] {
-        Decision {
-            outcome: PanelOutcome::Unanimous,
-            adopted_idx: 0,
-            minority_idx: None,
-        }
+        Decision { outcome: PanelOutcome::Unanimous, adopted_idx: 0, minority_idx: None }
     } else if fines[0] == fines[1] {
-        Decision {
-            outcome: PanelOutcome::Majority,
-            adopted_idx: 0,
-            minority_idx: Some(2),
-        }
+        Decision { outcome: PanelOutcome::Majority, adopted_idx: 0, minority_idx: Some(2) }
     } else if fines[0] == fines[2] {
-        Decision {
-            outcome: PanelOutcome::Majority,
-            adopted_idx: 0,
-            minority_idx: Some(1),
-        }
+        Decision { outcome: PanelOutcome::Majority, adopted_idx: 0, minority_idx: Some(1) }
     } else if fines[1] == fines[2] {
-        Decision {
-            outcome: PanelOutcome::Majority,
-            adopted_idx: 1,
-            minority_idx: Some(0),
-        }
+        Decision { outcome: PanelOutcome::Majority, adopted_idx: 1, minority_idx: Some(0) }
     } else {
         // All distinct: adopt the median.
         let mut idx = [0usize, 1, 2];
         idx.sort_by_key(|&i| fines[i]);
-        Decision {
-            outcome: PanelOutcome::Median,
-            adopted_idx: idx[1],
-            minority_idx: None,
-        }
+        Decision { outcome: PanelOutcome::Median, adopted_idx: idx[1], minority_idx: None }
     }
 }
 
@@ -217,9 +180,7 @@ fn dissent_exceeds_threshold(majority_fine: u64, minority_fine: u64) -> Result<b
     if majority_fine == 0 {
         return Ok(diff > 0);
     }
-    let lhs = (diff as u128)
-        .checked_mul(100)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    let lhs = (diff as u128).checked_mul(100).ok_or(NestCrowError::ArithmeticOverflow)?;
     let rhs = (majority_fine as u128)
         .checked_mul(PANEL_DISSENT_THRESHOLD_PCT as u128)
         .ok_or(NestCrowError::ArithmeticOverflow)?;
@@ -237,7 +198,7 @@ pub struct ResolveDisputePanel<'info> {
         bump = escrow_state.bump,
         has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
-    pub escrow_state: Account<'info, EscrowState>,
+    pub escrow_state: Box<Account<'info, EscrowState>>,
 
     #[account(
         mut,
@@ -267,14 +228,14 @@ pub struct ResolveDisputePanel<'info> {
         token::mint = token_mint,
         token::authority = escrow_state,
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         token::mint = token_mint,
         token::authority = landlord,
     )]
-    pub landlord_token_account: Account<'info, TokenAccount>,
+    pub landlord_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: landlord pubkey validated against escrow_state.
     #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
@@ -285,7 +246,7 @@ pub struct ResolveDisputePanel<'info> {
         token::mint = token_mint,
         token::authority = tenant,
     )]
-    pub tenant_token_account: Account<'info, TokenAccount>,
+    pub tenant_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: tenant pubkey validated against escrow_state.
     #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]

@@ -21,10 +21,7 @@ pub fn handler(ctx: Context<PayArbitrationFee>) -> Result<()> {
     );
 
     let now = Clock::get()?.unix_timestamp;
-    require!(
-        now <= arb.payment_deadline_ts,
-        NestCrowError::FeeDeadlinePassed
-    );
+    require!(now <= arb.payment_deadline_ts, NestCrowError::FeeDeadlinePassed);
 
     let amount = if is_landlord {
         require!(!arb.landlord_paid, NestCrowError::FeeAlreadyPaid);
@@ -47,10 +44,7 @@ pub fn handler(ctx: Context<PayArbitrationFee>) -> Result<()> {
     } else {
         arb.tenant_paid = true;
     }
-    arb.total = arb
-        .total
-        .checked_add(amount)
-        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    arb.total = arb.total.checked_add(amount).ok_or(NestCrowError::ArithmeticOverflow)?;
     if arb.landlord_paid && arb.tenant_paid {
         arb.status = ArbitrationFeeStatus::BothPaid;
     }
