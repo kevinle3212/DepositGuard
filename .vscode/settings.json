@@ -1,0 +1,21 @@
+{
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.rulers": [100],
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.formatOnSave": true
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml"
+    },
+    "typescript.preferences.quoteStyle": "double",
+    "javascript.preferences.quoteStyle": "double",
+    "python.terminal.useEnvFile": true
+}

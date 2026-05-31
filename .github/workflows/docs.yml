@@ -1,0 +1,58 @@
+name: Docs
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "docs/**"
+            - ".github/workflows/docs.yml"
+    workflow_dispatch:
+
+concurrency:
+    group: docs-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: write
+
+jobs:
+    deploy-pages:
+        name: Deploy to GitHub Pages
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Install docs dependencies
+              run: npm install
+              working-directory: docs
+
+            - name: Build Docusaurus site
+              run: npm run build
+              working-directory: docs
+
+            - name: Deploy to gh-pages branch
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: docs/build
+                  user_name: github-actions[bot]
+                  user_email: github-actions[bot]@users.noreply.github.com
+                  commit_message: "docs: deploy ${{ github.sha }}"
+
+    sync-wiki:
+        name: Sync to GitHub Wiki
+        runs-on: ubuntu-latest
+        # Run after pages deploy so both finish on the same push
+        needs: deploy-pages
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Sync docs to wiki
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: bash scripts/sync-wiki.sh

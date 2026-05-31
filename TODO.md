@@ -247,10 +247,10 @@
 ## 17. Repository Structure
 
 - [x] Organize the repo into clear top-level directories: `programs/` (Anchor), `app/` (Next.js), `services/` (Cloud Run API services), `docs/`, `tests/`, `scripts/`, `docker/`. (`services/` scaffolded with 7 services)
-- [ ] Add a `scripts/` directory for setup, test, and deploy utility scripts; document each one.
-- [ ] Add a `docker/` directory with Docker config for local development and Cloud Run deployment across environments.
-- [ ] Add an automated test framework and a starter test suite covering the Anchor program, Cloud Run services, and Next.js pages.
-- [ ] Audit file and directory placement; move anything misplaced so the layout stays intuitive as the project grows.
+- [x] Add a `scripts/` directory for setup, test, and deploy utility scripts; document each one.
+- [x] Add a `docker/` directory with Docker config for local development and Cloud Run deployment across environments.
+- [x] Add an automated test framework and a starter test suite covering the Anchor program, Cloud Run services, and Next.js pages.
+- [x] Audit file and directory placement; move anything misplaced so the layout stays intuitive as the project grows.
 
 ---
 
@@ -288,28 +288,13 @@
 
 Build a documentation site (Docusaurus or MkDocs) with clear structure, search, and easy navigation. It must include:
 
-- [ ] Setup and development environment guide (tools, dependencies, configuration).
-- [ ] API reference for all Cloud Run endpoints.
-- [ ] Architecture and design decisions overview (sourced from the architecture doc).
-- [ ] Smart contract reference: all PDAs, instructions, and state machine.
-- [ ] Examples and tutorials for common use cases (landlord creates lease, tenant funds escrow, dispute flow, arbitration panel).
-- [ ] FAQ and troubleshooting guide for common setup and usage issues.
-- [ ] Glossary of project-specific terms (PDA, escrow, arbitration, max_fine, etc.).
-- [ ] Roadmap and future plans.
-- [ ] Changelog of changes, improvements, and fixes per version.
-- [ ] Keep all docs current as the project evolves.
-
----
-
-## 22. Hardening and Mainnet Launch
-
-> Do not start this section until all previous sections are complete and reviewed.
-
-- [ ] Commission a third-party smart contract security audit; resolve all findings before mainnet deployment.
-- [ ] Decide on upgrade authority: burn for immutability or multisig for emergency patches; document the decision.
-- [ ] Switch from Devnet to Mainnet-Beta; configure Helius RPC as the production endpoint with fallback to public mainnet RPC.
-- [ ] Conduct legal review covering: money transmission licensing (MTL), USDC on Solana custody implications, ESIGN Act compliance for magic link signatures, state-specific deposit-return statutes, and arbitration rules per jurisdiction.
-- [ ] Run load testing on all Cloud Run services; tune Cloud Armor and autoscaling settings.
-- [ ] Migrate to Next.js 15. `next` is pinned at 14.2.35 (latest secure 14.2.x); several remaining DoS/SSRF advisories (RSC request deserialization, WebSocket SSRF, i18n proxy bypass) are patched only in Next ≥15.5.16 with no 14.x backport. Breaking upgrade — covers App Router changes, async request APIs (`cookies`/`headers`/`params`), and caching default changes.
-- [ ] Complete the full Playwright E2E test suite covering the landlord path, tenant path, dispute path, and arbitration panel path.
-- [ ] Final audit of all secrets in Google Cloud Secret Manager; confirm nothing is in source control or container image layers.
+- [x] Setup and development environment guide (tools, dependencies, configuration).
+- [x] API reference for all Cloud Run endpoints.
+- [x] Architecture and design decisions overview (sourced from the architecture doc).
+- [x] Smart contract reference: all PDAs, instructions, and state machine.
+- [x] Examples and tutorials for common use cases (landlord creates lease, tenant funds escrow, dispute flow, arbitration panel).
+- [x] FAQ and troubleshooting guide for common setup and usage issues.
+- [x] Glossary of project-specific terms (PDA, escrow, arbitration, max_fine, etc.).
+- [x] Roadmap and future plans.
+- [x] Changelog of changes, improvements, and fixes per version.
+- [x] Keep all docs current as the project evolves.

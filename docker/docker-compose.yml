@@ -1,0 +1,111 @@
+version: "3.9"
+
+# Local development stack for DepositGuard Cloud Run services.
+# Requires: .env file at repo root with all required variables.
+#
+# Start all services:
+#   docker compose -f docker/docker-compose.yml --env-file .env up
+#
+# Start a single service:
+#   docker compose -f docker/docker-compose.yml --env-file .env up verify-wallet
+#
+# Rebuild after code changes:
+#   docker compose -f docker/docker-compose.yml --env-file .env up --build
+
+x-common-env: &common-env
+    NODE_ENV: development
+    FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+    GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+
+services:
+    verify-wallet:
+        build:
+            context: ../services/verify-wallet
+            dockerfile: Dockerfile
+        ports:
+            - "8081:8080"
+        environment:
+            <<: *common-env
+            JWT_SECRET: ${JWT_SECRET}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+        healthcheck:
+            test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+
+    upload-contract:
+        build:
+            context: ../services/upload-contract
+            dockerfile: Dockerfile
+        ports:
+            - "8082:8080"
+        environment:
+            <<: *common-env
+            FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+            SOLANA_RPC_URL: ${NEXT_PUBLIC_SOLANA_RPC_URL:-https://api.devnet.solana.com}
+            RELAYER_KEYPAIR: ${RELAYER_KEYPAIR}
+
+    send-signing-link:
+        build:
+            context: ../services/send-signing-link
+            dockerfile: Dockerfile
+        ports:
+            - "8083:8080"
+        environment:
+            <<: *common-env
+            SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+            SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
+            JWT_SECRET: ${JWT_SECRET}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+
+    assess-damage:
+        build:
+            context: ../services/assess-damage
+            dockerfile: Dockerfile
+        ports:
+            - "8084:8080"
+        environment:
+            <<: *common-env
+            GEMINI_API_KEY: ${GEMINI_API_KEY}
+            FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+
+    tts:
+        build:
+            context: ../services/tts
+            dockerfile: Dockerfile
+        ports:
+            - "8085:8080"
+        environment:
+            <<: *common-env
+            ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+            ELEVENLABS_VOICE_ID_PLATFORM_GUIDE: ${ELEVENLABS_VOICE_ID_PLATFORM_GUIDE:-}
+            ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR: ${ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR:-}
+            FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+
+    notify:
+        build:
+            context: ../services/notify
+            dockerfile: Dockerfile
+        ports:
+            - "8086:8080"
+        environment:
+            <<: *common-env
+            SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+            SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+
+    webhook-deadline:
+        build:
+            context: ../services/webhook-deadline
+            dockerfile: Dockerfile
+        ports:
+            - "8087:8080"
+        environment:
+            <<: *common-env
+            FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+            SOLANA_RPC_URL: ${NEXT_PUBLIC_SOLANA_RPC_URL:-https://api.devnet.solana.com}
+            RELAYER_KEYPAIR: ${RELAYER_KEYPAIR}

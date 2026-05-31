@@ -21,6 +21,8 @@ export default tseslint.config(
             "services/**",
             "agent/**",
             "oracle/**",
+            // Docusaurus site — linted independently inside docs/
+            "docs/**",
         ],
     },
 
@@ -100,13 +102,16 @@ export default tseslint.config(
         },
     },
 
-    // ── Anchor integration tests (excluded from root tsconfig) ───────────────
+    // ── Test files (Anchor + Vitest) — looser type-checking ─────────────────
     {
-        files: ["tests/**/*.ts"],
+        files: ["tests/**/*.ts", "**/*.test.ts", "**/*.test.tsx"],
         extends: [...tseslint.configs.recommended, ...tseslint.configs.stylistic],
         rules: {
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-non-null-assertion": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
             "no-console": "off",
         },
     },

@@ -1,0 +1,6 @@
+{
+    "extends": "@docusaurus/module-type-aliases/base-tsconfig-docusaurus",
+    "compilerOptions": {
+        "baseUrl": "."
+    }
+}
