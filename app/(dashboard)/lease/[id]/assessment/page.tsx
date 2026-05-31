@@ -326,7 +326,14 @@ export default function AssessmentPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <DamageCapturePanel role={isLandlord ? "landlord" : "tenant"} />
+                    <DamageCapturePanel
+                        role={isLandlord ? "landlord" : "tenant"}
+                        leaseId={id}
+                        onCommitted={(txSig, estimateUsdc) => {
+                            setEstimate((p) => ({ ...p, mySubmitted: true, myValue: String(estimateUsdc) }));
+                            void speak("assessment.ready");
+                        }}
+                    />
                 </CardContent>
             </Card>
 

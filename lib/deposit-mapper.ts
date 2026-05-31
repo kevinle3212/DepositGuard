@@ -25,6 +25,15 @@ export interface LeaseDoc {
     leaseEnd?: string;
     contractHash?: string;
     contractStorageUrl?: string;
+    landlordSigned?: boolean;
+    tenantSigned?: boolean;
+    landlordEstimateUsdc?: number;
+    tenantEstimateUsdc?: number;
+    maxFineUsdc?: number;
+    estimatesRevealed?: boolean;
+    landlordEstimateTxSig?: string;
+    tenantEstimateTxSig?: string;
+    solanaLeaseId?: string;
     timeline?: unknown[];
 }
 
@@ -44,6 +53,14 @@ export interface DepositResponse {
     moveOutDate?: string;
     contractHash?: string;
     contractStorageUrl?: string;
+    landlordSigned?: boolean;
+    tenantSigned?: boolean;
+    landlordEstimateUsdc?: number;
+    tenantEstimateUsdc?: number;
+    maxFineUsdc?: number;
+    estimatesRevealed?: boolean;
+    landlordEstimateTxSig?: string;
+    tenantEstimateTxSig?: string;
     timeline: unknown[];
 }
 
@@ -71,6 +88,14 @@ export function leaseToDeposit(id: string, raw: FirebaseFirestore.DocumentData):
         ...(data.contractStorageUrl !== undefined
             ? { contractStorageUrl: data.contractStorageUrl }
             : {}),
+        landlordSigned: data.landlordSigned === true,
+        tenantSigned: data.tenantSigned === true,
+        ...(data.landlordEstimateUsdc !== undefined ? { landlordEstimateUsdc: data.landlordEstimateUsdc } : {}),
+        ...(data.tenantEstimateUsdc !== undefined ? { tenantEstimateUsdc: data.tenantEstimateUsdc } : {}),
+        ...(data.maxFineUsdc !== undefined ? { maxFineUsdc: data.maxFineUsdc } : {}),
+        ...(data.estimatesRevealed !== undefined ? { estimatesRevealed: data.estimatesRevealed } : {}),
+        ...(data.landlordEstimateTxSig !== undefined ? { landlordEstimateTxSig: data.landlordEstimateTxSig } : {}),
+        ...(data.tenantEstimateTxSig !== undefined ? { tenantEstimateTxSig: data.tenantEstimateTxSig } : {}),
         timeline:
             Array.isArray(data.timeline) && data.timeline.length > 0
                 ? data.timeline

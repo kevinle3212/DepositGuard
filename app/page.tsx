@@ -16,7 +16,7 @@ import {
     MapPin,
     User,
 } from "lucide-react";
-import { TopNav } from "@/components/layout/TopNav";
+import { Nav } from "@/components/layout/nav";
 import { WalletGate } from "@/components/layout/wallet-gate";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -172,7 +172,7 @@ export default function DashboardPage() {
 
     return (
         <>
-            <TopNav />
+            <Nav />
             <WalletGate>
                 <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
                     {isError && (
