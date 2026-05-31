@@ -120,7 +120,15 @@ async function uploadContract(file: File): Promise<{ hash: string; storageUrl: s
     // Always force application/pdf — some browsers report an empty or incorrect
     // MIME type for dragged files, which would cause Firebase Storage rules to
     // reject the upload (rules require contentType == 'application/pdf').
-    await uploadBytes(storageRef, file, { contentType: "application/pdf" });
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => {
+            reject(new Error("Upload timed out after 30 s — check your connection and try again."));
+        }, 30_000),
+    );
+    await Promise.race([
+        uploadBytes(storageRef, file, { contentType: "application/pdf" }),
+        timeout,
+    ]);
     const storageUrl = await getDownloadURL(storageRef);
     return { hash, storageUrl };
 }

@@ -199,6 +199,9 @@ export default function SignPage() {
 
         setSignStatus("done");
         void speak("contract.signed");
+        setTimeout(() => {
+            router.push("/deposits");
+        }, 3000);
     }
 
     if (tokenStatus === "loading") {
@@ -315,7 +318,7 @@ export default function SignPage() {
                             Signed and confirmed.
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Your signature has been recorded on-chain and in Firestore.
+                            Your signature has been recorded. Redirecting to your agreements…
                         </p>
                     </div>
                 ) : (
