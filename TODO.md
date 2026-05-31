@@ -144,12 +144,12 @@
 
 > Depends on Sections 2 and 7.
 
-- [ ] Create the `/api/webhook-deadline` Cloud Run route: query Firestore for leases in `assessed` or `disputed` status where `deadlineTs < now`.
-- [ ] For each expired lease, build a `claim_timeout` transaction unsigned; sign with the relayer keypair fetched from Google Cloud Secret Manager; submit to Solana.
-- [ ] Confirm on-chain that `deadline_ts < Clock::unix_timestamp` is enforced inside the Anchor instruction — the relayer must never be able to trigger timeout early.
-- [ ] Configure Google Cloud Scheduler to POST to `/api/webhook-deadline` every 15 minutes.
-- [ ] Notify both parties via `/api/notify` when `claim_timeout` executes.
-- [ ] Write unit tests for the deadline query, transaction construction, and early-trigger rejection.
+- [x] Create the `/api/webhook-deadline` Cloud Run route: query Firestore for leases in `assessed` or `disputed` status where `deadlineTs < now`.
+- [x] For each expired lease, build a `claim_timeout` transaction unsigned; sign with the relayer keypair fetched from Google Cloud Secret Manager; submit to Solana.
+- [x] Confirm on-chain that `deadline_ts < Clock::unix_timestamp` is enforced inside the Anchor instruction — the relayer must never be able to trigger timeout early.
+- [ ] Configure Google Cloud Scheduler to POST to `/api/webhook-deadline` every 15 minutes. <!-- run: gcloud scheduler jobs create http webhook-deadline --schedule="*/15 * * * *" --uri=<CLOUD_RUN_URL>/trigger --message-body="" --oidc-service-account-email=<SA_EMAIL> --project=uoo-quackathon26eug-8200 -->
+- [x] Notify both parties via `/api/notify` when `claim_timeout` executes.
+- [x] Write unit tests for the deadline query, transaction construction, and early-trigger rejection.
 
 ---
 
