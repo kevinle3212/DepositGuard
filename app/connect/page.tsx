@@ -19,6 +19,7 @@ import {
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { cn } from "@/lib/utils";
 import { useVoice } from "@/src/hooks/useVoice";
+import { scanTangemCard, tangemSign, TangemNfcUnavailable, TangemUserAborted } from "@/lib/tangem";
 
 type Chain = "solana" | "evm" | "hardware";
 type Step = "select" | "signing" | "verifying" | "success";
@@ -105,6 +106,8 @@ function ConnectInner() {
     // Tracks whether we opened the wallet modal and are waiting for the user to approve
     const pendingSolanaSign = useRef(false);
     const pendingEvmSign = useRef(false);
+    // AbortController for the active Tangem NFC session
+    const nfcAbort = useRef<AbortController | null>(null);
 
     // After the Solana modal connects the wallet, auto-proceed to signing
     useEffect(() => {
@@ -203,14 +206,43 @@ function ConnectInner() {
         }
     }
 
-    function handleHardwareConnect() {
+    function handleHardwareConnect(): void {
         setSelectedChain("hardware");
-        // @tangem/tangem-sdk-web is not available on npm.
-        // To enable NFC Tangem signing: install @tangem/tangem-sdk-web and configure
-        // NFC permissions in your browser/native host, then call TangemSdk.startSession().
-        setError(
-            "Tangem NFC — install @tangem/tangem-sdk-web and configure NFC permissions to enable hardware wallet signing.",
-        );
+        setError(null);
+
+        // Cancel any previous NFC session
+        nfcAbort.current?.abort();
+        const abort = new AbortController();
+        nfcAbort.current = abort;
+
+        void (async () => {
+            try {
+                setStep("signing");
+                // Step 1: scan the card to obtain the wallet public key.
+                const pubkey = await scanTangemCard(abort.signal);
+                // Step 2: fetch a server nonce bound to that pubkey.
+                const nonce = await fetchServerNonce(pubkey);
+                const unix_ts = Math.floor(Date.now() / 1000);
+                const message = `NestCrow identity verification ${nonce} ${unix_ts}`;
+                // Step 3: have the card sign the challenge.
+                const signature = await tangemSign(message, abort.signal);
+                setStep("verifying");
+                await verifyMutation.mutateAsync({ signature, pubkey, message, chain: "hardware" });
+            } catch (e: unknown) {
+                if (e instanceof TangemUserAborted) {
+                    setStep("select");
+                    return;
+                }
+                setError(
+                    e instanceof TangemNfcUnavailable
+                        ? e.message
+                        : e instanceof Error
+                          ? e.message
+                          : "Tangem NFC signing failed.",
+                );
+                setStep("select");
+            }
+        })();
     }
 
     const handlers: Record<Chain, () => void> = {

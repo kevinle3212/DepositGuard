@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid or expired nonce" }, { status: 401 });
         }
 
-        if (chain === "solana") {
+        if (chain === "solana" || chain === "hardware") {
+            // Both Solana wallets and Tangem hardware cards use Ed25519 — same verification path.
             const valid = await verifySolanaSignature(pubkey, signature, message);
             if (!valid) {
                 return NextResponse.json(
