@@ -11,6 +11,7 @@ import {
     Loader2,
     CheckCircle2,
     AlertCircle,
+    Camera,
 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
@@ -24,6 +25,7 @@ import { useWalletStore } from "@/src/store/useWalletStore";
 import { deserializeAndSignSolanaTx } from "@/src/lib/txEngine";
 import { toast } from "@/hooks/use-toast";
 import { cn, formatAmount } from "@/lib/utils";
+import { DamageCapturePanel } from "@/src/components/damage/DamageCapturePanel";
 
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
 const SOLANA_NETWORK = process.env["NEXT_PUBLIC_SOLANA_NETWORK"] ?? "devnet";
@@ -253,6 +255,26 @@ export default function DepositDetailPage() {
                                 Move-out: {formatDate(deposit.moveOutDate)}
                             </p>
                         )}
+                    </CardContent>
+                </Card>
+
+                {/* Damage Photo — Gemini Estimate */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Camera className="h-4 w-4 text-primary" />
+                                Damage Photo
+                            </CardTitle>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-semibold text-primary">
+                                Powered by Gemini
+                            </span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <DamageCapturePanel
+                            role={walletPubkey === deposit.landlordAddress ? "landlord" : "tenant"}
+                        />
                     </CardContent>
                 </Card>
 
