@@ -1,6 +1,6 @@
 "use client";
 
-import { useConversation } from "@11labs/react";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAgent } from "@/agent/agents";
@@ -8,7 +8,11 @@ import { getAgent } from "@/agent/agents";
 const agent = getAgent("platform-guide");
 
 export function ErynWidget() {
-    return <ErynButton agentId={agent.id} />;
+    return (
+        <ConversationProvider>
+            <ErynButton agentId={agent.id} />
+        </ConversationProvider>
+    );
 }
 
 function ErynButton({ agentId }: { agentId: string }) {
@@ -18,14 +22,14 @@ function ErynButton({ agentId }: { agentId: string }) {
         },
     });
 
-    const status = conversation.status; // "connected" | "connecting" | "disconnected"
+    const status = conversation.status; // "disconnected" | "connecting" | "connected" | "error"
     const isSpeaking = conversation.isSpeaking;
 
-    const handleClick = async () => {
+    const handleClick = () => {
         if (status === "connected") {
-            await conversation.endSession();
+            conversation.endSession();
         } else {
-            await conversation.startSession({ agentId });
+            conversation.startSession({ agentId, connectionType: "webrtc" });
         }
     };
 
@@ -41,7 +45,7 @@ function ErynButton({ agentId }: { agentId: string }) {
             )}
 
             <button
-                onClick={() => void handleClick()}
+                onClick={handleClick}
                 aria-label={isActive ? "End conversation with Eryn" : "Talk to Eryn"}
                 disabled={isConnecting}
                 className={cn(
