@@ -35,6 +35,7 @@ export default function SignPage() {
     const [signStatus, setSignStatus] = useState<SignStatus>("idle");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
     // Redirect to /connect if wallet is not connected
     useEffect(() => {
@@ -108,43 +109,7 @@ export default function SignPage() {
             .finally(() => setContractFetched(true));
     }, [tokenStatus, payload]);
 
-    // Render PDF using pdfjs-dist when contractUrl is available
-    useEffect(() => {
-        if (!contractUrl || !canvasRef.current) return;
-        let cancelled = false;
-
-        async function renderPdf() {
-            try {
-                // Dynamic import to avoid SSR issues with pdfjs-dist
-                const pdfjsLib = await import("pdfjs-dist");
-                pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-
-                // Fetch the PDF via a signed-URL proxy to avoid CORS issues with GCS
-                const proxyUrl = `/api/deposits/${payload?.leaseId ?? ""}/contract-pdf`;
-                const loadingTask = pdfjsLib.getDocument(proxyUrl);
-                const pdf = await loadingTask.promise;
-                if (cancelled) return;
-
-                const page = await pdf.getPage(1);
-                // canvasRef.current is guaranteed non-null by the guard above
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const canvas = canvasRef.current!;
-                const viewport = page.getViewport({ scale: 1.2 });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return;
-                await page.render({ canvasContext: ctx, viewport }).promise;
-            } catch (err) {
-                console.error("[sign-page] PDF render failed:", err);
-            }
-        }
-
-        void renderPdf();
-        return () => {
-            cancelled = true;
-        };
-    }, [contractUrl, payload]);
+    // canvasRef kept for potential future use but PDF is now rendered via iframe
 
     async function handleSign() {
         if (!wallet.signMessage || !wallet.publicKey || !payload || !contractHash) return;
@@ -283,19 +248,23 @@ export default function SignPage() {
                     </div>
                 )}
 
-                <div
-                    className="border rounded-lg overflow-auto bg-muted/20 flex justify-center p-4"
-                    style={{ minHeight: 500 }}
-                >
-                    {contractUrl ? (
-                        <canvas ref={canvasRef} className="shadow" />
+                <div className="border rounded-lg overflow-hidden bg-muted/20" style={{ minHeight: 500 }}>
+                    {contractUrl && pdfProxyUrl ? (
+                        <iframe
+                            src={pdfProxyUrl}
+                            className="w-full"
+                            style={{ height: 600 }}
+                            title="Lease contract"
+                        />
                     ) : contractFetched ? (
-                        <div className="self-center text-center space-y-2">
+                        <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-2 p-6">
                             <p className="text-muted-foreground text-sm">No contract PDF uploaded.</p>
                             <p className="text-xs text-muted-foreground">You can still sign to confirm the lease terms.</p>
                         </div>
                     ) : (
-                        <p className="text-muted-foreground self-center">Loading contract PDF…</p>
+                        <div className="flex items-center justify-center min-h-[500px]">
+                            <p className="text-muted-foreground">Loading contract PDF…</p>
+                        </div>
                     )}
                 </div>
 
