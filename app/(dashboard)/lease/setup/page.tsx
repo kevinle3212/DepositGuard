@@ -117,14 +117,21 @@ async function sha256Hex(file: File): Promise<string> {
 async function uploadContract(file: File): Promise<{ hash: string; storageUrl: string }> {
     const hash = await sha256Hex(file);
     const storageRef = ref(storage, `contracts/${hash}/${file.name}`);
-    await uploadBytes(storageRef, file, { contentType: file.type });
+    // Always force application/pdf — some browsers report an empty or incorrect
+    // MIME type for dragged files, which would cause Firebase Storage rules to
+    // reject the upload (rules require contentType == 'application/pdf').
+    await uploadBytes(storageRef, file, { contentType: "application/pdf" });
     const storageUrl = await getDownloadURL(storageRef);
     return { hash, storageUrl };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, storageUrl: string) => void }) {
+function ContractDropzone({
+    onFile,
+}: {
+    onFile: (file: File, hash: string, storageUrl: string) => void;
+}) {
     const [processing, setProcessing] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -138,7 +145,11 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, stora
                 const { hash, storageUrl } = await uploadContract(file);
                 onFile(file, hash, storageUrl);
             } catch (err) {
-                setUploadError(err instanceof Error ? err.message : "Upload failed — check Firebase Storage config.");
+                setUploadError(
+                    err instanceof Error
+                        ? err.message
+                        : "Upload failed — check Firebase Storage config.",
+                );
             } finally {
                 setProcessing(false);
             }
@@ -150,7 +161,6 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, stora
         onDrop,
         accept: {
             "application/pdf": [".pdf"],
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
         },
         maxFiles: 1,
         disabled: processing,
@@ -181,11 +191,9 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, stora
                           ? "Drop to upload"
                           : "Drag contract here"}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">PDF or DOCX · max 20 MB</p>
+                <p className="mt-1 text-xs text-muted-foreground">PDF only · max 20 MB</p>
             </div>
-            {uploadError && (
-                <p className="text-xs text-destructive">{uploadError}</p>
-            )}
+            {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
         </div>
     );
 }
@@ -226,7 +234,11 @@ function ThresholdSlider({ value, onChange }: { value: number; onChange: (v: num
 export default function LeaseSetupPage() {
     const router = useRouter();
     const { walletPubkey } = useWalletStore();
-    const [contractFile, setContractFile] = useState<{ name: string; hash: string; storageUrl: string } | null>(null);
+    const [contractFile, setContractFile] = useState<{
+        name: string;
+        hash: string;
+        storageUrl: string;
+    } | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const createLease = useCreateLease();
@@ -257,7 +269,12 @@ export default function LeaseSetupPage() {
                 leaseStart: data.leaseStart,
                 leaseEnd: data.leaseEnd,
                 landlordAddress: walletPubkey ?? "",
-                ...(contractFile ? { contractHash: contractFile.hash, contractStorageUrl: contractFile.storageUrl } : {}),
+                ...(contractFile
+                    ? {
+                          contractHash: contractFile.hash,
+                          contractStorageUrl: contractFile.storageUrl,
+                      }
+                    : {}),
             });
 
             // Generate a landlord signing token so the sign page validates correctly

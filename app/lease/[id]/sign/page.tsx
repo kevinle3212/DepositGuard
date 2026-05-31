@@ -109,15 +109,13 @@ export default function SignPage() {
         if (tokenStatus !== "valid" || !payload) return;
         void fetch(`/api/deposits/${payload.leaseId}`)
             .then(async (r) => {
-                if (r.ok) {
-                    const data = (await r.json()) as {
-                        contractStorageUrl?: string;
-                        contractHash?: string;
-                    };
-                    setContractUrl(data.contractStorageUrl ?? null);
-                    // Fall back to lease ID so the sign button is never permanently blocked
-                    setContractHash(data.contractHash ?? payload.leaseId);
-                }
+                const data = (await r.json()) as {
+                    contractStorageUrl?: string;
+                    contractHash?: string;
+                };
+                setContractUrl(data.contractStorageUrl ?? null);
+                // Fall back to lease ID so the sign button is never permanently blocked
+                setContractHash(data.contractHash ?? payload.leaseId);
             })
             .catch((_e: unknown) => {
                 setContractHash(payload.leaseId);
