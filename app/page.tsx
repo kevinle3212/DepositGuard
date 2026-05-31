@@ -141,10 +141,10 @@ export default function LandingPage() {
                     </a>
                     {/* Nav links */}
                     <div className="hidden md:flex items-center gap-8">
-                        <a href="#" className="nav-link text-white text-sm font-medium">
+                        <a href="#features" className="nav-link text-white text-sm font-medium">
                             Features
                         </a>
-                        <a href="#" className="nav-link text-white text-sm font-medium">
+                        <a href="#how-it-works" className="nav-link text-white text-sm font-medium">
                             How it Works
                         </a>
                         <a href="#" className="nav-link text-white text-sm font-medium">
@@ -1229,7 +1229,7 @@ export default function LandingPage() {
             </section>
 
             {/* ═══════════════════════════════════════ FEATURES STRIP ═══ */}
-            <section className="bg-white py-20 px-6">
+            <section id="features" className="scroll-mt-20 bg-white py-20 px-6">
                 <div className="max-w-5xl mx-auto">
                     <h2 className="text-center text-3xl md:text-4xl font-black text-slate-800 mb-3">
                         How NestCrow protects you
@@ -1318,7 +1318,7 @@ export default function LandingPage() {
             </section>
 
             {/* ═══════════════════════════════════════ HOW IT WORKS ═══ */}
-            <section className="bg-slate-50 py-20 px-6">
+            <section id="how-it-works" className="scroll-mt-20 bg-slate-50 py-20 px-6">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-center text-3xl md:text-4xl font-black text-slate-800 mb-14">
                         How it works
@@ -1441,8 +1441,11 @@ export default function LandingPage() {
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <span className="text-white font-black tracking-tight">NestCrow</span>
                     <div className="flex gap-6 text-sm">
-                        <a href="#" className="hover:text-white transition-colors">
+                        <a href="#features" className="hover:text-white transition-colors">
                             Features
+                        </a>
+                        <a href="#how-it-works" className="hover:text-white transition-colors">
+                            How it Works
                         </a>
                         <a href="#" className="hover:text-white transition-colors">
                             Docs

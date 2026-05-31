@@ -97,6 +97,11 @@ body {
     overflow-x: hidden;
 }
 
+/* Smooth in-page anchor navigation (e.g. landing page nav links) */
+html {
+    scroll-behavior: smooth;
+}
+
 /* Responsive typography scaling */
 @media (max-width: 400px) {
     .text-2xl {
