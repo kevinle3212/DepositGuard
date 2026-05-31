@@ -7,12 +7,18 @@
     "rules": "storage.rules"
   },
   "emulators": {
-    "auth": { "port": 9099 },
-    "firestore": { "port": 8081 },
-    "storage": { "port": 9199 },
-    "ui": { "enabled": true, "port": 4000 }
-  },
-  "extensions": {
-    "firestore-send-email": "firebase/firestore-send-email@0.2.9"
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8081
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
   }
 }
