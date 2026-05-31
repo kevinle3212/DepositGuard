@@ -6,6 +6,9 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 /// Each party independently seals their own damage estimate. Neither estimate is
 /// revealed until both are in, and a sealed estimate can never be revised.
 /// Requires status DISPUTED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<SubmitEstimate>, estimate: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);

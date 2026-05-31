@@ -3,11 +3,14 @@ use anchor_lang::prelude::*;
 use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
-/// Stores the SHA-256 hash of a party's move-in photo set in the ClaimRecord.
+/// Stores the SHA-256 hash of a party's move-in photo set in the `ClaimRecord`.
 ///
 /// State transitions:
-/// - First submission (FUNDED → PENDING_DOCUMENTATION).
-/// - Both parties submitted (PENDING_DOCUMENTATION → ACTIVE).
+/// - First submission (FUNDED → `PENDING_DOCUMENTATION`).
+/// - Both parties submitted (`PENDING_DOCUMENTATION` → ACTIVE).
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let claim = &mut ctx.accounts.claim_record;

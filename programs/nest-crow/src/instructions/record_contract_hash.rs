@@ -8,6 +8,9 @@ use crate::state::{EscrowState, LeaseConfig};
 /// - Landlord call: sets `contract_hash` and marks `landlord_signed = true`.
 /// - Tenant call: verifies the submitted hash matches the stored one and marks
 ///   `tenant_signed = true`. The landlord must call first.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<RecordContractHash>, contract_hash: [u8; 32]) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let config = &mut ctx.accounts.lease_config;

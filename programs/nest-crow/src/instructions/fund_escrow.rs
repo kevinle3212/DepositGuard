@@ -7,6 +7,9 @@ use crate::state::{EscrowState, EscrowStatus, LeaseConfig};
 /// Transfers the full deposit from the tenant's token account into the
 /// PDA-owned vault. Both parties must have signed the lease before funding.
 /// Status transitions: CREATED → FUNDED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<FundEscrow>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let config = &ctx.accounts.lease_config;

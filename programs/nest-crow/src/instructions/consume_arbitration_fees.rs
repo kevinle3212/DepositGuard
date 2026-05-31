@@ -6,6 +6,9 @@ use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState};
 
 /// The assigned arbitrator claims the fee pool after both parties have paid.
 /// Only `arbitration_escrow.arbitrator_pubkey` may call this.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<ConsumeArbitrationFees>) -> Result<()> {
     let arb = &ctx.accounts.arbitration_escrow;
     require!(ctx.accounts.arbitrator.key() == arb.arbitrator_pubkey, NestCrowError::NotArbitrator);

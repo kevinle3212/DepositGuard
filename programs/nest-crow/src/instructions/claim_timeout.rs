@@ -6,7 +6,10 @@ use crate::state::{EscrowState, EscrowStatus};
 
 /// Relayer calls this after `deadline_ts` has passed.
 /// Releases the full remaining vault balance to the tenant.
-/// Status transitions: ACTIVE or PENDING_APPROVAL → RELEASED.
+/// Status transitions: ACTIVE or `PENDING_APPROVAL` → RELEASED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<ClaimTimeout>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 

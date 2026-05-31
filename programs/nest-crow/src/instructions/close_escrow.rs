@@ -7,6 +7,9 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus, LeaseConfig};
 /// Closes all PDA accounts and the vault token account, reclaiming rent
 /// back to the landlord. May only be called after all funds are disbursed
 /// (status = RELEASED or RESOLVED).
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<CloseEscrow>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 

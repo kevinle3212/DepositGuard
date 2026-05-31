@@ -4,11 +4,15 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::errors::NestCrowError;
 use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC};
 
-/// Returns every fee a party actually paid (base $50 + optional $25 panel) back
-/// to that party. Used when the dispute resolves before the arbitrator is
-/// assigned, or when only one party paid within the 72-hour window
-/// (one-party default). Permissionless relayer call; funds only ever return to
-/// the original payers.
+/// Returns every fee a party actually paid back to that party.
+///
+/// Covers base $50 plus optional $25 panel fees. Used when the dispute resolves
+/// before the arbitrator is assigned, or when only one party paid within the
+/// 72-hour window (one-party default). Permissionless relayer call; funds only
+/// ever return to the original payers.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<RefundArbitrationFees>) -> Result<()> {
     let arb = &ctx.accounts.arbitration_escrow;
     require!(
@@ -102,7 +106,7 @@ pub struct RefundArbitrationFees<'info> {
     )]
     pub landlord_token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: landlord pubkey validated against escrow_state.
+    /// CHECK: landlord pubkey validated against `escrow_state`.
     #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
     pub landlord: UncheckedAccount<'info>,
 
@@ -113,7 +117,7 @@ pub struct RefundArbitrationFees<'info> {
     )]
     pub tenant_token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: tenant pubkey validated against escrow_state.
+    /// CHECK: tenant pubkey validated against `escrow_state`.
     #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
     pub tenant: UncheckedAccount<'info>,
 

@@ -7,6 +7,9 @@ use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_U
 /// A party pays the optional $25 USDC panel-upgrade fee. Both parties must pay to
 /// activate the three-arbitrator panel track. The party must have paid its base
 /// arbitration fee first.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<PayPanelUpgradeFee>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let signer = ctx.accounts.payer.key();

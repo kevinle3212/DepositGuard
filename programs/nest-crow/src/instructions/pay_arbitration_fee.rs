@@ -4,9 +4,13 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::errors::NestCrowError;
 use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState};
 
-/// A party pays its fixed $50 USDC arbitration fee into the fee vault. Must be
-/// paid within the 72-hour window. Once both parties have paid, the pool moves
-/// to BothPaid and can be consumed by the assigned arbitrator.
+/// A party pays its fixed $50 USDC arbitration fee into the fee vault.
+///
+/// Must be paid within the 72-hour window. Once both parties have paid, the pool
+/// moves to `BothPaid` and can be consumed by the assigned arbitrator.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<PayArbitrationFee>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let signer = ctx.accounts.payer.key();

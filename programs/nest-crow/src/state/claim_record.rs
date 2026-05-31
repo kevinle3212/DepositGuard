@@ -2,9 +2,10 @@ use anchor_lang::prelude::*;
 
 /// Damage and photo record for a lease.
 /// Populated across move-in, move-out, and dispute phases.
-/// PDA seeds: ["claim-record", lease_id]
+/// PDA seeds: ["claim-record", `lease_id`]
 #[account]
 #[derive(InitSpace)]
+#[allow(clippy::struct_excessive_bools)] // flat flags required for Anchor account layout
 pub struct ClaimRecord {
     /// SHA-256 hashes of itemized damage evidence (max 20 items).
     #[max_len(20)]
@@ -21,7 +22,7 @@ pub struct ClaimRecord {
     pub tenant_estimate_sealed_ts: i64,
     /// Unix timestamp when the landlord sealed their estimate.
     pub landlord_estimate_sealed_ts: i64,
-    /// Maximum fine enforceable by an arbitrator = (tenant_estimate + landlord_estimate) / 2.
+    /// Maximum fine enforceable by an arbitrator = (`tenant_estimate` + `landlord_estimate`) / 2.
     /// Set on-chain by `reveal_estimates`; every resolution path is capped by this value.
     pub max_fine: u64,
     /// SHA-256 hash of the landlord's photo set (move-in baseline).

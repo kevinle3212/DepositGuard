@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 /// Status of the escrow, enforcing the state machine:
-/// CREATED → FUNDED → PENDING_DOCUMENTATION → ACTIVE →
-/// PENDING_APPROVAL → RELEASED / DISPUTED → RESOLVED
+/// CREATED → FUNDED → `PENDING_DOCUMENTATION` → ACTIVE →
+/// `PENDING_APPROVAL` → RELEASED / DISPUTED → RESOLVED
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, InitSpace, Debug)]
 pub enum EscrowStatus {
     Created,
@@ -16,7 +16,7 @@ pub enum EscrowStatus {
 }
 
 /// Primary escrow account holding lease identity and lifecycle state.
-/// PDA seeds: ["escrow", lease_id]
+/// PDA seeds: ["escrow", `lease_id`]
 #[account]
 #[derive(InitSpace)]
 pub struct EscrowState {

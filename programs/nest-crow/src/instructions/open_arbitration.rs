@@ -7,10 +7,14 @@ use crate::state::{
     ARBITRATION_PAYMENT_WINDOW_SECS,
 };
 
-/// Opens the arbitration fee track for a disputed lease: creates the
-/// `ArbitrationEscrow` and its fee vault, fixes each party's fee at $50 USDC,
-/// records the assigned arbitrator, and starts the 72-hour payment window.
-/// Callable by either party once the lease is DISPUTED.
+/// Opens the arbitration fee track for a disputed lease.
+///
+/// Creates the `ArbitrationEscrow` and its fee vault, fixes each party's fee at
+/// $50 USDC, records the assigned arbitrator, and starts the 72-hour payment
+/// window. Callable by either party once the lease is DISPUTED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<OpenArbitration>, arbitrator: Pubkey) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);

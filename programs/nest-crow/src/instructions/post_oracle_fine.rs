@@ -3,9 +3,14 @@ use anchor_lang::prelude::*;
 use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
-/// The designated oracle relays the Gemini-computed fine on-chain. This value is
-/// advisory: it is recorded for the arbitrator/panel and re-checked against
-/// `max_fine` here, but every resolution path independently re-enforces the cap.
+/// The designated oracle relays the Gemini-computed fine on-chain.
+///
+/// This value is advisory: it is recorded for the arbitrator/panel and
+/// re-checked against `max_fine` here, but every resolution path independently
+/// re-enforces the cap.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<PostOracleFine>, fine: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);

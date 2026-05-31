@@ -21,9 +21,10 @@ pub enum ArbitrationFeeStatus {
 }
 
 /// Escrow holding the arbitration (and optional panel-upgrade) fees for a lease.
-/// PDA seeds: ["arb-escrow", lease_id]. Funds are held in ["arb-vault", lease_id].
+/// PDA seeds: ["arb-escrow", `lease_id`]. Funds are held in ["arb-vault", `lease_id`].
 #[account]
 #[derive(InitSpace)]
+#[allow(clippy::struct_excessive_bools)] // flat flags required for Anchor account layout
 pub struct ArbitrationEscrow {
     /// Lease this fee pool belongs to (PDA seed).
     pub lease_id: Pubkey,

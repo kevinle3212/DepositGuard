@@ -37,7 +37,7 @@ pub struct PanelRuling {
 }
 
 /// Three-arbitrator panel for a disputed lease.
-/// PDA seeds: ["arb-panel", lease_id].
+/// PDA seeds: ["arb-panel", `lease_id`].
 #[account]
 #[derive(InitSpace)]
 pub struct ArbitrationPanel {

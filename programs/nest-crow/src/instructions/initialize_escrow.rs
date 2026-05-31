@@ -3,8 +3,11 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus, LeaseConfig};
 
-/// Creates EscrowState, LeaseConfig, ClaimRecord PDAs and the PDA-owned
+/// Creates `EscrowState`, `LeaseConfig`, `ClaimRecord` PDAs and the PDA-owned
 /// vault token account for a new lease. Status is set to CREATED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(
     ctx: Context<InitializeEscrow>,
     lease_id: Pubkey,

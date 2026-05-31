@@ -6,7 +6,10 @@ use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Tenant approves the landlord's proposed deduction split.
 /// Releases the undisputed amount to the tenant and the deduction to the landlord.
-/// Status transitions: PENDING_APPROVAL → RELEASED.
+/// Status transitions: `PENDING_APPROVAL` → RELEASED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<ApproveRelease>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
@@ -91,7 +94,7 @@ pub struct ApproveRelease<'info> {
     )]
     pub tenant_token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: Landlord's token account; validated via escrow_state.landlord constraint.
+    /// CHECK: Landlord's token account; validated via `escrow_state.landlord` constraint.
     #[account(
         mut,
         token::mint = token_mint,

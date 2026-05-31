@@ -19,4 +19,4 @@ wallet = "~/.config/solana/id.json"
 test = "yarn test-anchor"
 
 [hooks]
-# Re-enable when `cargo lint` is clean: pre_build = "cargo lint"
+pre_build = "cargo lint"

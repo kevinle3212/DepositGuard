@@ -3,9 +3,14 @@ use anchor_lang::prelude::*;
 use crate::errors::NestCrowError;
 use crate::state::{ArbitrationPanel, EscrowState};
 
-/// A panelist submits a sealed ruling: a fine amount, the intended recipient,
-/// and the SHA-256 hash of their written reasoning. Each panelist may submit
-/// exactly once; rulings cannot be added after the panel has resolved.
+/// A panelist submits a sealed ruling.
+///
+/// Includes a fine amount, the intended recipient, and the SHA-256 hash of their
+/// written reasoning. Each panelist may submit exactly once; rulings cannot be
+/// added after the panel has resolved.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(
     ctx: Context<SubmitPanelRuling>,
     fine_amount: u64,
@@ -26,9 +31,8 @@ pub fn handler(
     let idx =
         panel.panelists.iter().position(|p| *p == panelist).ok_or(NestCrowError::NotPanelist)?;
 
-    require!(!panel.rulings[idx].submitted, NestCrowError::RulingAlreadySubmitted);
-
-    let ruling = &mut panel.rulings[idx];
+    let ruling = panel.rulings.get_mut(idx).ok_or(NestCrowError::ArithmeticOverflow)?;
+    require!(!ruling.submitted, NestCrowError::RulingAlreadySubmitted);
     ruling.panelist = panelist;
     ruling.fine_amount = fine_amount;
     ruling.recipient = recipient;

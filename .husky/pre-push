@@ -1,6 +1,5 @@
 #!/bin/sh
-# Re-enable when `cargo lint` is clean:
-# cargo lint
+cargo lint
 
 # Anchor tests need a local validator — skip if none is running.
 if curl -sf http://127.0.0.1:8899 -o /dev/null 2>/dev/null; then

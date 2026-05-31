@@ -3,9 +3,14 @@ use anchor_lang::prelude::*;
 use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
-/// Computes `max_fine = (tenant_estimate + landlord_estimate) / 2` once both
-/// estimates are sealed. Deterministic and permissionless (typically the relayer).
-/// `max_fine` is the hard cap every resolution path must respect.
+/// Computes `max_fine` once both estimates are sealed.
+///
+/// `max_fine = (tenant_estimate + landlord_estimate) / 2`. Deterministic and
+/// permissionless (typically the relayer). `max_fine` is the hard cap every
+/// resolution path must respect.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<RevealEstimates>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);

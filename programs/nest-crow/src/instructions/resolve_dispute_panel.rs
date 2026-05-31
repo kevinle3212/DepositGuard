@@ -7,17 +7,34 @@ use crate::state::{
     EscrowStatus, PanelOutcome, PANEL_DISSENT_THRESHOLD_PCT, PANEL_ESCALATION_WINDOW_SECS,
 };
 
-/// Reconciles the three panel rulings and executes the adopted outcome:
-///   Case A — unanimous: all three fines agree.
-///   Case B — 2-1 majority: the majority fine is adopted; if the minority's
-///            dissent exceeds 20% of the majority fine, it is flagged and the
-///            dissenting panelist + reasoning hash are recorded permanently.
-///   Case C — three-way split: the median fine is adopted.
+/// Reconciles the three panel rulings and executes the adopted outcome.
+///
+/// Case A — unanimous: all three fines agree.
+/// Case B — 2-1 majority: the majority fine is adopted; if the minority's
+/// dissent exceeds 20% of the majority fine, it is flagged and the
+/// dissenting panelist + reasoning hash are recorded permanently.
+/// Case C — three-way split: the median fine is adopted.
 /// The adopted fine is hard-capped at `max_fine` and at the disputed balance.
 /// Disputed funds are paid out (fine → recipient, remainder → the other party),
 /// the fee pool is marked consumed, and a 14-day escalation window opens.
 /// Status transitions: DISPUTED → RESOLVED.
-pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
+pub fn handler(mut ctx: Context<ResolveDisputePanel>) -> Result<()> {
+    validate_ready(&ctx)?;
+    let fines = collect_panel_fines(&ctx.accounts.arbitration_panel)?;
+    let decision = reconcile(&fines);
+    let adopted = adopted_ruling(&ctx.accounts.arbitration_panel, &fines, &decision)?;
+    validate_fine(&ctx.accounts.claim_record, adopted.fine)?;
+    let minority = minority_dissent(&ctx.accounts.arbitration_panel, &fines, &decision)?;
+    let to_other = payout_remainder(&ctx.accounts.claim_record, adopted.fine)?;
+    execute_payout(&ctx, adopted.recipient, adopted.fine, to_other)?;
+    record_resolution(&mut ctx, decision, adopted, minority)?;
+    Ok(())
+}
+
+fn validate_ready(ctx: &Context<ResolveDisputePanel>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
 
@@ -27,8 +44,6 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
         require!(panel.rulings.iter().all(|r| r.submitted), NestCrowError::PanelNotComplete);
     }
     require!(ctx.accounts.claim_record.estimates_revealed, NestCrowError::EstimatesNotRevealed);
-
-    // The panel track must have been funded (both upgrade fees paid).
     require!(
         matches!(
             ctx.accounts.arbitration_escrow.status,
@@ -36,38 +51,82 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
         ),
         NestCrowError::FeesNotBothPaid
     );
+    Ok(())
+}
 
-    let fines = [
-        ctx.accounts.arbitration_panel.rulings[0].fine_amount,
-        ctx.accounts.arbitration_panel.rulings[1].fine_amount,
-        ctx.accounts.arbitration_panel.rulings[2].fine_amount,
-    ];
+fn collect_panel_fines(panel: &ArbitrationPanel) -> Result<[u64; 3]> {
+    let mut fines = [0u64; 3];
+    for (i, slot) in fines.iter_mut().enumerate() {
+        *slot =
+            panel.rulings.get(i).map(|r| r.fine_amount).ok_or(NestCrowError::ArithmeticOverflow)?;
+    }
+    Ok(fines)
+}
 
-    // Reconcile the three rulings into an adopted ruling.
-    let decision = reconcile(&fines);
-    let adopted_idx = decision.adopted_idx;
-    let adopted_fine = fines[adopted_idx];
-    let adopted_recipient = ctx.accounts.arbitration_panel.rulings[adopted_idx].recipient;
+struct AdoptedRuling {
+    fine: u64,
+    recipient: Pubkey,
+}
 
-    let claim = &ctx.accounts.claim_record;
+fn adopted_ruling(
+    panel: &ArbitrationPanel,
+    fines: &[u64; 3],
+    decision: &Decision,
+) -> Result<AdoptedRuling> {
+    let fine = fines.get(decision.adopted_idx).copied().ok_or(NestCrowError::ArithmeticOverflow)?;
+    let recipient = panel
+        .rulings
+        .get(decision.adopted_idx)
+        .map(|r| r.recipient)
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
+    Ok(AdoptedRuling { fine, recipient })
+}
+
+fn validate_fine(claim: &ClaimRecord, adopted_fine: u64) -> Result<()> {
     require!(adopted_fine <= claim.max_fine, NestCrowError::FineExceedsMaxFine);
     require!(adopted_fine <= claim.disputed_total, NestCrowError::FineExceedsDisputed);
-    let disputed_total = claim.disputed_total;
-    let to_other =
-        disputed_total.checked_sub(adopted_fine).ok_or(NestCrowError::ArithmeticOverflow)?;
+    Ok(())
+}
 
-    // Minority-protection: in a 2-1 majority, evaluate the dissent magnitude.
-    let mut dissent_flag = false;
-    let mut minority_panelist = Pubkey::default();
-    let mut minority_hash = [0u8; 32];
-    if let Some(minority_idx) = decision.minority_idx {
-        let minority_fine = fines[minority_idx];
-        minority_panelist = ctx.accounts.arbitration_panel.rulings[minority_idx].panelist;
-        minority_hash = ctx.accounts.arbitration_panel.rulings[minority_idx].ruling_hash;
-        dissent_flag = dissent_exceeds_threshold(adopted_fine, minority_fine)?;
-    }
+struct MinorityDissent {
+    flag: bool,
+    panelist: Pubkey,
+    hash: [u8; 32],
+}
 
-    // Execute the payout from the disputed vault.
+fn minority_dissent(
+    panel: &ArbitrationPanel,
+    fines: &[u64; 3],
+    decision: &Decision,
+) -> Result<MinorityDissent> {
+    let mut dissent = MinorityDissent { flag: false, panelist: Pubkey::default(), hash: [0u8; 32] };
+    let Some(minority_idx) = decision.minority_idx else {
+        return Ok(dissent);
+    };
+    let minority_fine =
+        fines.get(minority_idx).copied().ok_or(NestCrowError::ArithmeticOverflow)?;
+    let ruling = panel.rulings.get(minority_idx).ok_or(NestCrowError::ArithmeticOverflow)?;
+    dissent.panelist = ruling.panelist;
+    dissent.hash = ruling.ruling_hash;
+    let adopted_fine =
+        fines.get(decision.adopted_idx).copied().ok_or(NestCrowError::ArithmeticOverflow)?;
+    dissent.flag = dissent_exceeds_threshold(adopted_fine, minority_fine)?;
+    Ok(dissent)
+}
+
+fn payout_remainder(claim: &ClaimRecord, adopted_fine: u64) -> Result<u64> {
+    claim
+        .disputed_total
+        .checked_sub(adopted_fine)
+        .ok_or_else(|| NestCrowError::ArithmeticOverflow.into())
+}
+
+fn execute_payout(
+    ctx: &Context<ResolveDisputePanel>,
+    adopted_recipient: Pubkey,
+    adopted_fine: u64,
+    to_other: u64,
+) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     let lease_id = escrow.lease_id;
     let bump = escrow.bump;
@@ -114,34 +173,34 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
             to_other,
         )?;
     }
+    Ok(())
+}
 
+fn record_resolution(
+    ctx: &mut Context<ResolveDisputePanel>,
+    decision: Decision,
+    adopted: AdoptedRuling,
+    minority: MinorityDissent,
+) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
 
-    // Record the panel outcome.
     let panel = &mut ctx.accounts.arbitration_panel;
     panel.outcome = decision.outcome;
-    panel.adopted_fine = adopted_fine;
-    panel.adopted_recipient = adopted_recipient;
-    panel.minority_dissent_flag = dissent_flag;
+    panel.adopted_fine = adopted.fine;
+    panel.adopted_recipient = adopted.recipient;
+    panel.minority_dissent_flag = minority.flag;
     panel.escalation_deadline_ts =
         now.checked_add(PANEL_ESCALATION_WINDOW_SECS).ok_or(NestCrowError::ArithmeticOverflow)?;
     panel.resolved = true;
 
-    // Persist minority protection on the immutable claim record.
     let claim = &mut ctx.accounts.claim_record;
-    claim.resolved_fine = adopted_fine;
-    claim.minority_panelist = minority_panelist;
-    claim.minority_ruling_hash = minority_hash;
-    claim.minority_dissent_flag = dissent_flag;
+    claim.resolved_fine = adopted.fine;
+    claim.minority_panelist = minority.panelist;
+    claim.minority_ruling_hash = minority.hash;
+    claim.minority_dissent_flag = minority.flag;
 
-    // Mark the fee pool consumed (panelist compensation is claimed via
-    // consume_arbitration_fees).
-    let arb = &mut ctx.accounts.arbitration_escrow;
-    arb.status = ArbitrationFeeStatus::Consumed;
-
-    let escrow = &mut ctx.accounts.escrow_state;
-    escrow.status = EscrowStatus::Resolved;
-
+    ctx.accounts.arbitration_escrow.status = ArbitrationFeeStatus::Consumed;
+    ctx.accounts.escrow_state.status = EscrowStatus::Resolved;
     Ok(())
 }
 
@@ -157,19 +216,21 @@ struct Decision {
 /// Classifies three fines as unanimous (Case A), 2-1 majority (Case B), or
 /// three-way split adopting the median (Case C).
 fn reconcile(fines: &[u64; 3]) -> Decision {
-    if fines[0] == fines[1] && fines[1] == fines[2] {
+    let &[a, b, c] = fines;
+    if a == b && b == c {
         Decision { outcome: PanelOutcome::Unanimous, adopted_idx: 0, minority_idx: None }
-    } else if fines[0] == fines[1] {
+    } else if a == b {
         Decision { outcome: PanelOutcome::Majority, adopted_idx: 0, minority_idx: Some(2) }
-    } else if fines[0] == fines[2] {
+    } else if a == c {
         Decision { outcome: PanelOutcome::Majority, adopted_idx: 0, minority_idx: Some(1) }
-    } else if fines[1] == fines[2] {
+    } else if b == c {
         Decision { outcome: PanelOutcome::Majority, adopted_idx: 1, minority_idx: Some(0) }
     } else {
         // All distinct: adopt the median.
         let mut idx = [0usize, 1, 2];
-        idx.sort_by_key(|&i| fines[i]);
-        Decision { outcome: PanelOutcome::Median, adopted_idx: idx[1], minority_idx: None }
+        idx.sort_by_key(|&i| fines.get(i).copied().unwrap_or(0));
+        let [_, median_idx, _] = idx;
+        Decision { outcome: PanelOutcome::Median, adopted_idx: median_idx, minority_idx: None }
     }
 }
 
@@ -180,9 +241,9 @@ fn dissent_exceeds_threshold(majority_fine: u64, minority_fine: u64) -> Result<b
     if majority_fine == 0 {
         return Ok(diff > 0);
     }
-    let lhs = (diff as u128).checked_mul(100).ok_or(NestCrowError::ArithmeticOverflow)?;
-    let rhs = (majority_fine as u128)
-        .checked_mul(PANEL_DISSENT_THRESHOLD_PCT as u128)
+    let lhs = u128::from(diff).checked_mul(100).ok_or(NestCrowError::ArithmeticOverflow)?;
+    let rhs = u128::from(majority_fine)
+        .checked_mul(u128::from(PANEL_DISSENT_THRESHOLD_PCT))
         .ok_or(NestCrowError::ArithmeticOverflow)?;
     Ok(lhs > rhs)
 }
@@ -237,7 +298,7 @@ pub struct ResolveDisputePanel<'info> {
     )]
     pub landlord_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: landlord pubkey validated against escrow_state.
+    /// CHECK: landlord pubkey validated against `escrow_state`.
     #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
     pub landlord: UncheckedAccount<'info>,
 
@@ -248,7 +309,7 @@ pub struct ResolveDisputePanel<'info> {
     )]
     pub tenant_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: tenant pubkey validated against escrow_state.
+    /// CHECK: tenant pubkey validated against `escrow_state`.
     #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
     pub tenant: UncheckedAccount<'info>,
 

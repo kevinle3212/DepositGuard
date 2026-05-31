@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 /// Configuration and signing state for a lease.
-/// PDA seeds: ["lease-config", lease_id]
+/// PDA seeds: ["lease-config", `lease_id`]
 #[account]
 #[derive(InitSpace)]
 pub struct LeaseConfig {

@@ -4,8 +4,11 @@ use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Landlord proposes a deduction split after move-out.
-/// Sets `landlord_estimate` and `undisputed_total` in ClaimRecord.
-/// Status transitions: ACTIVE → PENDING_APPROVAL.
+/// Sets `landlord_estimate` and `undisputed_total` in `ClaimRecord`.
+/// Status transitions: ACTIVE → `PENDING_APPROVAL`.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
@@ -13,7 +16,10 @@ pub fn handler(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()
     require!(ctx.accounts.landlord.key() == escrow.landlord, NestCrowError::NotLandlord);
     require!(deduction_amount <= escrow.deposit_amount, NestCrowError::DeductionExceedsDeposit);
 
-    let undisputed = escrow.deposit_amount.checked_sub(deduction_amount).unwrap();
+    let undisputed = escrow
+        .deposit_amount
+        .checked_sub(deduction_amount)
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
 
     let claim = &mut ctx.accounts.claim_record;
     claim.landlord_estimate = deduction_amount;

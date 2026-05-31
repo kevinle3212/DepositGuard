@@ -4,11 +4,15 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
-/// Solo arbitrator resolves the dispute. `fine_amount` is the damages charged to
-/// the tenant (paid to the landlord); the remaining disputed funds go to the
-/// tenant. The fine is hard-capped on-chain at `max_fine` regardless of any
-/// off-chain (Gemini/oracle) recommendation.
-/// Status transitions: DISPUTED → RESOLVED.
+/// Solo arbitrator resolves the dispute.
+///
+/// `fine_amount` is the damages charged to the tenant (paid to the landlord);
+/// the remaining disputed funds go to the tenant. The fine is hard-capped
+/// on-chain at `max_fine` regardless of any off-chain (Gemini/oracle)
+/// recommendation. Status transitions: DISPUTED → RESOLVED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<ResolveDispute>, fine_amount: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);
@@ -98,7 +102,7 @@ pub struct ResolveDispute<'info> {
     )]
     pub tenant_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: tenant pubkey validated against escrow_state.
+    /// CHECK: tenant pubkey validated against `escrow_state`.
     #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
     pub tenant: UncheckedAccount<'info>,
 
@@ -110,7 +114,7 @@ pub struct ResolveDispute<'info> {
     )]
     pub landlord_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: landlord pubkey validated against escrow_state.
+    /// CHECK: landlord pubkey validated against `escrow_state`.
     #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
     pub landlord: UncheckedAccount<'info>,
 

@@ -1,8 +1,16 @@
-/// NestCrow — security deposit escrow on Solana.
-///
-/// State machine:
-///   CREATED → FUNDED → PENDING_DOCUMENTATION → ACTIVE →
-///   PENDING_APPROVAL → RELEASED / DISPUTED → RESOLVED
+//! NestCrow — security deposit escrow on Solana.
+//!
+//! State machine:
+//!   CREATED → FUNDED → `PENDING_DOCUMENTATION` → ACTIVE →
+//!   `PENDING_APPROVAL` → RELEASED / DISPUTED → RESOLVED
+//!
+//! Anchor `Context` / `Accounts` use elided binder lifetimes on `#[program]` entrypoints.
+#![allow(
+    elided_lifetimes_in_paths,
+    clippy::diverging_sub_expression,
+    clippy::needless_pass_by_value
+)]
+
 use anchor_lang::prelude::*;
 
 pub mod errors;
@@ -10,17 +18,28 @@ pub mod instructions;
 pub mod state;
 
 // `use instructions::*` brings the Accounts structs into scope for #[program].
-// handler fns are called via full module paths below (mod.rs does not re-export them).
+#[allow(clippy::wildcard_imports)]
 use instructions::*;
 
 // Replace with the actual program ID after running `anchor keys sync`.
 declare_id!("Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi");
 
+#[allow(
+    clippy::diverging_sub_expression,
+    clippy::needless_pass_by_value,
+    clippy::missing_errors_doc
+)]
 #[program]
 pub mod nest_crow {
-    use super::*;
+    use super::{
+        instructions, ApproveRelease, ClaimTimeout, CloseEscrow, ConsumeArbitrationFees, Context,
+        FundEscrow, InitializeEscrow, OpenArbitration, OpenDispute, OpenPanel, PayArbitrationFee,
+        PayPanelUpgradeFee, PostOracleFine, ProposeRelease, Pubkey, RecordContractHash,
+        RecordPhotoHash, RefundArbitrationFees, ResolveDispute, ResolveDisputePanel, Result,
+        RevealEstimates, SubmitEstimate, SubmitPanelRuling,
+    };
 
-    /// Creates EscrowState, LeaseConfig, ClaimRecord PDAs and the vault token
+    /// Creates `EscrowState`, `LeaseConfig`, `ClaimRecord` PDAs and the vault token
     /// account for a new lease. Status begins at CREATED.
     pub fn initialize_escrow(
         ctx: Context<InitializeEscrow>,
@@ -59,26 +78,26 @@ pub mod nest_crow {
     }
 
     /// Stores the SHA-256 hash of a party's move-in photo set.
-    /// Status: FUNDED → PENDING_DOCUMENTATION (first call),
-    ///         PENDING_DOCUMENTATION → ACTIVE (both parties submitted).
+    /// Status: FUNDED → `PENDING_DOCUMENTATION` (first call),
+    ///         `PENDING_DOCUMENTATION` → ACTIVE (both parties submitted).
     pub fn record_photo_hash(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()> {
         instructions::record_photo_hash::handler(ctx, photo_hash)
     }
 
     /// Landlord proposes a deduction from the deposit after move-out.
-    /// Status: ACTIVE → PENDING_APPROVAL.
+    /// Status: ACTIVE → `PENDING_APPROVAL`.
     pub fn propose_release(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()> {
         instructions::propose_release::handler(ctx, deduction_amount)
     }
 
     /// Tenant accepts the landlord's proposed split; funds are disbursed.
-    /// Status: PENDING_APPROVAL → RELEASED.
+    /// Status: `PENDING_APPROVAL` → RELEASED.
     pub fn approve_release(ctx: Context<ApproveRelease>) -> Result<()> {
         instructions::approve_release::handler(ctx)
     }
 
     /// Relayer calls after `deadline_ts`; full vault balance goes to tenant.
-    /// Status: ACTIVE or PENDING_APPROVAL → RELEASED.
+    /// Status: ACTIVE or `PENDING_APPROVAL` → RELEASED.
     pub fn claim_timeout(ctx: Context<ClaimTimeout>) -> Result<()> {
         instructions::claim_timeout::handler(ctx)
     }
@@ -93,7 +112,7 @@ pub mod nest_crow {
 
     /// Tenant rejects the proposed deduction; undisputed funds go to the tenant,
     /// disputed funds stay locked. Records the solo arbitrator and fine oracle.
-    /// Status: PENDING_APPROVAL → DISPUTED.
+    /// Status: `PENDING_APPROVAL` → DISPUTED.
     pub fn open_dispute(
         ctx: Context<OpenDispute>,
         arbitrator: Pubkey,

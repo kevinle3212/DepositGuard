@@ -22,7 +22,7 @@ pub mod submit_panel_ruling;
 
 // Full glob re-exports are required so that Anchor's #[program] macro can
 // resolve the generated `__client_accounts_*` types from each submodule.
-// The "ambiguous glob re-exports" warning about the `handler` name is harmless.
+#[allow(clippy::wildcard_imports, ambiguous_glob_reexports)]
 pub use approve_release::*;
 pub use claim_timeout::*;
 pub use close_escrow::*;

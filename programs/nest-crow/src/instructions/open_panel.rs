@@ -7,6 +7,9 @@ use crate::state::{
 
 /// Creates the three-arbitrator panel for a disputed lease. Requires that both
 /// parties have paid the panel-upgrade fee. Callable by either party.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<OpenPanel>, panelists: [Pubkey; 3]) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(escrow.status == EscrowStatus::Disputed, NestCrowError::NotDisputed);

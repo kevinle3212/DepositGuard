@@ -5,10 +5,14 @@ use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Tenant rejects the landlord's proposed deduction and opens a formal dispute.
+///
 /// The undisputed portion is released to the tenant immediately; the contested
 /// remainder stays locked in the vault. The assigned solo `arbitrator` and the
 /// fine `oracle` (which relays the Gemini-computed fine) are recorded here.
-/// Status transitions: PENDING_APPROVAL → DISPUTED.
+/// Status transitions: `PENDING_APPROVAL` → DISPUTED.
+/// # Errors
+///
+/// Returns a [`ProgramError`] if accounts, authorization, or state checks fail.
 pub fn handler(ctx: Context<OpenDispute>, arbitrator: Pubkey, oracle: Pubkey) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
