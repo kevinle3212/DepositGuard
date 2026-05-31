@@ -13,6 +13,7 @@
 export interface LeaseDoc {
     status?: string;
     depositAmount?: number;
+    arbitratorAddress?: string;
     currency?: string;
     landlordAddress?: string;
     tenantAddress?: string;
@@ -40,6 +41,7 @@ export interface LeaseDoc {
 export interface DepositResponse {
     id: string;
     status: string;
+    arbitratorAddress?: string;
     amountSol: number;
     denomination: string;
     landlordAddress: string;
@@ -90,12 +92,25 @@ export function leaseToDeposit(id: string, raw: FirebaseFirestore.DocumentData):
             : {}),
         landlordSigned: data.landlordSigned === true,
         tenantSigned: data.tenantSigned === true,
-        ...(data.landlordEstimateUsdc !== undefined ? { landlordEstimateUsdc: data.landlordEstimateUsdc } : {}),
-        ...(data.tenantEstimateUsdc !== undefined ? { tenantEstimateUsdc: data.tenantEstimateUsdc } : {}),
+        ...(data.landlordEstimateUsdc !== undefined
+            ? { landlordEstimateUsdc: data.landlordEstimateUsdc }
+            : {}),
+        ...(data.tenantEstimateUsdc !== undefined
+            ? { tenantEstimateUsdc: data.tenantEstimateUsdc }
+            : {}),
         ...(data.maxFineUsdc !== undefined ? { maxFineUsdc: data.maxFineUsdc } : {}),
-        ...(data.estimatesRevealed !== undefined ? { estimatesRevealed: data.estimatesRevealed } : {}),
-        ...(data.landlordEstimateTxSig !== undefined ? { landlordEstimateTxSig: data.landlordEstimateTxSig } : {}),
-        ...(data.tenantEstimateTxSig !== undefined ? { tenantEstimateTxSig: data.tenantEstimateTxSig } : {}),
+        ...(data.estimatesRevealed !== undefined
+            ? { estimatesRevealed: data.estimatesRevealed }
+            : {}),
+        ...(data.landlordEstimateTxSig !== undefined
+            ? { landlordEstimateTxSig: data.landlordEstimateTxSig }
+            : {}),
+        ...(data.tenantEstimateTxSig !== undefined
+            ? { tenantEstimateTxSig: data.tenantEstimateTxSig }
+            : {}),
+        ...(data.arbitratorAddress !== undefined
+            ? { arbitratorAddress: data.arbitratorAddress }
+            : {}),
         timeline:
             Array.isArray(data.timeline) && data.timeline.length > 0
                 ? data.timeline

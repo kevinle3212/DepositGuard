@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, PlusCircle } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WalletButton } from "@/components/wallet/wallet-button";
 import { VoiceToggle } from "@/components/ui/VoiceToggle";
@@ -12,6 +12,7 @@ const NAV_LINKS = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/deposits", label: "Deposits", icon: FileText },
     { href: "/deposits/new", label: "New", icon: PlusCircle },
+    { href: "/jurors", label: "Jurors", icon: Scale },
 ];
 
 export function Nav() {

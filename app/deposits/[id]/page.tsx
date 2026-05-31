@@ -26,6 +26,7 @@ import { deserializeAndSignSolanaTx } from "@/src/lib/txEngine";
 import { toast } from "@/hooks/use-toast";
 import { cn, formatAmount } from "@/lib/utils";
 import { DamageCapturePanel } from "@/src/components/damage/DamageCapturePanel";
+import { ArbitratorPanel } from "@/components/arbitration/ArbitratorPanel";
 
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
 const SOLANA_NETWORK = process.env["NEXT_PUBLIC_SOLANA_NETWORK"] ?? "devnet";
@@ -46,6 +47,7 @@ export default function DepositDetailPage() {
     const [funding, setFunding] = useState(false);
 
     const isTenant = walletPubkey === deposit?.tenantAddress;
+    const isArbitrator = walletPubkey != null && walletPubkey === deposit?.arbitratorAddress;
     const canFund = deposit?.status === "Created" && isTenant;
 
     async function handleFundEscrow() {
@@ -279,6 +281,11 @@ export default function DepositDetailPage() {
                         />
                     </CardContent>
                 </Card>
+
+                {/* Arbitrator resolve panel — only visible to the assigned arbitrator */}
+                {isArbitrator && (
+                    <ArbitratorPanel deposit={deposit} onResolved={() => void refetch()} />
+                )}
 
                 {/* Timeline */}
                 {deposit.timeline.length > 0 && (

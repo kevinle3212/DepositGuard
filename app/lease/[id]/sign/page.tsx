@@ -28,6 +28,7 @@ export default function SignPage() {
     const wallet = useWallet();
     const { speak } = useVoice();
 
+    const [previewTs] = useState(() => Math.floor(Date.now() / 1000));
     const [tokenStatus, setTokenStatus] = useState<TokenStatus>("loading");
     const [payload, setPayload] = useState<TokenPayload | null>(null);
     const [contractUrl, setContractUrl] = useState<string | null>(null);
@@ -332,7 +333,7 @@ export default function SignPage() {
                         {errorMsg && <p className="text-sm text-destructive">{errorMsg}</p>}
                         <button
                             onClick={() => void handleSign()}
-                            disabled={!wallet.connected || signStatus !== "idle" || !contractHash}
+                            disabled={!connected || signStatus !== "idle" || !contractHash}
                             className="w-full rounded-lg bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
                         >
                             {signStatus === "signing"
@@ -346,7 +347,7 @@ export default function SignPage() {
                             <br />
                             <span className="font-mono">
                                 I agree to lease {payload?.leaseId} contract hash{" "}
-                                {contractHash ?? "…"}. Timestamp: &lt;unix_ts&gt;
+                                {contractHash ?? "…"}. Timestamp: {previewTs}
                             </span>
                         </p>
                     </div>

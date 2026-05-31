@@ -14,6 +14,7 @@ import {
     Wallet,
     UserCheck,
     Building2,
+    Scale,
 } from "lucide-react";
 import { useState } from "react";
 import { cn, shortenAddress } from "@/lib/utils";
@@ -24,6 +25,7 @@ import { VoiceToggle } from "@/components/ui/VoiceToggle";
 const NAV_LINKS = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/deposits", label: "Deposits", icon: FileText },
+    { href: "/jurors", label: "Jurors", icon: Scale },
 ];
 
 function RoleBadge({ role }: { role: "landlord" | "tenant" | "arbitrator" | null }) {
