@@ -1,12 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
-import {
-    PublicKey,
-    TransactionMessage,
-    VersionedTransaction,
-    Keypair,
-} from "@solana/web3.js";
+import { PublicKey, TransactionMessage, VersionedTransaction, Keypair } from "@solana/web3.js";
 
 const PROGRAM_ID =
     process.env["NEST_CROW_PROGRAM_ID"] ?? "Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi";
@@ -28,7 +23,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const estimateUsdc = parseInt(estimateParam, 10);
     if (isNaN(estimateUsdc) || estimateUsdc < 0) {
-        return NextResponse.json({ error: "estimateUsdc must be a non-negative integer" }, { status: 400 });
+        return NextResponse.json(
+            { error: "estimateUsdc must be a non-negative integer" },
+            { status: 400 },
+        );
     }
 
     initFirebaseAdmin();

@@ -22,7 +22,9 @@ export async function playTts(
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audio.onended = () => { URL.revokeObjectURL(url); };
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+        };
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         audio.play().catch(() => {});
     } catch {
@@ -48,7 +50,7 @@ export function useVoice() {
     // Run accessibility auto-detection once per component tree mount.
     useEffect(() => {
         autoDetect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     async function speak(scriptKey: string, variables: Record<string, string> = {}) {
@@ -67,9 +69,9 @@ export function useVoice() {
             audio.onended = () => {
                 URL.revokeObjectURL(url);
             };
-             
+
             // eslint-disable-next-line @typescript-eslint/no-empty-function
-        audio.play().catch(() => {}); // silently handle autoplay blocks
+            audio.play().catch(() => {}); // silently handle autoplay blocks
         } catch {
             // Non-fatal: TTS errors must never crash the UI
         }

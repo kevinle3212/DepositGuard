@@ -11,14 +11,18 @@ function walletFromRequest(req: NextRequest): string | null {
         try {
             const p = verify(cookie, secret) as { walletPubkey?: string };
             if (p.walletPubkey) return p.walletPubkey;
-        } catch { /* fall through */ }
+        } catch {
+            /* fall through */
+        }
     }
     const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/, "");
     if (bearer) {
         try {
             const p = verify(bearer, secret) as { walletPubkey?: string };
             if (p.walletPubkey) return p.walletPubkey;
-        } catch { /* fall through */ }
+        } catch {
+            /* fall through */
+        }
     }
     return null;
 }

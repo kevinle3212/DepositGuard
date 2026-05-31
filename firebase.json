@@ -1,37 +1,37 @@
 {
-  "apphosting": {
-    "backendId": "depositguard2",
-    "rootDir": "/",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "programs",
-      "target",
-      "tests"
-    ]
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "emulators": {
-    "auth": {
-      "port": 9099
+    "apphosting": {
+        "backendId": "depositguard2",
+        "rootDir": "/",
+        "ignore": [
+            "node_modules",
+            ".git",
+            "firebase-debug.log",
+            "firebase-debug.*.log",
+            "programs",
+            "target",
+            "tests"
+        ]
     },
     "firestore": {
-      "port": 8081
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
     },
     "storage": {
-      "port": 9199
+        "rules": "storage.rules"
     },
-    "ui": {
-      "enabled": true,
-      "port": 4000
+    "emulators": {
+        "auth": {
+            "port": 9099
+        },
+        "firestore": {
+            "port": 8081
+        },
+        "storage": {
+            "port": 9199
+        },
+        "ui": {
+            "enabled": true,
+            "port": 4000
+        }
     }
-  }
 }

@@ -21,7 +21,10 @@ function getClient(): SecretManagerServiceClient {
  * @param secretId   The Secret Manager secret ID (not the full resource name).
  * @param envFallback  The env var to fall back to (e.g. "ELEVENLABS_API_KEY").
  */
-export async function getSecret(secretId: string, envFallback: string): Promise<string | undefined> {
+export async function getSecret(
+    secretId: string,
+    envFallback: string,
+): Promise<string | undefined> {
     const cached = cache.get(secretId);
     if (cached !== undefined) return cached;
 

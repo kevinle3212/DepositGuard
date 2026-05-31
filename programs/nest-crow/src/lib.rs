@@ -22,7 +22,7 @@ pub mod state;
 use instructions::*;
 
 // Replace with the actual program ID after running `anchor keys sync`.
-declare_id!("Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi");
+declare_id!("4phWaHV2hxXRrLeuEusVeJ5CYqbHvErw55bTPyEBsBMN");
 
 #[allow(
     clippy::diverging_sub_expression,

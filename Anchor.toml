@@ -9,7 +9,7 @@ skip-lint = false
 nest_crow = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
 
 [programs.localnet]
-nest_crow = "Cr81cjzduskMppdGZWBaP7GVX8H1Uqujs2Zf9dSResyi"
+nest_crow = "4phWaHV2hxXRrLeuEusVeJ5CYqbHvErw55bTPyEBsBMN"
 
 [provider]
 cluster = "localnet"
