@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMutation } from '@tanstack/react-query'
+import { useAccount, useSignMessage } from 'wagmi'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import {
   Shield,
   Zap,
@@ -17,6 +19,7 @@ import {
 import { useWalletStore } from '@/src/store/useWalletStore'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useVoice } from '@/src/hooks/useVoice'
 
 type Chain = 'solana' | 'evm' | 'hardware'
 type Step = 'select' | 'signing' | 'verifying' | 'success'
@@ -31,13 +34,6 @@ interface WalletCategory {
   border: string
 }
 
-async function fetchNonce(pubkey: string): Promise<string> {
-  const res = await fetch(`/api/nonce?pubkey=${encodeURIComponent(pubkey)}`)
-  if (!res.ok) throw new Error('Failed to obtain signing nonce')
-  const { nonce } = await res.json()
-  return nonce as string
-}
-
 async function verifyWallet(payload: { signature: string; pubkey: string; message: string; chain: Chain }) {
   const res = await fetch('/api/verify-wallet', {
     method: 'POST',
@@ -46,7 +42,7 @@ async function verifyWallet(payload: { signature: string; pubkey: string; messag
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.error ?? 'Verification failed')
+    throw new Error((err as { error?: string }).error ?? 'Verification failed')
   }
   return res.json() as Promise<{ jwt: string; pubkey: string; chain: Chain }>
 }
@@ -86,9 +82,17 @@ function ConnectInner() {
   const searchParams = useSearchParams()
   const from = searchParams.get('from') ?? '/'
 
+  // Solana wallet
   const { signMessage, publicKey, connected } = useWallet()
   const { setVisible } = useWalletModal()
-  const { connect: storeConnect, setFirebaseJwt } = useWalletStore()
+
+  // EVM wallet (wagmi + RainbowKit)
+  const { address: evmAddress, isConnected: evmConnected } = useAccount()
+  const { signMessageAsync } = useSignMessage()
+  const { openConnectModal } = useConnectModal()
+
+  const { connect: storeConnect, setFromFirebaseToken } = useWalletStore()
+  const { speak } = useVoice()
 
   const [selectedChain, setSelectedChain] = useState<Chain | null>(null)
   const [step, setStep] = useState<Step>('select')
@@ -96,24 +100,33 @@ function ConnectInner() {
 
   // Tracks whether we opened the wallet modal and are waiting for the user to approve
   const pendingSolanaSign = useRef(false)
+  const pendingEvmSign = useRef(false)
 
-  // After the Phantom/Solana modal connects the wallet, auto-proceed to signing
+  // After the Solana modal connects the wallet, auto-proceed to signing
   useEffect(() => {
     if (connected && publicKey && pendingSolanaSign.current) {
       pendingSolanaSign.current = false
-      console.log('[ConnectPage] Wallet connected via modal — proceeding to sign-and-verify', publicKey.toBase58())
       signAndVerify('solana', publicKey.toBase58())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey])
 
+  // After EVM wallet connects via RainbowKit, auto-proceed to signing
+  useEffect(() => {
+    if (evmConnected && evmAddress && pendingEvmSign.current) {
+      pendingEvmSign.current = false
+      signAndVerifyEvm(evmAddress)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evmConnected, evmAddress])
+
   const verifyMutation = useMutation({
     mutationFn: verifyWallet,
-    onSuccess: (data) => {
-      console.log('[ConnectPage] Verification success — dg-session cookie set, navigating to', from)
-      setFirebaseJwt(data.jwt)
+    onSuccess: async (data) => {
+      setFromFirebaseToken(data.jwt)
       storeConnect(data.pubkey)
       setStep('success')
+      await speak('wallet.connected', { chain: data.chain })
       setTimeout(() => router.replace(from), 800)
     },
     onError: (e: Error) => {
@@ -126,7 +139,6 @@ function ConnectInner() {
     if (!signMessage) { setError('Wallet does not support message signing.'); return }
     try {
       setStep('signing')
-      // Generate client-side nonce + timestamp — no round-trip to /api/nonce needed
       const nonce = Array.from(crypto.getRandomValues(new Uint8Array(8)))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('')
@@ -142,6 +154,23 @@ function ConnectInner() {
     }
   }
 
+  async function signAndVerifyEvm(pubkey: string) {
+    try {
+      setStep('signing')
+      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+      const unix_ts = Math.floor(Date.now() / 1000)
+      const message = `DepositGuard identity verification ${nonce} ${unix_ts}`
+      const signature = await signMessageAsync({ message })
+      setStep('verifying')
+      await verifyMutation.mutateAsync({ signature, pubkey, message, chain: 'evm' })
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Signing cancelled or failed.')
+      setStep('select')
+    }
+  }
+
   function handleSolanaConnect() {
     setSelectedChain('solana')
     setError(null)
@@ -151,16 +180,25 @@ function ConnectInner() {
 
   function handleEvmConnect() {
     setSelectedChain('evm')
-    // TODO: wagmi integration — install wagmi + viem + @rainbow-me/rainbowkit then:
-    //   const { signMessageAsync } = useSignMessage()  (wagmi)
-    //   const sig = await signMessageAsync({ message })
-    //   await verifyMutation.mutateAsync({ signature: sig, pubkey: address, message, chain: 'evm' })
-    setError('EVM signing requires wagmi — add it via: npm install wagmi viem @rainbow-me/rainbowkit')
+    setError(null)
+    if (evmConnected && evmAddress) {
+      // Wallet already connected — go straight to signing
+      signAndVerifyEvm(evmAddress)
+    } else {
+      // Open RainbowKit modal; useEffect will pick up once connected
+      pendingEvmSign.current = true
+      openConnectModal?.()
+    }
   }
 
   function handleHardwareConnect() {
     setSelectedChain('hardware')
-    setError('Tangem NFC pairing — coming in next sprint.')
+    // @tangem/tangem-sdk-web is not available on npm.
+    // To enable NFC Tangem signing: install @tangem/tangem-sdk-web and configure
+    // NFC permissions in your browser/native host, then call TangemSdk.startSession().
+    setError(
+      'Tangem NFC — install @tangem/tangem-sdk-web and configure NFC permissions to enable hardware wallet signing.'
+    )
   }
 
   const handlers: Record<Chain, () => void> = {
