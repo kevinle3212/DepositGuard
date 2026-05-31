@@ -1,14 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 import { verify } from "jsonwebtoken";
 
-function ensureInit() {
-    if (!getApps().length) initializeApp();
-}
-
 export async function GET(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
     const wallet = req.nextUrl.searchParams.get("wallet");
     if (!wallet) {
         return NextResponse.json({ error: "wallet query param required" }, { status: 400 });
@@ -51,7 +47,7 @@ function walletFromCookie(req: NextRequest): string | null {
 }
 
 export async function POST(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
 
     const landlordAddress = walletFromCookie(req);
     if (!landlordAddress) {
@@ -60,17 +56,25 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as Record<string, unknown>;
 
-    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash, leaseStart, leaseEnd } =
-        body as {
-            propertyAddress?: string;
-            depositAmount?: number;
-            currency?: string;
-            tenantAddress?: string;
-            jurisdiction?: string;
-            contractHash?: string;
-            leaseStart?: string;
-            leaseEnd?: string;
-        };
+    const {
+        propertyAddress,
+        depositAmount,
+        currency,
+        tenantAddress,
+        jurisdiction,
+        contractHash,
+        leaseStart,
+        leaseEnd,
+    } = body as {
+        propertyAddress?: string;
+        depositAmount?: number;
+        currency?: string;
+        tenantAddress?: string;
+        jurisdiction?: string;
+        contractHash?: string;
+        leaseStart?: string;
+        leaseEnd?: string;
+    };
 
     if (!propertyAddress || !depositAmount || !currency || !tenantAddress) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

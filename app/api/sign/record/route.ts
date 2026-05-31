@@ -1,10 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
-
-function ensureInit() {
-    if (!getApps().length) initializeApp();
-}
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
     const { leaseId, role, walletPubkey, signatureB64, signedMessage, token } =
@@ -21,7 +17,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    ensureInit();
+    initFirebaseAdmin();
     const db = getFirestore();
     const ts = new Date();
 

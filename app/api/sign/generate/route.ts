@@ -2,11 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
-
-function ensureInit() {
-    if (!getApps().length) initializeApp();
-}
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 
 const SECRET = process.env["JWT_SIGNING_SECRET"] ?? "";
 
@@ -26,14 +22,10 @@ export async function POST(req: NextRequest) {
     }
 
     const jti = randomUUID();
-    const token = jwt.sign(
-        { leaseId, role, email: email ?? "", jti },
-        SECRET,
-        { expiresIn: "7d" },
-    );
+    const token = jwt.sign({ leaseId, role, email: email ?? "", jti }, SECRET, { expiresIn: "7d" });
 
     // Register the token in Firestore so /api/sign/record can verify it
-    ensureInit();
+    initFirebaseAdmin();
     const db = getFirestore();
     await db.doc(`signingTokens/${token}`).set({
         leaseId,
