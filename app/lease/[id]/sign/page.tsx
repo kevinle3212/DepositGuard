@@ -7,6 +7,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import { getConnection } from "@/lib/solana";
 import { useVoice } from "@/src/hooks/useVoice";
+import { LeaseAgreementSummary } from "@/components/ui/LeaseAgreementSummary";
 
 type TokenStatus = "loading" | "valid" | "invalid" | "expired" | "already-signed";
 type SignStatus = "idle" | "signing" | "submitting" | "done" | "error";
@@ -34,7 +35,7 @@ export default function SignPage() {
     const [contractFetched, setContractFetched] = useState(false);
     const [signStatus, setSignStatus] = useState<SignStatus>("idle");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const _canvasRef = useRef<HTMLCanvasElement>(null);
     const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
     // Redirect to /connect if wallet is not connected
@@ -50,8 +51,11 @@ export default function SignPage() {
     useEffect(() => {
         if (!token) {
             const leaseId = params.id;
-            if (!leaseId) { setTokenStatus("invalid"); return; }
-            const role = (userRole === "landlord" || userRole === "tenant") ? userRole : "tenant";
+            if (!leaseId) {
+                setTokenStatus("invalid");
+                return;
+            }
+            const role = userRole === "landlord" || userRole === "tenant" ? userRole : "tenant";
             fetch("/api/sign/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -65,7 +69,9 @@ export default function SignPage() {
                         setTokenStatus("invalid");
                     }
                 })
-                .catch(() => setTokenStatus("invalid"));
+                .catch(() => {
+                    setTokenStatus("invalid");
+                });
             return;
         }
         fetch("/api/sign/validate", {
@@ -80,7 +86,11 @@ export default function SignPage() {
                     setTokenStatus("valid");
                 } else {
                     const { error } = (await r.json()) as { error: string };
-                    if (r.status === 409 || error.toLowerCase().includes("used") || error.toLowerCase().includes("already")) {
+                    if (
+                        r.status === 409 ||
+                        error.toLowerCase().includes("used") ||
+                        error.toLowerCase().includes("already")
+                    ) {
                         setTokenStatus("already-signed");
                     } else if (error.includes("expired")) {
                         setTokenStatus("expired");
@@ -112,7 +122,9 @@ export default function SignPage() {
             .catch((_e: unknown) => {
                 setContractHash(payload.leaseId);
             })
-            .finally(() => setContractFetched(true));
+            .finally(() => {
+                setContractFetched(true);
+            });
     }, [tokenStatus, payload]);
 
     // canvasRef kept for potential future use but PDF is now rendered via iframe
@@ -218,7 +230,8 @@ export default function SignPage() {
                 <div className="text-center space-y-2 max-w-sm px-4">
                     <h1 className="text-xl font-semibold text-green-700">Already Signed</h1>
                     <p className="text-sm text-muted-foreground">
-                        This lease has already been signed with this link. Your signature is recorded.
+                        This lease has already been signed with this link. Your signature is
+                        recorded.
                     </p>
                     <a href="/" className="inline-block mt-3 text-sm underline text-primary">
                         Back to dashboard
@@ -270,6 +283,11 @@ export default function SignPage() {
                     </div>
                 )}
 
+                <LeaseAgreementSummary
+                    leaseId={payload?.leaseId ?? params.id}
+                    hasPdf={!!contractUrl && contractFetched}
+                />
+
                 <div className="border rounded-lg overflow-hidden bg-muted/20">
                     {contractUrl && pdfProxyUrl ? (
                         <iframe
@@ -279,8 +297,12 @@ export default function SignPage() {
                         />
                     ) : contractFetched ? (
                         <div className="flex flex-col items-center justify-center h-[30vh] min-h-[180px] text-center space-y-2 p-6">
-                            <p className="text-muted-foreground text-sm">No contract PDF uploaded.</p>
-                            <p className="text-xs text-muted-foreground">You can still sign to confirm the lease terms.</p>
+                            <p className="text-muted-foreground text-sm">
+                                No contract PDF uploaded.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                You can still sign to confirm the lease terms.
+                            </p>
                         </div>
                     ) : (
                         <div className="flex items-center justify-center h-[30vh] min-h-[180px]">

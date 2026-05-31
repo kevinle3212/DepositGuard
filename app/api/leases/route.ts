@@ -1,13 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 import { verify } from "jsonwebtoken";
 
-function ensureInit() {
-    if (!getApps().length) initializeApp();
-}
-
-function normalizeLeaseDoc(id: string, data: FirebaseFirestore.DocumentData): Record<string, unknown> {
+function normalizeLeaseDoc(
+    id: string,
+    data: FirebaseFirestore.DocumentData,
+): Record<string, unknown> {
     return {
         id,
         propertyAddress: data["propertyAddress"] ?? "",
@@ -28,7 +27,7 @@ function normalizeLeaseDoc(id: string, data: FirebaseFirestore.DocumentData): Re
 }
 
 export async function GET(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
     const wallet = req.nextUrl.searchParams.get("wallet");
     if (!wallet) {
         return NextResponse.json({ error: "wallet query param required" }, { status: 400 });
@@ -66,7 +65,9 @@ function walletFromRequest(req: NextRequest, body: Record<string, unknown>): str
             try {
                 const payload = verify(cookie, secret) as { walletPubkey?: string };
                 if (payload.walletPubkey) return payload.walletPubkey;
-            } catch { /* fall through */ }
+            } catch {
+                /* fall through */
+            }
         }
     }
 
@@ -78,7 +79,9 @@ function walletFromRequest(req: NextRequest, body: Record<string, unknown>): str
             try {
                 const payload = verify(bearer, secret) as { walletPubkey?: string };
                 if (payload.walletPubkey) return payload.walletPubkey;
-            } catch { /* fall through */ }
+            } catch {
+                /* fall through */
+            }
         }
     }
 
@@ -91,27 +94,39 @@ function walletFromRequest(req: NextRequest, body: Record<string, unknown>): str
 }
 
 export async function POST(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
 
     const body = (await req.json()) as Record<string, unknown>;
     const landlordAddress = walletFromRequest(req, body);
 
     if (!landlordAddress) {
-        return NextResponse.json({ error: "Unauthorized — no wallet identity found" }, { status: 401 });
+        return NextResponse.json(
+            { error: "Unauthorized — no wallet identity found" },
+            { status: 401 },
+        );
     }
 
-    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash, contractStorageUrl, leaseStart, leaseEnd } =
-        body as {
-            propertyAddress?: string;
-            depositAmount?: number;
-            currency?: string;
-            tenantAddress?: string;
-            jurisdiction?: string;
-            contractHash?: string;
-            contractStorageUrl?: string;
-            leaseStart?: string;
-            leaseEnd?: string;
-        };
+    const {
+        propertyAddress,
+        depositAmount,
+        currency,
+        tenantAddress,
+        jurisdiction,
+        contractHash,
+        contractStorageUrl,
+        leaseStart,
+        leaseEnd,
+    } = body as {
+        propertyAddress?: string;
+        depositAmount?: number;
+        currency?: string;
+        tenantAddress?: string;
+        jurisdiction?: string;
+        contractHash?: string;
+        contractStorageUrl?: string;
+        leaseStart?: string;
+        leaseEnd?: string;
+    };
 
     if (!propertyAddress || !depositAmount || !currency || !tenantAddress) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

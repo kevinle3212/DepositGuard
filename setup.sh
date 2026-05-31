@@ -1,313 +1,171 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  DepositGuard / NestCrow  —  Local development setup
+#  NestCrow / DepositGuard — Local Development Setup
 # =============================================================================
-#
-#  Run this once to get the project running on your machine:
-#
+#  Run this once after cloning:
 #    chmod +x setup.sh && ./setup.sh
 #
-#  What it installs:
-#    - Homebrew (macOS only, if missing)
-#    - nvm  →  Node.js 22
-#    - Corepack / Yarn
-#    - All npm / node_modules dependencies
-#
-#  Optional (prompted):
-#    - Rust + Cargo
-#    - Solana CLI
-#    - Anchor CLI (AVM)
-#    → Only needed if you want to build / deploy the Solana program.
-#      Skip these if you just want to run the Next.js web app.
-#
-#  After this script finishes:
-#    1. Fill in .env with your API keys (see .env.example for instructions)
-#    2. Run:  yarn dev
-#    3. Open: http://localhost:3000
-#
+#  What it does:
+#    1. Writes a .env file with all project-wide values pre-filled
+#    2. Prompts for secrets that must stay off GitHub
+#    3. Installs Node dependencies (yarn)
 # =============================================================================
 
-set -euo pipefail
+set -e
 
-# ── Colours ───────────────────────────────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-RESET='\033[0m'
+BOLD=$(tput bold 2>/dev/null || echo "")
+RESET=$(tput sgr0 2>/dev/null || echo "")
+GREEN=$(tput setaf 2 2>/dev/null || echo "")
+YELLOW=$(tput setaf 3 2>/dev/null || echo "")
+CYAN=$(tput setaf 6 2>/dev/null || echo "")
 
-info()    { echo -e "${CYAN}[info]${RESET}  $*"; }
-success() { echo -e "${GREEN}[ok]${RESET}    $*"; }
-warn()    { echo -e "${YELLOW}[warn]${RESET}  $*"; }
-error()   { echo -e "${RED}[error]${RESET} $*" >&2; }
-step()    { echo -e "\n${BOLD}━━  $*${RESET}"; }
+banner() { echo ""; echo "${BOLD}${CYAN}▶  $1${RESET}"; }
+ok()     { echo "  ${GREEN}✔  $1${RESET}"; }
+warn()   { echo "  ${YELLOW}⚠  $1${RESET}"; }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-have() { command -v "$1" &>/dev/null; }
+banner "NestCrow — Local Dev Setup"
 
-confirm() {
-  local prompt="$1"
-  local response
-  read -r -p "$(echo -e "${YELLOW}[?]${RESET}    $prompt [y/N] ")" response
-  [[ "$response" =~ ^[Yy]$ ]]
-}
-
-# Reload PATH changes made by installers in this session
-reload_path() {
-  # shellcheck source=/dev/null
-  [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
-  export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-  export PATH="$HOME/.avm/bin:$PATH"
-}
-
-# ── OS detection ──────────────────────────────────────────────────────────────
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-
-case "$OS" in
-  Darwin) PLATFORM="macos" ;;
-  Linux)  PLATFORM="linux" ;;
-  *)      error "Unsupported OS: $OS. This script supports macOS and Linux."; exit 1 ;;
-esac
-
-echo -e "\n${BOLD}  DepositGuard — Local Setup${RESET}"
-echo    "  Platform : $OS ($ARCH)"
-echo    "  Date     : $(date)"
-echo
-
-# ── 1. Homebrew (macOS only) ──────────────────────────────────────────────────
-if [[ "$PLATFORM" == "macos" ]]; then
-  step "Homebrew"
-  if have brew; then
-    success "Homebrew already installed"
-  else
-    info "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add Homebrew to PATH for Apple Silicon
-    if [[ "$ARCH" == "arm64" ]]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
-    success "Homebrew installed"
-  fi
-fi
-
-# ── 2. Git ────────────────────────────────────────────────────────────────────
-step "Git"
-if have git; then
-  success "git $(git --version | awk '{print $3}')"
-else
-  if [[ "$PLATFORM" == "macos" ]]; then
-    info "Installing git via Homebrew..."
-    brew install git
-  else
-    info "Installing git via apt..."
-    sudo apt-get update -qq && sudo apt-get install -y git
-  fi
-  success "Git installed"
-fi
-
-# ── 3. nvm + Node.js 22 ───────────────────────────────────────────────────────
-step "nvm + Node.js"
-
-NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-NODE_VERSION="22"
-
-# Install nvm if missing
-if [ ! -s "$NVM_DIR/nvm.sh" ]; then
-  info "Installing nvm..."
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-  success "nvm installed"
-else
-  success "nvm already installed"
-fi
-
-# Load nvm into this shell session
-# shellcheck source=/dev/null
-source "$NVM_DIR/nvm.sh"
-
-# Install and use Node 22
-if nvm ls "$NODE_VERSION" &>/dev/null; then
-  success "Node.js $NODE_VERSION already installed"
-else
-  info "Installing Node.js $NODE_VERSION..."
-  nvm install "$NODE_VERSION"
-  success "Node.js $NODE_VERSION installed"
-fi
-
-nvm use "$NODE_VERSION"
-nvm alias default "$NODE_VERSION"
-success "Using Node.js $(node --version)"
-
-# ── 4. Corepack / Yarn ────────────────────────────────────────────────────────
-step "Yarn"
-
-if have yarn; then
-  success "yarn $(yarn --version) already available"
-else
-  info "Enabling corepack and installing Yarn..."
-  corepack enable
-  corepack prepare yarn@stable --activate
-  success "yarn $(yarn --version) installed"
-fi
-
-# ── 5. Project dependencies ───────────────────────────────────────────────────
-step "Project dependencies"
-
+# ── 1. Detect project root ────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-info "Running yarn install (this may take a minute)..."
-yarn install
-success "Dependencies installed"
+# ── 2. Build the .env file ────────────────────────────────────────────────────
+ENV_FILE=".env"
 
-# ── 6. Environment file ───────────────────────────────────────────────────────
-step "Environment (.env)"
-
-if [ -f ".env" ]; then
-  success ".env already exists — skipping copy"
+if [ -f "$ENV_FILE" ]; then
+  warn ".env already exists — skipping (delete it and re-run to regenerate)"
 else
-  cp .env.example .env
-  success ".env created from .env.example"
-  warn "You must fill in the required values in .env before running the app."
-  warn "Open .env and follow the HOW TO GET instructions for each variable."
+  banner "Writing $ENV_FILE …"
+
+  # Auto-generate a JWT signing secret
+  JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" 2>/dev/null || \
+               openssl rand -hex 32 2>/dev/null || \
+               echo "CHANGE_ME_$(date +%s)")
+
+  # ── Prompt for secrets ────────────────────────────────────────────────────
+  echo ""
+  echo "${BOLD}You will be prompted for a few secrets.${RESET}"
+  echo "Press Enter to skip any optional value and fill it in later."
+  echo ""
+
+  # GEMINI_API_KEY
+  echo "${CYAN}[1/3] Gemini API key${RESET}"
+  echo "      Get one free at: https://aistudio.google.com/app/apikey"
+  read -r -p "      GEMINI_API_KEY: " GEMINI_API_KEY
+  GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+
+  # ELEVENLABS_API_KEY
+  echo ""
+  echo "${CYAN}[2/3] ElevenLabs API key (optional — voice features only)${RESET}"
+  echo "      Get one at: https://elevenlabs.io → Profile → API Keys"
+  read -r -p "      ELEVENLABS_API_KEY: " ELEVENLABS_API_KEY
+  ELEVENLABS_API_KEY="${ELEVENLABS_API_KEY:-}"
+
+  # FIREBASE_SERVICE_ACCOUNT_JSON
+  echo ""
+  echo "${CYAN}[3/3] Firebase service account JSON (needed for Firestore / Storage)${RESET}"
+  echo "      How to get it:"
+  echo "        1. Go to https://console.firebase.google.com"
+  echo "        2. Select project → Project Settings (gear icon) → Service Accounts"
+  echo "        3. Click 'Generate new private key' → download the JSON file"
+  echo "        4. Paste the ENTIRE file contents on one line below"
+  echo "      (Leave blank if you already have gcloud ADC configured)"
+  read -r -p "      FIREBASE_SERVICE_ACCOUNT_JSON: " FIREBASE_SA_JSON
+  FIREBASE_SA_JSON="${FIREBASE_SA_JSON:-}"
+
+  # ── Write the file ─────────────────────────────────────────────────────────
+  cat > "$ENV_FILE" << ENVEOF
+# ─────────────────────────────────────────────────────────────────────────────
+#  NestCrow — .env  (auto-generated by setup.sh — DO NOT COMMIT)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Firebase Client SDK (public — safe to expose in the browser) ──────────────
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDPw-3Kat5yR5Itet8JoniCVah1T3PEoak
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=uoo-quackathon26eug-8200.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=uoo-quackathon26eug-8200
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=uoo-quackathon26eug-8200.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=817723856650
+NEXT_PUBLIC_FIREBASE_APP_ID=1:817723856650:web:41b832f1de72dbdc4a8cf3
+
+# ── Firebase Admin SDK (server-side — DO NOT expose to browser) ───────────────
+# Paste the full JSON from Firebase Console → Project Settings → Service Accounts
+# Leave blank if you have gcloud ADC configured (gcloud auth application-default login)
+FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SA_JSON}
+
+# ── GCP / Firebase (server config) ───────────────────────────────────────────
+GCP_PROJECT_ID=uoo-quackathon26eug-8200
+GCP_LOCATION=us-central1
+FIREBASE_STORAGE_BUCKET=uoo-quackathon26eug-8200.firebasestorage.app
+
+# ── Auth / JWT ────────────────────────────────────────────────────────────────
+# Auto-generated — rotate this if you suspect it was leaked
+JWT_SIGNING_SECRET=${JWT_SECRET}
+APP_BASE_URL=http://localhost:3000
+
+# ── Solana ────────────────────────────────────────────────────────────────────
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_CLUSTER=devnet
+NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+NEST_CROW_PROGRAM_ID=F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a
+
+# ── Gemini AI (damage estimation) ─────────────────────────────────────────────
+# Get a free key at: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=${GEMINI_API_KEY}
+
+# ── ElevenLabs (voice — optional) ─────────────────────────────────────────────
+ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+ELEVENLABS_VOICE_ID_PLATFORM_GUIDE=DXFkLCBUTmvXpp2QwZjA
+ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR=pNInz6obpgDQGcFmaJgB
+NEXT_PUBLIC_ELEVEN_AGENT_PLATFORM_GUIDE=agent_3501ksy9mmx5fzmvsrqbx2g0p3by
+
+# ── Email (SendGrid — optional) ───────────────────────────────────────────────
+SENDGRID_API_KEY=
+SENDGRID_FROM_EMAIL=noreply@nestcrow.tech
+NOTIFY_SERVICE_URL=http://localhost:8080
+PORT=8080
+
+# ── GEMINI / GCP API project number (for Vertex AI) ──────────────────────────
+GEMINI_API_PROJECT_NUMBER=817723856650
+ENVEOF
+
+  ok ".env written with all project values"
 fi
 
-# ── 7. Optional: Rust + Cargo ─────────────────────────────────────────────────
-step "Rust (optional — for Solana program development)"
-
-if have rustc; then
-  success "Rust $(rustc --version | awk '{print $2}') already installed"
-  RUST_INSTALLED=true
+# ── 3. Install dependencies ───────────────────────────────────────────────────
+banner "Installing Node.js dependencies …"
+if command -v yarn &> /dev/null; then
+  yarn install --frozen-lockfile
+  ok "yarn install complete"
+elif command -v npm &> /dev/null; then
+  npm install
+  ok "npm install complete"
 else
-  if confirm "Install Rust + Cargo? (needed only for Solana program dev)"; then
-    info "Installing Rust via rustup..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-    reload_path
-    success "Rust $(rustc --version | awk '{print $2}') installed"
-    RUST_INSTALLED=true
-  else
-    info "Skipping Rust"
-    RUST_INSTALLED=false
+  warn "No package manager found — install Node.js from https://nodejs.org then re-run"
+  exit 1
+fi
+
+# ── 4. Done ───────────────────────────────────────────────────────────────────
+echo ""
+echo "${GREEN}${BOLD}✔  Setup complete!${RESET}"
+echo ""
+echo "  Start the dev server:"
+echo "    ${BOLD}yarn dev${RESET}   (or npm run dev)"
+echo ""
+echo "  Then open: ${CYAN}http://localhost:3000${RESET}"
+echo ""
+
+# Warn about missing secrets
+if [ -f "$ENV_FILE" ]; then
+  MISSING=()
+  grep -E "^GEMINI_API_KEY=$" "$ENV_FILE" &>/dev/null && MISSING+=("GEMINI_API_KEY")
+  grep -E "^FIREBASE_SERVICE_ACCOUNT_JSON=$" "$ENV_FILE" &>/dev/null && MISSING+=("FIREBASE_SERVICE_ACCOUNT_JSON")
+  if [ ${#MISSING[@]} -gt 0 ]; then
+    warn "These values are still empty in .env — some features will not work:"
+    for key in "${MISSING[@]}"; do
+      echo "    • $key"
+    done
+    echo ""
+    echo "  Edit .env and fill them in, then restart the dev server."
+    echo ""
   fi
 fi
-
-# ── 8. Optional: Solana CLI ───────────────────────────────────────────────────
-step "Solana CLI (optional)"
-
-if have solana; then
-  success "Solana CLI $(solana --version | awk '{print $2}') already installed"
-  SOLANA_INSTALLED=true
-elif [[ "$RUST_INSTALLED" == true ]] && confirm "Install Solana CLI?"; then
-  info "Installing Solana CLI..."
-  sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-  reload_path
-  if have solana; then
-    success "Solana CLI $(solana --version | awk '{print $2}') installed"
-    # Configure for devnet
-    solana config set --url devnet &>/dev/null
-    info "Configured Solana CLI to use devnet"
-    # Generate a local wallet if none exists
-    if [ ! -f "$HOME/.config/solana/id.json" ]; then
-      solana-keygen new --no-bip39-passphrase --silent
-      success "Generated local Solana wallet at ~/.config/solana/id.json"
-    fi
-    SOLANA_INSTALLED=true
-  else
-    warn "Solana CLI installed but not yet on PATH. Restart your terminal and run 'solana --version' to verify."
-    SOLANA_INSTALLED=false
-  fi
-else
-  info "Skipping Solana CLI"
-  SOLANA_INSTALLED=false
-fi
-
-# ── 9. Optional: Anchor / AVM ─────────────────────────────────────────────────
-step "Anchor CLI / AVM (optional)"
-
-ANCHOR_VERSION="1.0.2"   # must match Anchor.toml
-
-if have anchor; then
-  success "Anchor $(anchor --version | awk '{print $2}') already installed"
-elif [[ "$SOLANA_INSTALLED" == true ]] && confirm "Install Anchor CLI $ANCHOR_VERSION (via AVM)?"; then
-  info "Installing AVM..."
-  cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-  reload_path
-  info "Installing Anchor $ANCHOR_VERSION..."
-  avm install "$ANCHOR_VERSION"
-  avm use "$ANCHOR_VERSION"
-  success "Anchor $(anchor --version | awk '{print $2}') installed"
-else
-  info "Skipping Anchor"
-fi
-
-# ── 10. Shell profile update ──────────────────────────────────────────────────
-step "Shell profile"
-
-# Detect the user's shell config file
-if [[ "$SHELL" == */zsh ]]; then
-  SHELL_RC="$HOME/.zshrc"
-elif [[ "$SHELL" == */bash ]]; then
-  SHELL_RC="$HOME/.bashrc"
-else
-  SHELL_RC="$HOME/.profile"
-fi
-
-# nvm init block
-NVM_INIT_BLOCK='
-# nvm (added by DepositGuard setup)
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
-
-if grep -q 'NVM_DIR' "$SHELL_RC" 2>/dev/null; then
-  success "nvm already in $SHELL_RC"
-else
-  printf '%s\n' "$NVM_INIT_BLOCK" >> "$SHELL_RC"
-  success "Added nvm init to $SHELL_RC"
-fi
-
-# Solana PATH
-if [[ "$SOLANA_INSTALLED" == true ]]; then
-  SOLANA_PATH_LINE='export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"'
-  if grep -q 'solana/install/active_release' "$SHELL_RC" 2>/dev/null; then
-    success "Solana already in PATH ($SHELL_RC)"
-  else
-    echo "$SOLANA_PATH_LINE" >> "$SHELL_RC"
-    success "Added Solana to PATH in $SHELL_RC"
-  fi
-fi
-
-# ── Done ──────────────────────────────────────────────────────────────────────
-echo
-echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${GREEN}${BOLD}  Setup complete!${RESET}"
-echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo
-echo -e "${BOLD}  Next steps:${RESET}"
-echo
-echo    "  1. Fill in .env with your credentials:"
-echo -e "       ${CYAN}open .env${RESET}   (or use any text editor)"
-echo    "     Required keys for the web app:"
-echo    "       GEMINI_API_KEY         → https://aistudio.google.com/app/apikey"
-echo    "       JWT_SIGNING_SECRET     → node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
-echo    "       GCP_PROJECT_ID         → your Firebase / GCP project ID"
-echo    "       FIREBASE_STORAGE_BUCKET → your Firebase Storage bucket name"
-echo    "     (See .env.example for full instructions on each variable)"
-echo
-echo    "  2. Start the dev server:"
-echo -e "       ${CYAN}yarn dev${RESET}"
-echo
-echo    "  3. Open the app:"
-echo -e "       ${CYAN}http://localhost:3000${RESET}"
-echo
-if [[ "$SOLANA_INSTALLED" == true ]]; then
-  echo    "  Solana / Anchor (smart contract dev):"
-  echo -e "       ${CYAN}anchor build${RESET}    — compile the Rust program"
-  echo -e "       ${CYAN}anchor deploy${RESET}   — deploy to devnet"
-  echo -e "       ${CYAN}yarn test-anchor${RESET} — run on-chain tests"
-  echo
-fi
-echo -e "  ${YELLOW}Note:${RESET} Restart your terminal (or run ${CYAN}source $SHELL_RC${RESET}) to"
-echo    "        pick up PATH changes from this session."
-echo

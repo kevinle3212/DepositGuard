@@ -1,36 +1,51 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 
-function ensureInit() {
-    if (!getApps().length) initializeApp();
+interface LeaseDoc {
+    status?: string;
+    depositAmount?: number;
+    currency?: string;
+    landlordAddress?: string;
+    tenantAddress?: string;
+    propertyAddress?: string;
+    escrowAddress?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    leaseStart?: string;
+    leaseEnd?: string;
+    contractHash?: string;
+    contractStorageUrl?: string;
+    timeline?: unknown[];
 }
 
 // Maps a Firestore lease document to the Deposit shape used by the UI
-function leaseToDeposit(id: string, data: FirebaseFirestore.DocumentData) {
+function leaseToDeposit(id: string, raw: FirebaseFirestore.DocumentData) {
+    const data = raw as LeaseDoc;
+    const now = new Date().toISOString();
     return {
         id,
-        status: data["status"] ?? "Created",
-        amountSol: data["depositAmount"] ?? 0,
-        denomination: data["currency"] ?? "USDC",
-        landlordAddress: data["landlordAddress"] ?? "",
-        tenantAddress: data["tenantAddress"] ?? "",
-        propertyAddress: data["propertyAddress"] ?? "",
-        escrowAddress: data["escrowAddress"] ?? "",
-        createdAt: data["createdAt"] ?? new Date().toISOString(),
-        updatedAt: data["updatedAt"] ?? data["createdAt"] ?? new Date().toISOString(),
-        moveInDate: data["leaseStart"],
-        moveOutDate: data["leaseEnd"],
-        contractHash: data["contractHash"],
-        contractStorageUrl: data["contractStorageUrl"],
-        timeline: data["timeline"] ?? [
-            { status: data["status"] ?? "Created", timestamp: data["createdAt"] ?? new Date().toISOString(), actor: "System" },
+        status: data.status ?? "Created",
+        amountSol: data.depositAmount ?? 0,
+        denomination: data.currency ?? "USDC",
+        landlordAddress: data.landlordAddress ?? "",
+        tenantAddress: data.tenantAddress ?? "",
+        propertyAddress: data.propertyAddress ?? "",
+        escrowAddress: data.escrowAddress ?? "",
+        createdAt: data.createdAt ?? now,
+        updatedAt: data.updatedAt ?? data.createdAt ?? now,
+        moveInDate: data.leaseStart,
+        moveOutDate: data.leaseEnd,
+        contractHash: data.contractHash,
+        contractStorageUrl: data.contractStorageUrl,
+        timeline: data.timeline ?? [
+            { status: data.status ?? "Created", timestamp: data.createdAt ?? now, actor: "System" },
         ],
     };
 }
 
 export async function GET(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
     const wallet = req.nextUrl.searchParams.get("wallet");
     if (!wallet) {
         return NextResponse.json({ error: "wallet query param required" }, { status: 400 });
@@ -57,7 +72,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    ensureInit();
+    initFirebaseAdmin();
     const body = (await req.json()) as {
         tenantAddress?: string;
         landlordAddress?: string;
@@ -88,7 +103,14 @@ export async function POST(req: NextRequest) {
         leaseStart: body.moveInDate ?? "",
         createdAt: now,
         updatedAt: now,
-        timeline: [{ status: "Created", timestamp: now, actor: "Landlord", note: "Awaiting tenant funding" }],
+        timeline: [
+            {
+                status: "Created",
+                timestamp: now,
+                actor: "Landlord",
+                note: "Awaiting tenant funding",
+            },
+        ],
     };
 
     await ref.set(data);

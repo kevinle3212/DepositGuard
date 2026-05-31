@@ -1,11 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps } from "firebase-admin/app";
-
-function ensureInit() {
-    if (!getApps().length) initializeApp();
-}
+import { initFirebaseAdmin } from "@/lib/firebase-admin";
 
 const SECRET = process.env["JWT_SIGNING_SECRET"] ?? "";
 
@@ -20,14 +16,18 @@ export async function POST(req: NextRequest) {
     } catch (err) {
         const msg = err instanceof Error ? err.message : "";
         return NextResponse.json(
-            { error: msg.includes("expired") ? "Token expired" : "Invalid or expired signing token" },
+            {
+                error: msg.includes("expired")
+                    ? "Token expired"
+                    : "Invalid or expired signing token",
+            },
             { status: 401 },
         );
     }
 
     // Check whether this token has already been used in Firestore
     try {
-        ensureInit();
+        initFirebaseAdmin();
         const snap = await getFirestore().doc(`signingTokens/${token}`).get();
         if (snap.exists && snap.data()?.["used"] === true) {
             return NextResponse.json(
