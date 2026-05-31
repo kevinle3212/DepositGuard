@@ -1,5 +1,7 @@
 # DepositGuard
 
+**Live app: [nestcrow.tech](https://nestcrow.tech/)**
+
 **Trustless rental security deposit escrow on Solana, with AI-assisted damage assessment.**
 
 DepositGuard replaces the traditional landlord-holds-deposit model with a smart-contract escrow that neither the landlord, the tenant, nor the developers can override unilaterally. At move-out, Google Gemini compares move-in and move-out photos and produces an itemized damage estimate — strictly advisory — to inform negotiation. If the parties cannot agree, a structured dispute and arbitration system resolves the outcome on-chain.
@@ -90,11 +92,12 @@ yarn dev                                              # Next.js frontend on loca
 docker compose -f docker/docker-compose.yml up        # Cloud Run services on ports 8081–8087
 ```
 
-See the [documentation site](https://kevinle3212.github.io/DepositGuard/) or `docs/` for the full setup guide, API reference, smart contract reference, and tutorials.
+The app is live at [nestcrow.tech](https://nestcrow.tech/). For the full setup guide, API reference, smart contract reference, and tutorials see the [documentation site](https://kevinle3212.github.io/DepositGuard/) or the `docs/` directory.
 
 ## Documentation
 
-- **Live site:** [kevinle3212.github.io/DepositGuard](https://kevinle3212.github.io/DepositGuard/)
+- **Live app:** [nestcrow.tech](https://nestcrow.tech/)
+- **Docs site:** [kevinle3212.github.io/DepositGuard](https://kevinle3212.github.io/DepositGuard/)
 - **GitHub Wiki:** [github.com/kevinle3212/DepositGuard/wiki](https://github.com/kevinle3212/DepositGuard/wiki)
 - Setup guide, API reference, architecture overview, smart contract reference, tutorials, FAQ, glossary, roadmap, and changelog are all in `docs/`.
 

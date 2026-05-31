@@ -6,6 +6,8 @@ sidebar_position: 1
 
 # Setup & Development Guide
 
+**Live app:** [nestcrow.tech](https://nestcrow.tech/) — try it on Devnet before running locally.
+
 This guide walks you through running DepositGuard locally from scratch.
 
 ## Prerequisites

@@ -46,6 +46,11 @@ const config: Config = {
             items: [
                 { type: "docSidebar", sidebarId: "mainSidebar", position: "left", label: "Docs" },
                 {
+                    href: "https://nestcrow.tech/",
+                    label: "Live App",
+                    position: "right",
+                },
+                {
                     href: "https://github.com/kevinle3212/DepositGuard",
                     label: "GitHub",
                     position: "right",
@@ -64,8 +69,9 @@ const config: Config = {
                     ],
                 },
                 {
-                    title: "More",
+                    title: "App",
                     items: [
+                        { label: "Live App", href: "https://nestcrow.tech/" },
                         { label: "GitHub", href: "https://github.com/kevinle3212/DepositGuard" },
                         { label: "Changelog", to: "/changelog" },
                     ],

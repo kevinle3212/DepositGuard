@@ -74,7 +74,8 @@ cat > "$WORK_DIR/wiki/Home.md" <<'HOMEOF'
 
 On-chain rental deposit escrow powered by Solana and Gemini AI.
 
-> **Live docs site:** https://kevinle3212.github.io/DepositGuard/
+> **Live app:** https://nestcrow.tech/
+> **Docs site:** https://kevinle3212.github.io/DepositGuard/
 
 ---
 
