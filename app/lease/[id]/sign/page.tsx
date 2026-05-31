@@ -7,8 +7,9 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import { getConnection } from "@/lib/solana";
 import { useVoice } from "@/src/hooks/useVoice";
+import { LeaseAgreementSummary } from "@/components/ui/LeaseAgreementSummary";
 
-type TokenStatus = "loading" | "valid" | "invalid" | "expired";
+type TokenStatus = "loading" | "valid" | "invalid" | "expired" | "already-signed";
 type SignStatus = "idle" | "signing" | "submitting" | "done" | "error";
 
 interface TokenPayload {
@@ -34,14 +35,28 @@ export default function SignPage() {
     const [contractFetched, setContractFetched] = useState(false);
     const [signStatus, setSignStatus] = useState<SignStatus>("idle");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const _canvasRef = useRef<HTMLCanvasElement>(null);
+    const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
-    // Redirect to /connect if wallet is not connected
+    // Redirect to /connect if wallet is not connected — but never interrupt a
+    // completed signing flow (signStatus === "done" handles its own redirect).
     useEffect(() => {
+        if (signStatus === "done") return;
         if (tokenStatus !== "loading" && !connected) {
             router.push(`/connect?next=${encodeURIComponent(window.location.href)}`);
         }
-    }, [connected, tokenStatus, router]);
+    }, [connected, tokenStatus, signStatus, router]);
+
+    // Redirect to agreements list as soon as signing is confirmed.
+    useEffect(() => {
+        if (signStatus !== "done") return;
+        const id = setTimeout(() => {
+            router.replace("/deposits");
+        }, 2500);
+        return () => {
+            clearTimeout(id);
+        };
+    }, [signStatus, router]);
 
     // Validate the signing token server-side.
     // If no token is present (direct navigation from dashboard / back link),
@@ -49,8 +64,11 @@ export default function SignPage() {
     useEffect(() => {
         if (!token) {
             const leaseId = params.id;
-            if (!leaseId) { setTokenStatus("invalid"); return; }
-            const role = (userRole === "landlord" || userRole === "tenant") ? userRole : "tenant";
+            if (!leaseId) {
+                setTokenStatus("invalid");
+                return;
+            }
+            const role = userRole === "landlord" || userRole === "tenant" ? userRole : "tenant";
             fetch("/api/sign/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -64,7 +82,9 @@ export default function SignPage() {
                         setTokenStatus("invalid");
                     }
                 })
-                .catch(() => setTokenStatus("invalid"));
+                .catch(() => {
+                    setTokenStatus("invalid");
+                });
             return;
         }
         fetch("/api/sign/validate", {
@@ -79,7 +99,17 @@ export default function SignPage() {
                     setTokenStatus("valid");
                 } else {
                     const { error } = (await r.json()) as { error: string };
-                    setTokenStatus(error.includes("expired") ? "expired" : "invalid");
+                    if (
+                        r.status === 409 ||
+                        error.toLowerCase().includes("used") ||
+                        error.toLowerCase().includes("already")
+                    ) {
+                        setTokenStatus("already-signed");
+                    } else if (error.includes("expired")) {
+                        setTokenStatus("expired");
+                    } else {
+                        setTokenStatus("invalid");
+                    }
                 }
             })
             .catch(() => {
@@ -92,59 +122,23 @@ export default function SignPage() {
         if (tokenStatus !== "valid" || !payload) return;
         void fetch(`/api/deposits/${payload.leaseId}`)
             .then(async (r) => {
-                if (r.ok) {
-                    const data = (await r.json()) as {
-                        contractStorageUrl?: string;
-                        contractHash?: string;
-                    };
-                    setContractUrl(data.contractStorageUrl ?? null);
-                    // Fall back to lease ID so the sign button is never permanently blocked
-                    setContractHash(data.contractHash ?? payload.leaseId);
-                }
+                const data = (await r.json()) as {
+                    contractStorageUrl?: string;
+                    contractHash?: string;
+                };
+                setContractUrl(data.contractStorageUrl ?? null);
+                // Fall back to lease ID so the sign button is never permanently blocked
+                setContractHash(data.contractHash ?? payload.leaseId);
             })
             .catch((_e: unknown) => {
                 setContractHash(payload.leaseId);
             })
-            .finally(() => setContractFetched(true));
+            .finally(() => {
+                setContractFetched(true);
+            });
     }, [tokenStatus, payload]);
 
-    // Render PDF using pdfjs-dist when contractUrl is available
-    useEffect(() => {
-        if (!contractUrl || !canvasRef.current) return;
-        let cancelled = false;
-
-        async function renderPdf() {
-            try {
-                // Dynamic import to avoid SSR issues with pdfjs-dist
-                const pdfjsLib = await import("pdfjs-dist");
-                pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-
-                // Fetch the PDF via a signed-URL proxy to avoid CORS issues with GCS
-                const proxyUrl = `/api/deposits/${payload?.leaseId ?? ""}/contract-pdf`;
-                const loadingTask = pdfjsLib.getDocument(proxyUrl);
-                const pdf = await loadingTask.promise;
-                if (cancelled) return;
-
-                const page = await pdf.getPage(1);
-                // canvasRef.current is guaranteed non-null by the guard above
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const canvas = canvasRef.current!;
-                const viewport = page.getViewport({ scale: 1.2 });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return;
-                await page.render({ canvasContext: ctx, viewport }).promise;
-            } catch (err) {
-                console.error("[sign-page] PDF render failed:", err);
-            }
-        }
-
-        void renderPdf();
-        return () => {
-            cancelled = true;
-        };
-    }, [contractUrl, payload]);
+    // canvasRef kept for potential future use but PDF is now rendered via iframe
 
     async function handleSign() {
         if (!wallet.signMessage || !wallet.publicKey || !payload || !contractHash) return;
@@ -241,6 +235,23 @@ export default function SignPage() {
         );
     }
 
+    if (tokenStatus === "already-signed") {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="text-center space-y-2 max-w-sm px-4">
+                    <h1 className="text-xl font-semibold text-green-700">Already Signed</h1>
+                    <p className="text-sm text-muted-foreground">
+                        This lease has already been signed with this link. Your signature is
+                        recorded.
+                    </p>
+                    <a href="/" className="inline-block mt-3 text-sm underline text-primary">
+                        Back to dashboard
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     if (tokenStatus === "invalid") {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -283,19 +294,31 @@ export default function SignPage() {
                     </div>
                 )}
 
-                <div
-                    className="border rounded-lg overflow-auto bg-muted/20 flex justify-center p-4"
-                    style={{ minHeight: 500 }}
-                >
-                    {contractUrl ? (
-                        <canvas ref={canvasRef} className="shadow" />
+                <LeaseAgreementSummary
+                    leaseId={payload?.leaseId ?? params.id}
+                    hasPdf={!!contractUrl && contractFetched}
+                />
+
+                <div className="border rounded-lg overflow-hidden bg-muted/20">
+                    {contractUrl && pdfProxyUrl ? (
+                        <iframe
+                            src={pdfProxyUrl}
+                            className="w-full h-[55vh] min-h-[320px]"
+                            title="Lease contract"
+                        />
                     ) : contractFetched ? (
-                        <div className="self-center text-center space-y-2">
-                            <p className="text-muted-foreground text-sm">No contract PDF uploaded.</p>
-                            <p className="text-xs text-muted-foreground">You can still sign to confirm the lease terms.</p>
+                        <div className="flex flex-col items-center justify-center h-[30vh] min-h-[180px] text-center space-y-2 p-6">
+                            <p className="text-muted-foreground text-sm">
+                                No contract PDF uploaded.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                You can still sign to confirm the lease terms.
+                            </p>
                         </div>
                     ) : (
-                        <p className="text-muted-foreground self-center">Loading contract PDF…</p>
+                        <div className="flex items-center justify-center h-[30vh] min-h-[180px]">
+                            <p className="text-muted-foreground">Loading contract PDF…</p>
+                        </div>
                     )}
                 </div>
 
@@ -305,7 +328,7 @@ export default function SignPage() {
                             Signed and confirmed.
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Your signature has been recorded on-chain and in Firestore.
+                            Your signature has been recorded. Redirecting to your agreements…
                         </p>
                     </div>
                 ) : (

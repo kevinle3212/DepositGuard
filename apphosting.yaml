@@ -1,48 +1,71 @@
 runConfig:
-  runtime: nodejs20
-  concurrency: 80
-  minInstances: 0
-  maxInstances: 4
+    runtime: nodejs20
+    concurrency: 80
+    minInstances: 0
+    maxInstances: 4
 
 env:
-  # ── Non-sensitive inline values ──────────────────────────────────────────
-  - variable: GCP_LOCATION
-    value: us-central1
-  - variable: SENDGRID_FROM_EMAIL
-    value: noreply@nestcrow.tech
-  - variable: APP_BASE_URL
-    value: https://nestcrow.tech
-  - variable: SOLANA_RPC_URL
-    value: https://api.devnet.solana.com
-  - variable: SOLANA_CLUSTER
-    value: devnet
-  - variable: GCP_PROJECT_ID
-    value: uoo-quackathon26eug-8200
-  - variable: FIREBASE_STORAGE_BUCKET
-    value: uoo-quackathon26eug-8200.firebasestorage.app
-  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: uoo-quackathon26eug-8200
-  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: uoo-quackathon26eug-8200.firebasestorage.app
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: uoo-quackathon26eug-8200.firebaseapp.com
-  - variable: NEST_CROW_PROGRAM_ID
-    value: F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a
-  - variable: NOTIFY_SERVICE_URL
-    value: http://localhost:8080
-  - variable: PORT
-    value: "8080"
+    # ── Non-sensitive inline values ──────────────────────────────────────────
+    - variable: HUSKY
+      value: "0"
+    - variable: GCP_LOCATION
+      value: us-central1
+    - variable: SENDGRID_FROM_EMAIL
+      value: noreply@nestcrow.tech
+    - variable: APP_BASE_URL
+      value: https://nestcrow.tech
+    - variable: SOLANA_RPC_URL
+      value: https://api.devnet.solana.com
+    - variable: SOLANA_CLUSTER
+      value: devnet
+    - variable: GCP_PROJECT_ID
+      value: uoo-quackathon26eug-8200
+    - variable: FIREBASE_STORAGE_BUCKET
+      value: uoo-quackathon26eug-8200.firebasestorage.app
+    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      value: uoo-quackathon26eug-8200
+    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      value: uoo-quackathon26eug-8200.firebasestorage.app
+    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      value: uoo-quackathon26eug-8200.firebaseapp.com
+    - variable: NEST_CROW_PROGRAM_ID
+      value: F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a
+    # WalletConnect / RainbowKit project ID (public — safe to inline)
+    - variable: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+      value: 6c6170df7553a4a46bc21e4dee335e8c
+    # Client-side Solana network config (mirrors server-side SOLANA_* vars above)
+    - variable: NEXT_PUBLIC_RPC_URL
+      value: https://api.devnet.solana.com
+    - variable: NEXT_PUBLIC_SOLANA_NETWORK
+      value: devnet
+    # NOTIFY_SERVICE_URL: set this to your deployed Cloud Run notify service URL.
+    # Leave unset to silently skip deadline email notifications.
+    # Example: https://notify-<hash>-uc.a.run.app
+    - variable: PORT
+      value: "8080"
+    # ElevenLabs voice IDs — defaults are baked into the code but can be overridden here
+    - variable: ELEVENLABS_VOICE_ID_PLATFORM_GUIDE
+      value: DXFkLCBUTmvXpp2QwZjA
+    - variable: ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR
+      value: pNInz6obpgDQGcFmaJgB
+    # ElevenLabs conversational AI agent ID (sent to browser — safe to inline)
+    - variable: NEXT_PUBLIC_ELEVEN_AGENT_PLATFORM_GUIDE
+      value: agent_3501ksy9mmx5fzmvsrqbx2g0p3by
 
-  # ── Secrets (stored in Secret Manager) ──────────────────────────────────
-  - variable: GEMINI_API_KEY
-    secret: GEMINI_API_KEY
-  - variable: JWT_SIGNING_SECRET
-    secret: JWT_SIGNING_SECRET
-  - variable: SENDGRID_API_KEY
-    secret: SENDGRID_API_KEY
-  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: NEXT_PUBLIC_FIREBASE_API_KEY
-  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    secret: NEXT_PUBLIC_FIREBASE_APP_ID
+    # ── Secrets (stored in Secret Manager) ──────────────────────────────────
+    - variable: GEMINI_API_KEY
+      secret: GEMINI_API_KEY
+    # ElevenLabs server-side API key — used by /api/tts for voice generation
+    # Create in Secret Manager: gcloud secrets create ELEVENLABS_API_KEY --project=uoo-quackathon26eug-8200
+    - variable: ELEVENLABS_API_KEY
+      secret: ELEVENLABS_API_KEY
+    - variable: JWT_SIGNING_SECRET
+      secret: JWT_SIGNING_SECRET
+    - variable: SENDGRID_API_KEY
+      secret: SENDGRID_API_KEY
+    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+      secret: NEXT_PUBLIC_FIREBASE_API_KEY
+    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+      secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+      secret: NEXT_PUBLIC_FIREBASE_APP_ID

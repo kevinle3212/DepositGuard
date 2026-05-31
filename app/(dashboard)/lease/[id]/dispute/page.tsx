@@ -143,6 +143,7 @@ function TimerBadge({ label, endTs, accent }: { label: string; endTs: number; ac
 // ── Page ───────────────────────────────────────────────────────────────────
 
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
+const SOLANA_NETWORK = process.env["NEXT_PUBLIC_SOLANA_NETWORK"] ?? "devnet";
 
 export default function DisputePage() {
     const { id } = useParams<{ id: string }>();
@@ -178,7 +179,7 @@ export default function DisputePage() {
 
                 toast({
                     title: "Confirming Block on Chain…",
-                    description: "Broadcasting staking transaction to Solana devnet.",
+                    description: `Broadcasting staking transaction to Solana ${SOLANA_NETWORK}.`,
                     duration: 15000,
                 });
 

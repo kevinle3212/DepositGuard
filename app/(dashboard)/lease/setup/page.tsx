@@ -30,6 +30,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useCreateLease } from "@/src/hooks/useLeaseApi";
+import { useWalletStore } from "@/src/store/useWalletStore";
+import { storage } from "@/src/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // ── Schema ─────────────────────────────────────────────────────────────────
 
@@ -91,7 +94,7 @@ const leaseSetupSchema = z.object({
     city: z.string().min(2, "City required"),
     state: z.string().length(2, "Select a US state"),
     zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP"),
-    tenantAddress: z.string().min(32, "Invalid wallet address").max(44),
+    tenantAddress: z.string().trim().min(32, "Invalid wallet address").max(44),
     depositAmount: z.number().min(1, "Minimum $1").max(100_000, "Maximum $100,000"),
     currency: z.enum(["USDC", "SOL"]),
     leaseStart: z.string().min(1, "Required"),
@@ -103,30 +106,61 @@ type LeaseSetupInput = z.infer<typeof leaseSetupSchema>;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function mockSha256(filename: string): string {
-    const chars = "0123456789abcdef";
-    let hash = "";
-    const seed = filename.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    for (let i = 0; i < 64; i++) {
-        hash += chars[(seed * (i + 1) * 31) % 16] ?? "";
-    }
-    return hash;
+async function sha256Hex(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function uploadContract(file: File): Promise<{ hash: string; storageUrl: string }> {
+    const hash = await sha256Hex(file);
+    const storageRef = ref(storage, `contracts/${hash}/${file.name}`);
+    // Always force application/pdf — some browsers report an empty or incorrect
+    // MIME type for dragged files, which would cause Firebase Storage rules to
+    // reject the upload (rules require contentType == 'application/pdf').
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => {
+            reject(new Error("Upload timed out after 30 s — check your connection and try again."));
+        }, 30_000),
+    );
+    await Promise.race([
+        uploadBytes(storageRef, file, { contentType: "application/pdf" }),
+        timeout,
+    ]);
+    const storageUrl = await getDownloadURL(storageRef);
+    return { hash, storageUrl };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function ContractDropzone({ onFile }: { onFile: (file: File, hash: string) => void }) {
+function ContractDropzone({
+    onFile,
+}: {
+    onFile: (file: File, hash: string, storageUrl: string) => void;
+}) {
     const [processing, setProcessing] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const onDrop = useCallback(
         async (accepted: File[]) => {
             const file = accepted[0];
             if (!file) return;
             setProcessing(true);
-            await new Promise((r) => setTimeout(r, 700)); // simulate arraybuffer read
-            const hash = mockSha256(file.name + String(file.size));
-            setProcessing(false);
-            onFile(file, hash);
+            setUploadError(null);
+            try {
+                const { hash, storageUrl } = await uploadContract(file);
+                onFile(file, hash, storageUrl);
+            } catch (err) {
+                setUploadError(
+                    err instanceof Error
+                        ? err.message
+                        : "Upload failed — check Firebase Storage config.",
+                );
+            } finally {
+                setProcessing(false);
+            }
         },
         [onFile],
     );
@@ -135,37 +169,39 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string) => vo
         onDrop,
         accept: {
             "application/pdf": [".pdf"],
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
         },
         maxFiles: 1,
         disabled: processing,
     });
 
     return (
-        <div
-            {...getRootProps()}
-            className={cn(
-                "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
-                isDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50",
-                processing && "pointer-events-none opacity-70",
-            )}
-        >
-            <input {...getInputProps()} aria-label="Contract file upload" />
-            {processing ? (
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-            ) : (
-                <Upload className="h-8 w-8 text-muted-foreground mb-3" />
-            )}
-            <p className="text-sm font-medium text-foreground">
-                {processing
-                    ? "Reading file…"
-                    : isDragActive
-                      ? "Drop to upload"
-                      : "Drag contract here"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">PDF or DOCX · max 20 MB</p>
+        <div className="space-y-2">
+            <div
+                {...getRootProps()}
+                className={cn(
+                    "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
+                    isDragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50 hover:bg-muted/50",
+                    processing && "pointer-events-none opacity-70",
+                )}
+            >
+                <input {...getInputProps()} aria-label="Contract file upload" />
+                {processing ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                )}
+                <p className="text-sm font-medium text-foreground">
+                    {processing
+                        ? "Uploading to secure storage…"
+                        : isDragActive
+                          ? "Drop to upload"
+                          : "Drag contract here"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">PDF only · max 20 MB</p>
+            </div>
+            {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
         </div>
     );
 }
@@ -205,7 +241,12 @@ function ThresholdSlider({ value, onChange }: { value: number; onChange: (v: num
 
 export default function LeaseSetupPage() {
     const router = useRouter();
-    const [contractFile, setContractFile] = useState<{ name: string; hash: string } | null>(null);
+    const { walletPubkey } = useWalletStore();
+    const [contractFile, setContractFile] = useState<{
+        name: string;
+        hash: string;
+        storageUrl: string;
+    } | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const createLease = useCreateLease();
@@ -235,7 +276,13 @@ export default function LeaseSetupPage() {
                 jurisdiction: data.state,
                 leaseStart: data.leaseStart,
                 leaseEnd: data.leaseEnd,
-                ...(contractFile?.hash !== undefined ? { contractHash: contractFile.hash } : {}),
+                landlordAddress: walletPubkey ?? "",
+                ...(contractFile
+                    ? {
+                          contractHash: contractFile.hash,
+                          contractStorageUrl: contractFile.storageUrl,
+                      }
+                    : {}),
             });
 
             // Generate a landlord signing token so the sign page validates correctly
@@ -386,7 +433,7 @@ export default function LeaseSetupPage() {
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="space-y-1.5">
                                 <Label htmlFor="depositAmount">Deposit Amount *</Label>
                                 <Input
@@ -430,7 +477,7 @@ export default function LeaseSetupPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="space-y-1.5">
                                 <Label htmlFor="leaseStart">Lease Start *</Label>
                                 <Input
@@ -521,8 +568,8 @@ export default function LeaseSetupPage() {
                             </div>
                         ) : (
                             <ContractDropzone
-                                onFile={(file, hash) => {
-                                    setContractFile({ name: file.name, hash });
+                                onFile={(file, hash, storageUrl) => {
+                                    setContractFile({ name: file.name, hash, storageUrl });
                                 }}
                             />
                         )}

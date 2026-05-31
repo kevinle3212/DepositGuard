@@ -40,7 +40,7 @@ const CONFIDENCE_STYLES: Record<DamageEstimateResponse["confidenceLevel"], strin
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function fileToBase64(file: File): Promise<string> {
+async function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -164,7 +164,7 @@ export function DamageCapturePanel({ role, onEstimate }: DamageCaptureProps) {
     function handleFile(file: File) {
         if (!file.type.startsWith("image/")) return;
         // Revoke previous preview URL if it was a blob URL
-        if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+        if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
         setPreview(URL.createObjectURL(file));
         setCapturedFile(file);
         setResult(null);
@@ -180,7 +180,7 @@ export function DamageCapturePanel({ role, onEstimate }: DamageCaptureProps) {
     }
 
     function clearCapture() {
-        if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+        if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
         setPreview(null);
         setCapturedFile(null);
         setResult(null);

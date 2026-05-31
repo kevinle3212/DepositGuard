@@ -12,8 +12,8 @@ const ELEVENLABS_API = "https://api.elevenlabs.io/v1/text-to-speech";
 // Set ELEVENLABS_VOICE_ID_PLATFORM_GUIDE / _DISPUTE_ADVISOR in env; defaults
 // fall back to ElevenLabs' built-in "Rachel"/"Adam" voices for local dev.
 const VOICE_IDS: Record<string, string> = {
-    "platform-guide": process.env["ELEVENLABS_VOICE_ID_PLATFORM_GUIDE"] || "DXFkLCBUTmvXpp2QwZjA",
-    "dispute-advisor": process.env["ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR"] || "pNInz6obpgDQGcFmaJgB",
+    "platform-guide": process.env["ELEVENLABS_VOICE_ID_PLATFORM_GUIDE"] ?? "DXFkLCBUTmvXpp2QwZjA",
+    "dispute-advisor": process.env["ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR"] ?? "pNInz6obpgDQGcFmaJgB",
 };
 
 // Scripts that use the dispute-advisor voice

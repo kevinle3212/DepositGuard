@@ -6,6 +6,8 @@ import { Upload, X, ImageIcon, Loader2, CheckCircle2, Clock } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { storage } from "@/src/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -23,7 +25,26 @@ type SubmitStage = "idle" | "uploading" | "hashing" | "confirming" | "waiting";
 interface PhotoVerificationProps {
     phase: PhotoPhase;
     title?: string;
-    onComplete?: (photos: { description: string; hash: string }[]) => void;
+    onComplete?: (photos: { description: string; hash: string; storageUrl: string }[]) => void;
+}
+
+async function sha256Hex(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function uploadPhoto(
+    file: File,
+    phase: PhotoPhase,
+): Promise<{ hash: string; storageUrl: string }> {
+    const hash = await sha256Hex(file);
+    const storageRef = ref(storage, `photos/${phase}/${hash}-${file.name}`);
+    await uploadBytes(storageRef, file, { contentType: file.type });
+    const storageUrl = await getDownloadURL(storageRef);
+    return { hash, storageUrl };
 }
 
 // ── Dropzone ───────────────────────────────────────────────────────────────
@@ -174,6 +195,7 @@ function ProgressTracker({ stage }: { stage: SubmitStage }) {
 export function PhotoVerification({ phase, title, onComplete }: PhotoVerificationProps) {
     const [photos, setPhotos] = useState<StagedPhoto[]>([]);
     const [stage, setStage] = useState<SubmitStage>("idle");
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const heading =
         title ??
@@ -203,21 +225,29 @@ export function PhotoVerification({ phase, title, onComplete }: PhotoVerificatio
 
     async function handleSubmit() {
         if (photos.length === 0) return;
-        const stages: SubmitStage[] = ["uploading", "hashing", "confirming", "waiting"];
+        setUploadError(null);
 
-        for (const s of stages) {
-            setStage(s);
-            const delay = s === "waiting" ? 400 : 900;
-            await new Promise((r) => setTimeout(r, delay));
-            if (s !== "waiting") continue;
-            // Arrive at waiting state — call onComplete with mock hashes
-            const results = photos.map((p) => ({
+        try {
+            setStage("uploading");
+            const uploaded = await Promise.all(photos.map(async (p) => uploadPhoto(p.file, phase)));
+
+            setStage("hashing");
+            await new Promise((r) => setTimeout(r, 300));
+
+            setStage("confirming");
+            await new Promise((r) => setTimeout(r, 500));
+
+            setStage("waiting");
+
+            const results = photos.map((p, i) => ({
                 description: p.description || p.file.name,
-                hash: Array.from({ length: 16 }, () =>
-                    Math.floor(Math.random() * 16).toString(16),
-                ).join(""),
+                hash: uploaded[i]?.hash ?? "",
+                storageUrl: uploaded[i]?.storageUrl ?? "",
             }));
             onComplete?.(results);
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "Upload failed.");
+            setStage("idle");
         }
     }
 
@@ -275,6 +305,8 @@ export function PhotoVerification({ phase, title, onComplete }: PhotoVerificatio
                     </div>
                 </div>
             )}
+
+            {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
 
             {/* Submit button */}
             {stage === "idle" && (

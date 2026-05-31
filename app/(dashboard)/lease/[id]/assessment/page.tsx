@@ -61,7 +61,7 @@ export default function AssessmentPage() {
         myValue: "",
         counterpartySubmitted: false,
         revealed: false,
-        counterpartyValue: 875,
+        counterpartyValue: 0,
     });
 
     // Sync fetched assessment items into local state; announce when ready
@@ -105,17 +105,9 @@ export default function AssessmentPage() {
 
     function submitEstimate() {
         if (!estimate.myValue) return;
-        setEstimate((prev) => {
-            const next = { ...prev, mySubmitted: true, counterpartySubmitted: true };
-            setTimeout(() => {
-                setEstimate((s) => ({ ...s, revealed: true }));
-            }, 1200);
-            return next;
-        });
-    }
-
-    function mockReveal() {
-        setEstimate((prev) => ({ ...prev, counterpartySubmitted: true, revealed: true }));
+        setEstimate((prev) => ({ ...prev, mySubmitted: true }));
+        // TODO: persist estimate to Firestore under leases/{id}/estimates/{userRole}
+        // and poll/listen for counterparty estimate to trigger reveal
     }
 
     return (
@@ -259,7 +251,7 @@ export default function AssessmentPage() {
                                                             aria-label="Accept item"
                                                         >
                                                             <Check className="h-3 w-3" />
-                                                            Accept
+                                                            <span className="hidden sm:inline">Accept</span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -274,7 +266,7 @@ export default function AssessmentPage() {
                                                             aria-label="Modify cost"
                                                         >
                                                             <Edit3 className="h-3 w-3" />
-                                                            Modify
+                                                            <span className="hidden sm:inline">Modify</span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -289,7 +281,7 @@ export default function AssessmentPage() {
                                                             aria-label="Reject item"
                                                         >
                                                             <X className="h-3 w-3" />
-                                                            Reject
+                                                            <span className="hidden sm:inline">Reject</span>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -400,12 +392,6 @@ export default function AssessmentPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={mockReveal}
-                                        className="text-xs text-muted-foreground underline"
-                                    >
-                                        [Demo] Simulate counterparty submission &amp; reveal
-                                    </button>
                                 </div>
                             )}
 
