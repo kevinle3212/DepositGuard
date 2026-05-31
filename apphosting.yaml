@@ -6,6 +6,8 @@ runConfig:
 
 env:
   # ── Non-sensitive inline values ──────────────────────────────────────────
+  - variable: HUSKY
+    value: "0"
   - variable: GCP_LOCATION
     value: us-central1
   - variable: SENDGRID_FROM_EMAIL

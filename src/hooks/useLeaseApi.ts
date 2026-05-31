@@ -32,6 +32,7 @@ interface CreateLeasePayload {
     tenantAddress: string;
     jurisdiction: string;
     contractHash?: string;
+    contractStorageUrl?: string;
     leaseStart?: string;
     leaseEnd?: string;
 }

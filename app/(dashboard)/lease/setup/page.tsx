@@ -30,6 +30,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useCreateLease } from "@/src/hooks/useLeaseApi";
+import { storage } from "@/src/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // ── Schema ─────────────────────────────────────────────────────────────────
 
@@ -103,19 +105,25 @@ type LeaseSetupInput = z.infer<typeof leaseSetupSchema>;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function mockSha256(filename: string): string {
-    const chars = "0123456789abcdef";
-    let hash = "";
-    const seed = filename.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    for (let i = 0; i < 64; i++) {
-        hash += chars[(seed * (i + 1) * 31) % 16] ?? "";
-    }
-    return hash;
+async function sha256Hex(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function uploadContract(file: File): Promise<{ hash: string; storageUrl: string }> {
+    const hash = await sha256Hex(file);
+    const storageRef = ref(storage, `contracts/${hash}/${file.name}`);
+    await uploadBytes(storageRef, file, { contentType: file.type });
+    const storageUrl = await getDownloadURL(storageRef);
+    return { hash, storageUrl };
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function ContractDropzone({ onFile }: { onFile: (file: File, hash: string) => void }) {
+function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, storageUrl: string) => void }) {
     const [processing, setProcessing] = useState(false);
 
     const onDrop = useCallback(
@@ -123,10 +131,12 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string) => vo
             const file = accepted[0];
             if (!file) return;
             setProcessing(true);
-            await new Promise((r) => setTimeout(r, 700)); // simulate arraybuffer read
-            const hash = mockSha256(file.name + String(file.size));
-            setProcessing(false);
-            onFile(file, hash);
+            try {
+                const { hash, storageUrl } = await uploadContract(file);
+                onFile(file, hash, storageUrl);
+            } finally {
+                setProcessing(false);
+            }
         },
         [onFile],
     );
@@ -205,7 +215,7 @@ function ThresholdSlider({ value, onChange }: { value: number; onChange: (v: num
 
 export default function LeaseSetupPage() {
     const router = useRouter();
-    const [contractFile, setContractFile] = useState<{ name: string; hash: string } | null>(null);
+    const [contractFile, setContractFile] = useState<{ name: string; hash: string; storageUrl: string } | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const createLease = useCreateLease();
@@ -235,7 +245,7 @@ export default function LeaseSetupPage() {
                 jurisdiction: data.state,
                 leaseStart: data.leaseStart,
                 leaseEnd: data.leaseEnd,
-                ...(contractFile?.hash !== undefined ? { contractHash: contractFile.hash } : {}),
+                ...(contractFile ? { contractHash: contractFile.hash, contractStorageUrl: contractFile.storageUrl } : {}),
             });
 
             // Generate a landlord signing token so the sign page validates correctly
@@ -521,8 +531,8 @@ export default function LeaseSetupPage() {
                             </div>
                         ) : (
                             <ContractDropzone
-                                onFile={(file, hash) => {
-                                    setContractFile({ name: file.name, hash });
+                                onFile={(file, hash, storageUrl) => {
+                                    setContractFile({ name: file.name, hash, storageUrl });
                                 }}
                             />
                         )}

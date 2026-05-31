@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as Record<string, unknown>;
 
-    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash, leaseStart, leaseEnd } =
+    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash, contractStorageUrl, leaseStart, leaseEnd } =
         body as {
             propertyAddress?: string;
             depositAmount?: number;
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
             tenantAddress?: string;
             jurisdiction?: string;
             contractHash?: string;
+            contractStorageUrl?: string;
             leaseStart?: string;
             leaseEnd?: string;
         };
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
         createdAt: now,
     };
     if (contractHash) data["contractHash"] = contractHash;
+    if (contractStorageUrl) data["contractStorageUrl"] = contractStorageUrl;
     if (leaseStart) data["leaseStart"] = leaseStart;
     if (leaseEnd) data["leaseEnd"] = leaseEnd;
 
