@@ -295,5 +295,6 @@ Build a documentation site (Docusaurus or MkDocs) with clear structure, search, 
 - [ ] Switch from Devnet to Mainnet-Beta; configure Helius RPC as the production endpoint with fallback to public mainnet RPC.
 - [ ] Conduct legal review covering: money transmission licensing (MTL), USDC on Solana custody implications, ESIGN Act compliance for magic link signatures, state-specific deposit-return statutes, and arbitration rules per jurisdiction.
 - [ ] Run load testing on all Cloud Run services; tune Cloud Armor and autoscaling settings.
+- [ ] Migrate to Next.js 15. `next` is pinned at 14.2.35 (latest secure 14.2.x); several remaining DoS/SSRF advisories (RSC request deserialization, WebSocket SSRF, i18n proxy bypass) are patched only in Next ≥15.5.16 with no 14.x backport. Breaking upgrade — covers App Router changes, async request APIs (`cookies`/`headers`/`params`), and caching default changes.
 - [ ] Complete the full Playwright E2E test suite covering the landlord path, tenant path, dispute path, and arbitration panel path.
 - [ ] Final audit of all secrets in Google Cloud Secret Manager; confirm nothing is in source control or container image layers.
