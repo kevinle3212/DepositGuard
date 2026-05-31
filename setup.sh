@@ -48,29 +48,18 @@ else
   echo "Press Enter to skip any optional value and fill it in later."
   echo ""
 
-  # GEMINI_API_KEY
-  echo "${CYAN}[1/3] Gemini API key${RESET}"
-  echo "      Get one free at: https://aistudio.google.com/app/apikey"
-  read -r -p "      GEMINI_API_KEY: " GEMINI_API_KEY
-  GEMINI_API_KEY="${GEMINI_API_KEY:-}"
-
-  # ELEVENLABS_API_KEY
-  echo ""
-  echo "${CYAN}[2/3] ElevenLabs API key (optional — voice features only)${RESET}"
-  echo "      Get one at: https://elevenlabs.io → Profile → API Keys"
-  read -r -p "      ELEVENLABS_API_KEY: " ELEVENLABS_API_KEY
-  ELEVENLABS_API_KEY="${ELEVENLABS_API_KEY:-}"
+  # Shared project keys — pre-filled so teammates don't need to look them up
+  GEMINI_API_KEY="AQ.Ab8RN6I6MFqZBUyBBrTXDxLBFC2_-dHzHEyei38k7mArAGq2bA"
+  ELEVENLABS_API_KEY="sk_19f63a160947b2f4c2a20328d2576cf208240df4c05eac93"
 
   # FIREBASE_SERVICE_ACCOUNT_JSON
   echo ""
-  echo "${CYAN}[3/3] Firebase service account JSON (needed for Firestore / Storage)${RESET}"
-  echo "      How to get it:"
-  echo "        1. Go to https://console.firebase.google.com"
-  echo "        2. Select project → Project Settings (gear icon) → Service Accounts"
-  echo "        3. Click 'Generate new private key' → download the JSON file"
-  echo "        4. Paste the ENTIRE file contents on one line below"
-  echo "      (Leave blank if you already have gcloud ADC configured)"
-  read -r -p "      FIREBASE_SERVICE_ACCOUNT_JSON: " FIREBASE_SA_JSON
+  echo "${CYAN}Firebase Admin credentials${RESET}"
+  echo "  Teammates added as Firebase project owners can use gcloud ADC instead:"
+  echo "    gcloud auth application-default login"
+  echo "  (just press Enter below and run that command after setup)"
+  echo ""
+  read -r -p "  FIREBASE_SERVICE_ACCOUNT_JSON (optional, press Enter to skip): " FIREBASE_SA_JSON
   FIREBASE_SA_JSON="${FIREBASE_SA_JSON:-}"
 
   # ── Write the file ─────────────────────────────────────────────────────────
@@ -154,18 +143,12 @@ echo ""
 echo "  Then open: ${CYAN}http://localhost:3000${RESET}"
 echo ""
 
-# Warn about missing secrets
+# Warn if Firebase Admin credentials are missing
 if [ -f "$ENV_FILE" ]; then
-  MISSING=()
-  grep -E "^GEMINI_API_KEY=$" "$ENV_FILE" &>/dev/null && MISSING+=("GEMINI_API_KEY")
-  grep -E "^FIREBASE_SERVICE_ACCOUNT_JSON=$" "$ENV_FILE" &>/dev/null && MISSING+=("FIREBASE_SERVICE_ACCOUNT_JSON")
-  if [ ${#MISSING[@]} -gt 0 ]; then
-    warn "These values are still empty in .env — some features will not work:"
-    for key in "${MISSING[@]}"; do
-      echo "    • $key"
-    done
-    echo ""
-    echo "  Edit .env and fill them in, then restart the dev server."
+  if grep -E "^FIREBASE_SERVICE_ACCOUNT_JSON=$" "$ENV_FILE" &>/dev/null; then
+    warn "FIREBASE_SERVICE_ACCOUNT_JSON is empty."
+    echo "  Run this to use your Google account for Firebase Admin instead:"
+    echo "    ${BOLD}gcloud auth application-default login${RESET}"
     echo ""
   fi
 fi
