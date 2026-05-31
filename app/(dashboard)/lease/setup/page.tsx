@@ -125,15 +125,19 @@ async function uploadContract(file: File): Promise<{ hash: string; storageUrl: s
 
 function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, storageUrl: string) => void }) {
     const [processing, setProcessing] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const onDrop = useCallback(
         async (accepted: File[]) => {
             const file = accepted[0];
             if (!file) return;
             setProcessing(true);
+            setUploadError(null);
             try {
                 const { hash, storageUrl } = await uploadContract(file);
                 onFile(file, hash, storageUrl);
+            } catch (err) {
+                setUploadError(err instanceof Error ? err.message : "Upload failed — check Firebase Storage config.");
             } finally {
                 setProcessing(false);
             }
@@ -152,30 +156,35 @@ function ContractDropzone({ onFile }: { onFile: (file: File, hash: string, stora
     });
 
     return (
-        <div
-            {...getRootProps()}
-            className={cn(
-                "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
-                isDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50",
-                processing && "pointer-events-none opacity-70",
+        <div className="space-y-2">
+            <div
+                {...getRootProps()}
+                className={cn(
+                    "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
+                    isDragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50 hover:bg-muted/50",
+                    processing && "pointer-events-none opacity-70",
+                )}
+            >
+                <input {...getInputProps()} aria-label="Contract file upload" />
+                {processing ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground mb-3" />
+                )}
+                <p className="text-sm font-medium text-foreground">
+                    {processing
+                        ? "Uploading to secure storage…"
+                        : isDragActive
+                          ? "Drop to upload"
+                          : "Drag contract here"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">PDF or DOCX · max 20 MB</p>
+            </div>
+            {uploadError && (
+                <p className="text-xs text-destructive">{uploadError}</p>
             )}
-        >
-            <input {...getInputProps()} aria-label="Contract file upload" />
-            {processing ? (
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-            ) : (
-                <Upload className="h-8 w-8 text-muted-foreground mb-3" />
-            )}
-            <p className="text-sm font-medium text-foreground">
-                {processing
-                    ? "Reading file…"
-                    : isDragActive
-                      ? "Drop to upload"
-                      : "Drag contract here"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">PDF or DOCX · max 20 MB</p>
         </div>
     );
 }
