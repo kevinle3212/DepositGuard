@@ -133,9 +133,9 @@
 - [ ] Create the `/api/upload-contract` Cloud Run route: validate file type (PDF/DOCX) and size (max 20MB); convert DOCX to PDF via `pdf-lib`; compute SHA-256 hash of document bytes; upload to Firebase Cloud Storage at `contracts/{leaseId}/lease-v{n}.pdf` (versioned, write-once); write `{ contractHash, storageUrl, uploadedBy, timestamp }` to Firestore.
 - [ ] Submit `record_contract_hash(lease_id, sha256_hash)` on-chain via the relayer after successful upload.
 - [ ] Create the `/api/send-signing-link` Cloud Run route: generate a signed JWT (`{ leaseId, role, email, exp: +48h }`); store in `signingTokens/{token}` in Firestore; dispatch magic link email via Firebase Extensions.
-- [ ] Build the `/lease/[id]/sign` frontend page: validate JWT (expiry, `leaseId` match); redirect to `/connect` if wallet is not connected; render contract PDF in-browser via `pdfjs-dist`.
-- [ ] On "Sign and Confirm": call `wallet.signMessage("I agree to lease [leaseId] contract hash [sha256]. Timestamp: [unix_ts]")`; record signature and pubkey in Firestore and on-chain; invalidate the signing token.
-- [ ] Gate `fund_escrow()` — block tenant from funding until both `landlord_signed` and `tenant_signed` are `true` in `LeaseConfig` PDA.
+- [x] Build the `/lease/[id]/sign` frontend page: validate JWT (expiry, `leaseId` match); redirect to `/connect` if wallet is not connected; render contract PDF in-browser via `pdfjs-dist`.
+- [x] On "Sign and Confirm": call `wallet.signMessage("I agree to lease [leaseId] contract hash [sha256]. Timestamp: [unix_ts]")`; record signature and pubkey in Firestore and on-chain; invalidate the signing token.
+- [x] Gate `fund_escrow()` — block tenant from funding until both `landlord_signed` and `tenant_signed` are `true` in `LeaseConfig` PDA.
 - [ ] Write end-to-end tests: upload, hash match, signing flow (both parties), escrow funding gate.
 
 ---
@@ -171,11 +171,11 @@
 
 > Depends on Section 11.
 
-- [ ] Build the `/lease/[id]/setup` page: landlord creates a new lease (deposit amount, jurisdiction, tenant email); triggers `initialize_escrow` on-chain.
-- [ ] Build the contract upload UI using `react-dropzone`; call `/api/upload-contract`; display upload status and contract hash confirmation.
-- [ ] Build the move-in photo upload UI: `react-dropzone` for both parties; call Firebase Cloud Storage upload directly from client; trigger `record_photo_hash` on-chain after both parties upload.
-- [ ] Build the move-out photo upload UI following the same pattern as move-in.
-- [ ] Show wallet balance and USDC balance before any payment step; surface clear errors if insufficient funds.
+- [x] Build the `/lease/[id]/setup` page: landlord creates a new lease (deposit amount, jurisdiction, tenant email); triggers `initialize_escrow` on-chain.
+- [x] Build the contract upload UI using `react-dropzone`; call `/api/upload-contract`; display upload status and contract hash confirmation.
+- [x] Build the move-in photo upload UI: `react-dropzone` for both parties; call Firebase Cloud Storage upload directly from client; trigger `record_photo_hash` on-chain after both parties upload.
+- [x] Build the move-out photo upload UI following the same pattern as move-in.
+- [x] Show wallet balance and USDC balance before any payment step; surface clear errors if insufficient funds.
 
 ---
 
@@ -183,12 +183,12 @@
 
 > Depends on Sections 3, 4, 5, 6, and 12.
 
-- [ ] Build the `/lease/[id]/assessment` page: display Gemini's itemized estimate with the "Estimate Only" advisory label; allow landlord to accept, modify, or reject each line item; surface the 15% auto-flag warning if triggered.
-- [ ] Build the deposit return flow: landlord issues deduction statement; tenant reviews; "Agree" calls `approve_release()`; "Dispute" calls `open_dispute()`.
-- [ ] Build the `/lease/[id]/dispute` page: direct negotiation UI (both parties propose revised splits); tier indicators (Negotiation → Mediation → Arbitration → Court); sealed estimate submission form (neither party sees the other's until both submit).
-- [ ] Build the arbitration fee payment UI: show $50 USDC fee per party; connect to `pay_arbitration_fee()` on-chain; show 72-hour countdown; show refund-if-unused disclaimer.
-- [ ] Build the panel upgrade UI: show optional $25 each; connect to `pay_panel_upgrade_fee()`; require both parties to confirm.
-- [ ] Build the `/lease/[id]/arbitration` page: show panel composition (with conflict-of-interest disclosures); show sealed ruling status per panelist; reveal all three rulings simultaneously after all are submitted; display adopted ruling, minority dissent notice (if any), and 14-day escalation countdown.
+- [x] Build the `/lease/[id]/assessment` page: display Gemini's itemized estimate with the "Estimate Only" advisory label; allow landlord to accept, modify, or reject each line item; surface the 15% auto-flag warning if triggered.
+- [x] Build the deposit return flow: landlord issues deduction statement; tenant reviews; "Agree" calls `approve_release()`; "Dispute" calls `open_dispute()`.
+- [x] Build the `/lease/[id]/dispute` page: direct negotiation UI (both parties propose revised splits); tier indicators (Negotiation → Mediation → Arbitration → Court); sealed estimate submission form (neither party sees the other's until both submit).
+- [x] Build the arbitration fee payment UI: show $50 USDC fee per party; connect to `pay_arbitration_fee()` on-chain; show 72-hour countdown; show refund-if-unused disclaimer.
+- [x] Build the panel upgrade UI: show optional $25 each; connect to `pay_panel_upgrade_fee()`; require both parties to confirm.
+- [x] Build the `/lease/[id]/arbitration` page: show panel composition (with conflict-of-interest disclosures); show sealed ruling status per panelist; reveal all three rulings simultaneously after all are submitted; display adopted ruling, minority dissent notice (if any), and 14-day escalation countdown.
 
 ---
 
@@ -219,8 +219,8 @@
 
 ## 16. Tooling and Code Quality
 
-- [ ] Add config files with the strictest practical settings: `tsconfig.json` (TypeScript), `.eslintrc` (ESLint flat config), Prettier config.
-- [ ] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
+- [x] Add config files with the strictest practical settings: `tsconfig.json` (TypeScript), `.eslintrc` (ESLint flat config), Prettier config.
+- [x] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
 - [ ] Set up Husky Git hooks to run linters and tests before commit and push.
 - [ ] Set up commitlint to enforce a consistent commit-message format (e.g. Conventional Commits).
 
@@ -238,7 +238,7 @@
 
 ## 18. Project Docs (Root-Level Markdown)
 
-- [ ] `README.md` — project overview, purpose, setup instructions, and contribution pointer.
+- [x] `README.md` — project overview, purpose, setup instructions, and contribution pointer.
 - [ ] `CONTRIBUTING.md` — coding standards, commit-message conventions, PR process.
 - [ ] `SECURITY.md` — security policy, how to report vulnerabilities, and handling process.
 
