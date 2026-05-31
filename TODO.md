@@ -214,9 +214,9 @@
 
 > Depends on Section 7.
 
-- [ ] Create the `/api/notify` Cloud Run route: accept `{ leaseId, event, recipients }` and dispatch transactional emails via Firebase Extensions (Trigger Email).
-- [ ] Write email templates for all notification events: magic link invite, both-parties-signed confirmation, move-in photo required, move-out complete, assessment ready, deduction statement, dispute opened, arbitration fee due, arbitration fee refunded, ruling issued, minority dissent filed, deposit released, deadline warning, claim timeout executed.
-- [ ] Ensure every on-chain event that affects a party's funds triggers an email notification.
+- [x] Create the `/api/notify` Cloud Run route: accept `{ leaseId, event, recipients }` and dispatch transactional emails via Firebase Extensions (Trigger Email).
+- [x] Write email templates for all notification events: magic link invite, both-parties-signed confirmation, move-in photo required, move-out complete, assessment ready, deduction statement, dispute opened, arbitration fee due, arbitration fee refunded, ruling issued, minority dissent filed, deposit released, deadline warning, claim timeout executed.
+- [x] Ensure every on-chain event that affects a party's funds triggers an email notification.
 
 ---
 
