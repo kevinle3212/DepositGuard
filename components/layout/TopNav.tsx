@@ -19,6 +19,7 @@ import { useState } from "react";
 import { cn, shortenAddress } from "@/lib/utils";
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { Button } from "@/components/ui/button";
+import { VoiceToggle } from "@/components/ui/VoiceToggle";
 
 const NAV_LINKS = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -200,8 +201,11 @@ export function TopNav() {
                         </nav>
                     </div>
 
-                    {/* Right: wallet */}
-                    <WalletMenu />
+                    {/* Right: voice toggle + wallet */}
+                    <div className="flex items-center gap-2">
+                        <VoiceToggle />
+                        <WalletMenu />
+                    </div>
                 </div>
 
                 {/* Mobile nav */}

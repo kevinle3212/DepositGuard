@@ -132,3 +132,10 @@ TODO.local.md
 # Root uses Yarn; ignore only the root npm lockfile. Cloud Run services
 # under services/* are standalone npm packages and keep their own lockfiles.
 /package-lock.json
+.vercel
+
+# Service account keys — never commit
+.sa-keys/
+sa-keys/
+*.json.key
+firebase-adminsdk*.json

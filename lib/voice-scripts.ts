@@ -5,6 +5,12 @@
  * this map serves as the local fallback when Firestore is unavailable.
  */
 export const VOICE_SCRIPTS: Record<string, string> = {
+    // Voice feature onboarding — spoken when user enables voice for the first time
+    "voice.enabled":
+        "Voice is now on. I'm Eryn, your NestCrow assistant. " +
+        "I'll read important steps and confirmations aloud as you go through the deposit process. " +
+        "You can turn voice off at any time by clicking the speaker icon in the top navigation bar.",
+
     // Wallet & onboarding
     "wallet.prompt": "Please connect your Solana wallet to get started with NestCrow.",
     "wallet.connected": "Wallet connected successfully. Welcome to NestCrow.",

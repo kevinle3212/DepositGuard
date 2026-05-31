@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { createDepositSchema, type CreateDepositInput } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+import type { Denomination } from "@/types";
 import { useCreateDeposit } from "@/hooks/use-deposits";
 import { useWalletStore } from "@/src/store/useWalletStore";
 
@@ -22,6 +24,7 @@ export default function NewDepositPage() {
     const { walletPubkey: publicKey } = useWalletStore();
     const createDeposit = useCreateDeposit();
     const [txSigning, setTxSigning] = useState(false);
+    const [denomination, setDenomination] = useState<Denomination>("SOL");
 
     const {
         register,
@@ -47,6 +50,7 @@ export default function NewDepositPage() {
             const deposit = await createDeposit.mutateAsync({
                 ...rest,
                 landlordAddress: publicKey,
+                denomination,
                 ...(propertyDescription !== undefined ? { propertyDescription } : {}),
             });
             router.push(`/deposits/${deposit.id}`);
@@ -156,20 +160,39 @@ export default function NewDepositPage() {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="amountSol">Deposit Amount (SOL) *</Label>
+                                    <Label htmlFor="amountSol">Deposit Amount *</Label>
+                                    {/* Denomination toggle */}
+                                    <div className="flex gap-1 p-1 rounded-lg bg-muted w-fit mb-2">
+                                        {(["SOL", "USDC"] as Denomination[]).map((d) => (
+                                            <button
+                                                key={d}
+                                                type="button"
+                                                onClick={() => { setDenomination(d); }}
+                                                disabled={isBusy}
+                                                className={cn(
+                                                    "px-3 py-1 rounded-md text-sm font-medium transition-colors",
+                                                    denomination === d
+                                                        ? "bg-background text-foreground shadow-sm"
+                                                        : "text-muted-foreground hover:text-foreground",
+                                                )}
+                                            >
+                                                {d}
+                                            </button>
+                                        ))}
+                                    </div>
                                     <div className="relative">
                                         <Input
                                             id="amountSol"
                                             type="number"
-                                            step="0.001"
-                                            min="0.001"
-                                            max="1000"
+                                            step={denomination === "USDC" ? "1" : "0.001"}
+                                            min={denomination === "USDC" ? "1" : "0.001"}
+                                            max="1000000"
                                             {...register("amountSol", { valueAsNumber: true })}
                                             disabled={isBusy}
                                             className="pr-16"
                                         />
                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
-                                            SOL
+                                            {denomination}
                                         </span>
                                     </div>
                                     {errors.amountSol && (
@@ -187,8 +210,8 @@ export default function NewDepositPage() {
                             <div className="text-sm text-blue-800 space-y-1">
                                 <p className="font-medium">How it works</p>
                                 <p className="text-xs text-blue-700 leading-relaxed">
-                                    You (landlord) create the escrow. The tenant then funds it with{" "}
-                                    <strong>{amountSol || "—"} SOL</strong>. Funds are locked
+                                    You (landlord) create the escrow.                                     The tenant then funds it with{" "}
+                                    <strong>{amountSol || "—"} {denomination}</strong>. Funds are locked
                                     on-chain until both parties complete the move-out process. No
                                     intermediary holds your money.
                                 </p>

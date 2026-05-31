@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   PlusCircle,
   Building2,
@@ -28,6 +29,7 @@ import { useFetchLeases } from '@/src/hooks/useLeaseApi'
 import type { Lease } from '@/src/types/api'
 
 function LeaseCard({ lease, role }: { lease: Lease; role: 'landlord' | 'tenant' }) {
+  const router = useRouter()
   const isActionRequired =
     (role === 'tenant' && lease.status === 'Created') ||
     (role === 'landlord' && lease.status === 'Move-Out Pending')
@@ -35,8 +37,24 @@ function LeaseCard({ lease, role }: { lease: Lease; role: 'landlord' | 'tenant' 
   const counterpartyAddress =
     role === 'landlord' ? lease.tenantAddress : lease.landlordAddress
 
+  async function handleClick() {
+    try {
+      const res = await fetch('/api/sign/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leaseId: lease.id, role }),
+      })
+      if (res.ok) {
+        const { token } = (await res.json()) as { token: string }
+        router.push(`/lease/${lease.id}/sign?token=${token}`)
+        return
+      }
+    } catch { /* fall through */ }
+    router.push(`/lease/${lease.id}/sign`)
+  }
+
   return (
-    <Link href={`/lease/${lease.id}/sign`}>
+    <button onClick={() => void handleClick()} className="w-full text-left">
       <Card className={cn('group hover:shadow-md hover:border-primary/30 transition-all cursor-pointer', isActionRequired && 'ring-2 ring-amber-300 border-amber-200')}>
         <CardContent className="p-5">
           {isActionRequired && (
@@ -69,7 +87,7 @@ function LeaseCard({ lease, role }: { lease: Lease; role: 'landlord' | 'tenant' 
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </button>
   )
 }
 

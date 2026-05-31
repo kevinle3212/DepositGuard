@@ -32,6 +32,8 @@ interface CreateLeasePayload {
     tenantAddress: string;
     jurisdiction: string;
     contractHash?: string;
+    leaseStart?: string;
+    leaseEnd?: string;
 }
 
 export function useCreateLease() {

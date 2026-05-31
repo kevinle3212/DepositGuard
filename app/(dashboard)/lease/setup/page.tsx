@@ -233,9 +233,24 @@ export default function LeaseSetupPage() {
                 currency: data.currency,
                 tenantAddress: data.tenantAddress,
                 jurisdiction: data.state,
+                leaseStart: data.leaseStart,
+                leaseEnd: data.leaseEnd,
                 ...(contractFile?.hash !== undefined ? { contractHash: contractFile.hash } : {}),
             });
-            router.push(`/lease/${lease.id}/sign`);
+
+            // Generate a landlord signing token so the sign page validates correctly
+            const tokenRes = await fetch("/api/sign/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ leaseId: lease.id, role: "landlord" }),
+            });
+            if (tokenRes.ok) {
+                const { token } = (await tokenRes.json()) as { token: string };
+                router.push(`/lease/${lease.id}/sign?token=${token}`);
+            } else {
+                // Fall back to the sign page without a token if generation fails
+                router.push(`/lease/${lease.id}/sign`);
+            }
         } catch (e) {
             setSubmitError(e instanceof Error ? e.message : "Submission failed. Please try again.");
         }

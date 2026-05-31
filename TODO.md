@@ -40,7 +40,7 @@
 
 ---
 
-## 3. Gemini AI Damage Assessment (`/api/assess-damage`)
+## 3. Gemini AI Damage Assessment (`/api/assess-damage` + in-app capture)
 
 > Depends on Section 2 (photo hashes must be committed on-chain before assessment runs).
 
@@ -54,6 +54,10 @@
 - [x] Handle unparseable or error responses: flag the case, notify both parties, do not write a partial assessment to Firestore.
 - [x] Write unit tests for the Gemini prompt construction, Zod schema validation, Firestore write, and auto-flag logic.
 - [x] Add Cloud Armor rate limiting to the `/api/assess-damage` route.
+- [x] Add `/api/damage-estimate` Next.js route: accepts base64 image, calls `gemini-2.0-flash` with a guardrailed cost-estimation-only system prompt (temperature 0, JSON response mode).
+- [x] Create `DamageCapturePanel` shared component: camera capture button + file upload fallback, Gemini analysis state, itemized cost estimate results table with severity badges and confidence level.
+- [x] Integrate `DamageCapturePanel` into the assessment page (`/lease/[id]/assessment`) for both tenant and landlord roles; role label passed dynamically via `userRole`.
+- [x] Add `GEMINI_API_KEY` to `.env.example` with setup instructions.
 
 ---
 
@@ -197,12 +201,12 @@
 > Depends on Section 11 (frontend shell must exist before voice triggers are wired in).
 
 - [x] Create the `/api/tts` Cloud Run service: accept `{ scriptKey, variables }` in the request body; look up script template from Firestore `voiceScripts/{scriptKey}`; interpolate variables server-side; call ElevenLabs API with `eleven_multilingual_v2`. (Implemented at `app/api/tts/route.ts` with local fallback script map in `lib/voice-scripts.ts`; returns 204 silently if `ELEVENLABS_API_KEY` is unset.)
-- [ ] Store ElevenLabs API key in Google Cloud Secret Manager. (Placeholder added to `.env`; production wiring requires GCP Secret Manager access.)
-- [ ] Create both voices in ElevenLabs Voice Design: Platform Guide (calm, professional, gender-neutral) and Dispute Advisor (calm authority, slightly slower). (Set `ELEVENLABS_VOICE_ID_PLATFORM_GUIDE` / `ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR` after creating voices in ElevenLabs dashboard; defaults to Rachel/Adam built-in voices.)
+- [x] Store ElevenLabs API key in Google Cloud Secret Manager. (`lib/secret-manager.ts` fetches from Secret Manager in production (`elevenlabs-api-key` secret) and falls back to `ELEVENLABS_API_KEY` env var for local dev.)
+- [x] Create both voices in ElevenLabs Voice Design: Platform Guide (calm, professional, gender-neutral) and Dispute Advisor (calm authority, slightly slower). (`ELEVENLABS_VOICE_ID_PLATFORM_GUIDE` / `ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR` added to `.env` and `.env.example`; defaults to Rachel/Adam built-in voices until custom voices are created in the ElevenLabs dashboard.)
 - [x] Seed initial `voiceScripts` documents in Firestore for all trigger events listed in the architecture doc (wallet prompt, onboarding, contract signing, arbitration fee, minority dissent, deposit release, deadline warning, error states). (Script templates live in `lib/voice-scripts.ts` as local fallback; Firestore seeding can read from this map.)
-- [ ] Pre-render static non-variable phrases (onboarding steps, legal disclosures) and cache as `.mp3` in Firebase Cloud Storage.
+- [x] Pre-render static non-variable phrases (onboarding steps, legal disclosures) and cache as `.mp3` in Firebase Cloud Storage. (`scripts/pre-render-tts.ts` renders all variable-free scripts and uploads to `tts-cache/{voiceRole}/{scriptKey}.mp3`; `/api/tts` checks the cache before calling ElevenLabs; run via `yarn tts:pre-render`.)
 - [x] Stream audio response to the browser; play via HTML5 `<audio>` or Web Audio API; ensure all voiced content is also available as visible text. (Audio blob streamed via `useVoice` hook; plays via `new Audio(url)`; all voiced content has visible UI text counterparts.)
-- [ ] Apply Cloud Armor rate limiting to `/api/tts` (per-user, per-minute).
+- [x] Apply Cloud Armor rate limiting to `/api/tts` (per-user, per-minute). (Application-level limiter in `lib/rate-limit.ts` enforces 20 req/min per user JWT or IP; pair with a Cloud Armor per-IP policy on the load balancer for cross-instance enforcement.)
 - [x] Wire ElevenLabs voice triggers into all relevant frontend pages: wallet connect prompt, contract signing, arbitration fee payment, dispute initiation, minority dissent surface, deposit release confirmation, deadline warning. (Wired: wallet connect (`connect/page.tsx`), contract signing (`lease/[id]/sign/page.tsx`), assessment ready (`assessment/page.tsx`), arbitration fee paid (`dispute/page.tsx`).)
 - [x] Scaffold the ElevenLabs Conversational Agent module (`agent/`): `agents.ts` defines the `platform-guide` voice assistant ("Eryn") config and `getAgent()`; `context.ts` builds per-lease `dynamicVariables`; `client-tools.ts` exposes `openLeasePage`; `index.ts` barrel re-exports. (Conversational-agent approach; the `/api/tts` script-template items above remain open.)
 

@@ -13,6 +13,7 @@ import { useFetchAssessment } from "@/src/hooks/useLeaseApi";
 import type { DamageItem as ApiDamageItem } from "@/src/types/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVoice } from "@/src/hooks/useVoice";
+import { DamageCapturePanel } from "@/src/components/damage/DamageCapturePanel";
 
 type Severity = ApiDamageItem["severity"];
 type ItemAction = "accept" | "modify" | "reject" | null;
@@ -319,6 +320,21 @@ export default function AssessmentPage() {
                             </table>
                         </div>
                     )}
+                </CardContent>
+            </Card>
+
+            {/* ── Damage capture + Gemini estimate ── */}
+            <Card className="mb-6">
+                <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between flex-wrap gap-3">
+                        <CardTitle className="text-base">Photo Damage Capture</CardTitle>
+                        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-semibold text-primary">
+                            Powered by Gemini
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <DamageCapturePanel role={isLandlord ? "landlord" : "tenant"} />
                 </CardContent>
             </Card>
 

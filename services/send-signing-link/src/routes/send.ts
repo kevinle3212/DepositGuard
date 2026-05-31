@@ -29,7 +29,7 @@ sendRouter.post('/', async (req: Request, res: Response): Promise<void> => {
   // defence-in-depth gate using the authenticated wallet claim.
   let token: string
   try {
-    token = issueSigningToken(leaseId, role, email)
+    token = await issueSigningToken(leaseId, role, email)
   } catch (err) {
     console.error('[send-signing-link] JWT issue failed:', err)
     res.status(500).json({ error: 'Failed to generate signing token.' })

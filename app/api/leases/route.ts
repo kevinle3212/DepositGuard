@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as Record<string, unknown>;
 
-    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash } =
+    const { propertyAddress, depositAmount, currency, tenantAddress, jurisdiction, contractHash, leaseStart, leaseEnd } =
         body as {
             propertyAddress?: string;
             depositAmount?: number;
@@ -68,6 +68,8 @@ export async function POST(req: NextRequest) {
             tenantAddress?: string;
             jurisdiction?: string;
             contractHash?: string;
+            leaseStart?: string;
+            leaseEnd?: string;
         };
 
     if (!propertyAddress || !depositAmount || !currency || !tenantAddress) {
@@ -91,6 +93,8 @@ export async function POST(req: NextRequest) {
         createdAt: now,
     };
     if (contractHash) data["contractHash"] = contractHash;
+    if (leaseStart) data["leaseStart"] = leaseStart;
+    if (leaseEnd) data["leaseEnd"] = leaseEnd;
 
     await ref.set(data);
 

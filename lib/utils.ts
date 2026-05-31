@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import type { DepositStatus } from '@/types'
+import type { Denomination, DepositStatus } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -12,6 +12,22 @@ export function shortenAddress(address: string, chars = 4): string {
 
 export function formatSol(lamports: number): string {
   return (lamports / 1_000_000_000).toFixed(4)
+}
+
+/**
+ * Formats a deposit amount with its token denomination.
+ * SOL uses up to 4 significant decimal places; USDC uses exactly 2.
+ *
+ * @example formatAmount(2.5, 'SOL')  → "2.5 SOL"
+ * @example formatAmount(500, 'USDC') → "500.00 USDC"
+ */
+export function formatAmount(amount: number, denomination: Denomination = 'SOL'): string {
+  if (denomination === 'USDC') {
+    return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`
+  }
+  // SOL: trim trailing zeros but keep at least 1 decimal for readability
+  const formatted = parseFloat(amount.toFixed(4)).toString()
+  return `${formatted} SOL`
 }
 
 export function solToLamports(sol: number): number {

@@ -8,6 +8,7 @@ import {
   sendAndConfirmTransaction,
 } from '@solana/web3.js'
 import bs58 from 'bs58'
+import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
 
 const PROGRAM_ID = new PublicKey(
   process.env.NEST_CROW_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a',
@@ -17,10 +18,45 @@ const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 // Discriminator for `claim_timeout` from the Anchor IDL.
 const CLAIM_TIMEOUT_DISC = Buffer.from([130, 234, 45, 53, 120, 90, 86, 178])
 
-export function loadRelayerKeypair(): Keypair {
-  const b58 =
-    process.env.RELAYER_KEYPAIR_BASE58 ?? process.env.ORACLE_KEYPAIR_BASE58
-  if (!b58) throw new Error('RELAYER_KEYPAIR_BASE58 is not set')
+let _secretClient: SecretManagerServiceClient | null = null
+let _cachedKeypairB58: string | null = null
+
+function secretClient(): SecretManagerServiceClient {
+  if (!_secretClient) _secretClient = new SecretManagerServiceClient()
+  return _secretClient
+}
+
+/**
+ * Returns the relayer/oracle keypair as a base58 string.
+ * In production (GCP_PROJECT_ID set), fetches from Secret Manager and caches.
+ * Falls back to RELAYER_KEYPAIR_BASE58 / ORACLE_KEYPAIR_BASE58 env vars.
+ */
+async function getRelayerKeypairB58(): Promise<string> {
+  if (_cachedKeypairB58) return _cachedKeypairB58
+
+  const projectId = process.env.GCP_PROJECT_ID
+  if (projectId) {
+    try {
+      const name = `projects/${projectId}/secrets/oracle-keypair-base58/versions/latest`
+      const [version] = await secretClient().accessSecretVersion({ name })
+      const value = version.payload?.data?.toString() ?? ''
+      if (value) {
+        _cachedKeypairB58 = value
+        return value
+      }
+    } catch (err) {
+      console.warn('[solana] Could not fetch oracle-keypair-base58 from Secret Manager, falling back to env:', err)
+    }
+  }
+
+  const b58 = process.env.RELAYER_KEYPAIR_BASE58 ?? process.env.ORACLE_KEYPAIR_BASE58 ?? ''
+  _cachedKeypairB58 = b58
+  return b58
+}
+
+export async function loadRelayerKeypair(): Promise<Keypair> {
+  const b58 = await getRelayerKeypairB58()
+  if (!b58) throw new Error('RELAYER_KEYPAIR_BASE58 / oracle-keypair-base58 is not set')
   return Keypair.fromSecretKey(bs58.decode(b58))
 }
 
@@ -72,7 +108,7 @@ export async function submitClaimTimeout(
   const rpcUrl = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
   const connection = new Connection(rpcUrl, 'confirmed')
 
-  const relayer = loadRelayerKeypair()
+  const relayer = await loadRelayerKeypair()
   const leaseIdPubkey = new PublicKey(leaseId)
   const tenantTokenAccount = new PublicKey(tenantTokenAccountStr)
   const tokenMint = new PublicKey(tokenMintStr)

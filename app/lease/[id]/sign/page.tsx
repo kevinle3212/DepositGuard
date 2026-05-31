@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
@@ -20,9 +20,10 @@ interface TokenPayload {
 export default function SignPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const params = useParams<{ id: string }>();
     const token = searchParams.get("token") ?? "";
 
-    const { walletConnected: connected } = useWalletStore();
+    const { walletConnected: connected, userRole } = useWalletStore();
     const wallet = useWallet();
     const { speak } = useVoice();
 
@@ -41,10 +42,28 @@ export default function SignPage() {
         }
     }, [connected, tokenStatus, router]);
 
-    // Validate the signing token server-side
+    // Validate the signing token server-side.
+    // If no token is present (direct navigation from dashboard / back link),
+    // auto-generate one for the current user so the flow still works.
     useEffect(() => {
         if (!token) {
-            setTokenStatus("invalid");
+            const leaseId = params.id;
+            if (!leaseId) { setTokenStatus("invalid"); return; }
+            const role = (userRole === "landlord" || userRole === "tenant") ? userRole : "tenant";
+            fetch("/api/sign/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ leaseId, role }),
+            })
+                .then(async (r) => {
+                    if (r.ok) {
+                        const { token: newToken } = (await r.json()) as { token: string };
+                        router.replace(`/lease/${leaseId}/sign?token=${newToken}`);
+                    } else {
+                        setTokenStatus("invalid");
+                    }
+                })
+                .catch(() => setTokenStatus("invalid"));
             return;
         }
         fetch("/api/sign/validate", {
@@ -65,7 +84,7 @@ export default function SignPage() {
             .catch(() => {
                 setTokenStatus("invalid");
             });
-    }, [token]);
+    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Fetch the contract storage URL and hash from Firestore via Next.js API
     useEffect(() => {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin, User, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "./status-badge";
-import { shortenAddress, formatDate } from "@/lib/utils";
+import { shortenAddress, formatDate, formatAmount } from "@/lib/utils";
 import type { Deposit } from "@/types";
 
 interface DepositCardProps {
@@ -44,7 +44,7 @@ export function DepositCard({ deposit, myAddress }: DepositCardProps) {
 
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
                             <span className="text-lg font-bold text-foreground tabular-nums">
-                                {deposit.amountSol} SOL
+                                {formatAmount(deposit.amountSol, deposit.denomination)}
                             </span>
                             <span className="text-xs text-muted-foreground">
                                 {formatDate(deposit.createdAt)}

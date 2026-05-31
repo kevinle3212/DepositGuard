@@ -9,10 +9,16 @@ export type DepositStatus =
   | 'Disputed'
   | 'Resolved'
 
+/** Token used for the escrow deposit. Defaults to 'SOL' for backwards compat. */
+export type Denomination = 'SOL' | 'USDC'
+
 export interface Deposit {
   id: string
   status: DepositStatus
+  /** Deposit amount in the unit specified by `denomination`. */
   amountSol: number
+  /** Token denomination for the deposit amount. Defaults to 'SOL'. */
+  denomination?: Denomination
   landlordAddress: string
   tenantAddress: string
   propertyAddress: string
@@ -39,6 +45,7 @@ export interface CreateDepositInput {
   propertyAddress: string
   propertyDescription?: string
   amountSol: number
+  denomination?: Denomination
   moveInDate: string
 }
 

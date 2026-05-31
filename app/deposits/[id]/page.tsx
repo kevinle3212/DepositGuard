@@ -22,7 +22,7 @@ import { useDeposit } from "@/hooks/use-deposits";
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { deserializeAndSignSolanaTx } from "@/src/lib/txEngine";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatAmount } from "@/lib/utils";
 
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
 
@@ -148,7 +148,9 @@ export default function DepositDetailPage() {
                         )}
                     </div>
                     <div className="text-right flex-shrink-0">
-                        <p className="text-2xl font-bold tabular-nums">{deposit.amountSol} SOL</p>
+                        <p className="text-2xl font-bold tabular-nums">
+                            {formatAmount(deposit.amountSol, deposit.denomination)}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                             Created {formatDate(deposit.createdAt)}
                         </p>
@@ -165,7 +167,8 @@ export default function DepositDetailPage() {
                                 Action required: Fund escrow
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Sign the on-chain transaction to lock {deposit.amountSol} SOL into
+                                Sign the on-chain transaction to lock{" "}
+                                {formatAmount(deposit.amountSol, deposit.denomination)} into
                                 escrow.
                             </p>
                         </div>

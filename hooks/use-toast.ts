@@ -18,7 +18,7 @@ let _toasts: Toast[] = []
 
 function notify() {
   const snapshot = [..._toasts]
-  listeners.forEach((fn) => fn(snapshot))
+  listeners.forEach((fn) => { fn(snapshot); })
 }
 
 export function toast(opts: Omit<Toast, 'id'>) {

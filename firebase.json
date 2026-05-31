@@ -1,4 +1,17 @@
 {
+  "apphosting": {
+    "backendId": "depositguard2",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "programs",
+      "target",
+      "tests"
+    ]
+  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
