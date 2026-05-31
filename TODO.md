@@ -226,6 +226,7 @@
 - [x] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
 - [ ] Set up Husky Git hooks to run linters and tests before commit and push.
 - [ ] Set up commitlint to enforce a consistent commit-message format (e.g. Conventional Commits).
+- [x] Standardize package-manager conventions: root uses Yarn (`yarn.lock`); each `services/*` Cloud Run package uses npm with its own `package-lock.json`. Removed the stray root `package-lock.json`, scoped the `.gitignore` rule to `/package-lock.json` (root only), and added the missing lockfile for `services/tts` so every service has a reproducible build.
 
 ---
 
