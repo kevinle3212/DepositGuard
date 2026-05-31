@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         amountSol?: number;
         denomination?: string;
         moveInDate?: string;
+        moveOutDate?: string;
     };
 
     if (!body.tenantAddress || !body.landlordAddress || !body.propertyAddress || !body.amountSol) {
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
         landlordSigned: false,
         tenantSigned: false,
         leaseStart: body.moveInDate ?? "",
+        leaseEnd: body.moveOutDate ?? "",
         createdAt: now,
         updatedAt: now,
         timeline: [

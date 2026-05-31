@@ -16,6 +16,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { useDeposits } from "@/hooks/use-deposits";
 import type { DepositStatus } from "@/types";
@@ -24,11 +25,12 @@ import { DEPOSIT_STATUS_ORDER } from "@/types";
 const ALL_STATUSES: DepositStatus[] = DEPOSIT_STATUS_ORDER;
 
 export default function DepositsPage() {
-    const { walletPubkey: publicKey, userRole } = useWalletStore();
+    const { walletPubkey: publicKey } = useWalletStore();
     const { data: deposits, isLoading } = useDeposits(publicKey ?? undefined);
 
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [viewAs, setViewAs] = useState<"landlord" | "tenant">("landlord");
 
     const filtered = useMemo(() => {
         if (!deposits) return [];
@@ -41,18 +43,14 @@ export default function DepositsPage() {
 
             const matchesStatus = statusFilter === "all" || d.status === statusFilter;
 
-            // Hard-filter by the user's role — landlords only see contracts they
-            // own; tenants only see contracts they're invited to.
             const matchesRole =
-                userRole === "landlord"
+                viewAs === "landlord"
                     ? d.landlordAddress === publicKey
-                    : userRole === "tenant"
-                      ? d.tenantAddress === publicKey
-                      : true;
+                    : d.tenantAddress === publicKey;
 
             return matchesSearch && matchesStatus && matchesRole;
         });
-    }, [deposits, search, statusFilter, userRole, publicKey]);
+    }, [deposits, search, statusFilter, viewAs, publicKey]);
 
     return (
         <>
@@ -68,12 +66,32 @@ export default function DepositsPage() {
                                     : `${filtered.length} deposit${filtered.length !== 1 ? "s" : ""}`}
                             </p>
                         </div>
-                        <Button asChild>
-                            <Link href="/deposits/new">
-                                <PlusCircle className="h-4 w-4" />
-                                New Deposit
-                            </Link>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1 p-1 rounded-lg bg-muted">
+                                {(["landlord", "tenant"] as const).map((v) => (
+                                    <button
+                                        key={v}
+                                        onClick={() => {
+                                            setViewAs(v);
+                                        }}
+                                        className={cn(
+                                            "px-3 py-1 rounded-md text-xs font-medium transition-colors capitalize",
+                                            viewAs === v
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground",
+                                        )}
+                                    >
+                                        {v === "landlord" ? "My Contracts" : "As Tenant"}
+                                    </button>
+                                ))}
+                            </div>
+                            <Button asChild>
+                                <Link href="/deposits/new">
+                                    <PlusCircle className="h-4 w-4" />
+                                    New Deposit
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Filters */}
@@ -104,7 +122,6 @@ export default function DepositsPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
-
                         </div>
                     </div>
 

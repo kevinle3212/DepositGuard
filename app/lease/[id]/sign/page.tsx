@@ -24,7 +24,7 @@ export default function SignPage() {
     const params = useParams<{ id: string }>();
     const token = searchParams.get("token") ?? "";
 
-    const { walletConnected: connected, userRole } = useWalletStore();
+    const { walletConnected: connected, walletPubkey, userRole } = useWalletStore();
     const wallet = useWallet();
     const { speak } = useVoice();
 
@@ -38,10 +38,11 @@ export default function SignPage() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
-    // Redirect to /connect if wallet is not connected — but never interrupt a
-    // completed signing flow (signStatus === "done" handles its own redirect).
+    // Redirect to /connect if wallet is not connected — but never interrupt an
+    // active or completed signing flow (the wallet app briefly drops connected
+    // on mobile while the approval dialog is open).
     useEffect(() => {
-        if (signStatus === "done") return;
+        if (signStatus !== "idle") return;
         if (tokenStatus !== "loading" && !connected) {
             router.push(`/connect?next=${encodeURIComponent(window.location.href)}`);
         }
@@ -139,8 +140,23 @@ export default function SignPage() {
     }, [tokenStatus, payload]);
 
     async function handleSign() {
-        if (!wallet.signMessage || !wallet.publicKey || !payload || !contractHash) return;
-        if (!token) return;
+        if (!payload || !contractHash || !token) return;
+
+        // Use adapter pubkey if available, fall back to store value (mobile rehydration lag)
+        const pubkeyStr = wallet.publicKey?.toBase58() ?? walletPubkey;
+        if (!pubkeyStr) {
+            setSignStatus("error");
+            setErrorMsg("Wallet not connected. Please reconnect and try again.");
+            return;
+        }
+
+        if (!wallet.signMessage) {
+            setSignStatus("error");
+            setErrorMsg(
+                "Your wallet does not support message signing. Try opening the page inside your wallet's browser.",
+            );
+            return;
+        }
 
         setSignStatus("signing");
         setErrorMsg(null);
@@ -169,7 +185,7 @@ export default function SignPage() {
                 body: JSON.stringify({
                     leaseId: payload.leaseId,
                     role: payload.role,
-                    walletPubkey: wallet.publicKey.toBase58(),
+                    walletPubkey: pubkeyStr,
                     signatureB64,
                     signedMessage: messageText,
                     token,
@@ -208,7 +224,11 @@ export default function SignPage() {
         }
 
         setSignStatus("done");
-        void speak("contract.signed");
+        try {
+            void speak("contract.signed");
+        } catch {
+            /* non-fatal */
+        }
     }
 
     if (tokenStatus === "loading") {

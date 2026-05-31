@@ -46,12 +46,13 @@ export default function NewDepositPage() {
             await new Promise((r) => setTimeout(r, 800)); // simulate signing
             setTxSigning(false);
 
-            const { propertyDescription, ...rest } = data;
+            const { propertyDescription, moveOutDate, ...rest } = data;
             const deposit = await createDeposit.mutateAsync({
                 ...rest,
                 landlordAddress: publicKey,
                 denomination,
                 ...(propertyDescription !== undefined ? { propertyDescription } : {}),
+                ...(moveOutDate !== undefined && moveOutDate !== "" ? { moveOutDate } : {}),
             });
             router.push(`/deposits/${deposit.id}`);
         } catch {
@@ -119,19 +120,35 @@ export default function NewDepositPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="moveInDate">Move-In Date *</Label>
-                                    <Input
-                                        id="moveInDate"
-                                        type="date"
-                                        {...register("moveInDate")}
-                                        disabled={isBusy}
-                                    />
-                                    {errors.moveInDate && (
-                                        <p className="text-xs text-destructive">
-                                            {errors.moveInDate.message}
-                                        </p>
-                                    )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="moveInDate">Move-In Date *</Label>
+                                        <Input
+                                            id="moveInDate"
+                                            type="date"
+                                            {...register("moveInDate")}
+                                            disabled={isBusy}
+                                        />
+                                        {errors.moveInDate && (
+                                            <p className="text-xs text-destructive">
+                                                {errors.moveInDate.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="moveOutDate">
+                                            Lease End Date{" "}
+                                            <span className="text-muted-foreground">
+                                                (optional)
+                                            </span>
+                                        </Label>
+                                        <Input
+                                            id="moveOutDate"
+                                            type="date"
+                                            {...register("moveOutDate")}
+                                            disabled={isBusy}
+                                        />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -167,7 +184,9 @@ export default function NewDepositPage() {
                                             <button
                                                 key={d}
                                                 type="button"
-                                                onClick={() => { setDenomination(d); }}
+                                                onClick={() => {
+                                                    setDenomination(d);
+                                                }}
                                                 disabled={isBusy}
                                                 className={cn(
                                                     "px-3 py-1 rounded-md text-sm font-medium transition-colors",
@@ -210,10 +229,12 @@ export default function NewDepositPage() {
                             <div className="text-sm text-blue-800 space-y-1">
                                 <p className="font-medium">How it works</p>
                                 <p className="text-xs text-blue-700 leading-relaxed">
-                                    You (landlord) create the escrow.                                     The tenant then funds it with{" "}
-                                    <strong>{amountSol || "—"} {denomination}</strong>. Funds are locked
-                                    on-chain until both parties complete the move-out process. No
-                                    intermediary holds your money.
+                                    You (landlord) create the escrow. The tenant then funds it with{" "}
+                                    <strong>
+                                        {amountSol || "—"} {denomination}
+                                    </strong>
+                                    . Funds are locked on-chain until both parties complete the
+                                    move-out process. No intermediary holds your money.
                                 </p>
                             </div>
                         </div>

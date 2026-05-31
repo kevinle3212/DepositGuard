@@ -51,6 +51,7 @@ export interface CreateDepositInput {
     amountSol: number;
     denomination?: Denomination;
     moveInDate: string;
+    moveOutDate?: string;
 }
 
 export interface WalletState {

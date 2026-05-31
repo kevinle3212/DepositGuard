@@ -9,7 +9,17 @@ import {
     VersionedTransaction,
     LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { Users, UserCheck, Loader2, ShieldCheck, Trophy, Coins } from "lucide-react";
+import {
+    Users,
+    UserCheck,
+    Loader2,
+    ShieldCheck,
+    Trophy,
+    Coins,
+    Minus,
+    Plus,
+    Clock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -17,29 +27,53 @@ import { cn } from "@/lib/utils";
 import { getConnection } from "@/lib/solana";
 import type { JurorRecord } from "@/app/api/jurors/route";
 
-// Juror pool wallet — receives the staked SOL (replace with a PDA in production)
 const JUROR_POOL_ADDRESS =
     process.env["NEXT_PUBLIC_JUROR_POOL_ADDRESS"] ?? "11111111111111111111111111111111";
+const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+function cooldownRemaining(stakedAt: string): number {
+    return Math.max(0, COOLDOWN_MS - (Date.now() - new Date(stakedAt).getTime()));
+}
+
+function formatCooldown(ms: number): string {
+    const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    if (days > 0) return `${days}d ${hours}h`;
+    const mins = Math.floor((ms % (60 * 60 * 1000)) / 60000);
+    return `${hours}h ${mins}m`;
+}
 
 export function JurorRegistrationPanel() {
     const wallet = useWallet();
     const [jurors, setJurors] = useState<JurorRecord[]>([]);
     const [loading, setLoading] = useState(true);
-    const [registering, setRegistering] = useState(false);
-    const [stakeSol, setStakeSol] = useState<string>("1");
+    const [busy, setBusy] = useState(false);
+    const [addSol, setAddSol] = useState<string>("1");
+    const [tick, setTick] = useState(0);
 
     const walletAddress = wallet.publicKey?.toBase58() ?? null;
-    const existingRecord = jurors.find((j) => j.walletAddress === walletAddress);
-    const isRegistered = !!existingRecord;
+    const myRecord = jurors.find((j) => j.walletAddress === walletAddress);
+    const cooldownLeft = myRecord ? cooldownRemaining(myRecord.stakedAt) : 0;
+    const canUnstake = !!myRecord && cooldownLeft === 0;
+
+    useEffect(() => {
+        const id = setInterval(() => {
+            setTick((t) => t + 1);
+        }, 60_000);
+        return () => {
+            clearInterval(id);
+        };
+    }, []);
+    void tick;
 
     const fetchJurors = useCallback(async () => {
         try {
             const res = await fetch("/api/jurors");
             if (!res.ok) return;
             const data = (await res.json()) as { jurors: JurorRecord[] };
-            setJurors(data.jurors.sort((a, b) => b.stakeSol - a.stakeSol));
+            setJurors(data.jurors);
         } catch {
-            // ignore network errors
+            // ignore
         } finally {
             setLoading(false);
         }
@@ -49,87 +83,101 @@ export function JurorRegistrationPanel() {
         void fetchJurors();
     }, [fetchJurors]);
 
-    async function handleRegister() {
+    async function sendSol(amountSol: number): Promise<boolean> {
         if (!wallet.publicKey || !wallet.signTransaction) {
             toast({ title: "Connect your wallet first", variant: "destructive" });
+            return false;
+        }
+        const connection = getConnection();
+        const latestBlockhash = await connection.getLatestBlockhash("confirmed");
+        const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
+        const message = new TransactionMessage({
+            payerKey: wallet.publicKey,
+            recentBlockhash: latestBlockhash.blockhash,
+            instructions: [
+                SystemProgram.transfer({
+                    fromPubkey: wallet.publicKey,
+                    toPubkey: new PublicKey(JUROR_POOL_ADDRESS),
+                    lamports,
+                }),
+            ],
+        }).compileToV0Message();
+        const tx = new VersionedTransaction(message);
+        toast({
+            title: "Approve in wallet…",
+            description: `Staking ${amountSol} SOL.`,
+            duration: 15000,
+        });
+        const signed = await wallet.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize(), {
+            skipPreflight: false,
+        });
+        await connection.confirmTransaction({ signature: sig, ...latestBlockhash }, "confirmed");
+        return true;
+    }
+
+    async function handleAddStake() {
+        const amount = parseFloat(addSol);
+        if (isNaN(amount) || amount <= 0) {
+            toast({ title: "Enter a valid amount (> 0 SOL)", variant: "destructive" });
             return;
         }
-
-        const stake = parseFloat(stakeSol);
-        if (isNaN(stake) || stake <= 0) {
-            toast({ title: "Enter a valid SOL amount (> 0)", variant: "destructive" });
-            return;
-        }
-
-        setRegistering(true);
+        setBusy(true);
         try {
-            // 1. Transfer SOL to juror pool on-chain
-            const connection = getConnection();
-            const latestBlockhash = await connection.getLatestBlockhash("confirmed");
-            const { blockhash } = latestBlockhash;
-            const lamports = Math.round(stake * LAMPORTS_PER_SOL);
-
-            const message = new TransactionMessage({
-                payerKey: wallet.publicKey,
-                recentBlockhash: blockhash,
-                instructions: [
-                    SystemProgram.transfer({
-                        fromPubkey: wallet.publicKey,
-                        toPubkey: new PublicKey(JUROR_POOL_ADDRESS),
-                        lamports,
-                    }),
-                ],
-            }).compileToV0Message();
-
-            const tx = new VersionedTransaction(message);
-
-            toast({
-                title: "Approve in wallet…",
-                description: `Staking ${stake} SOL to the juror pool.`,
-                duration: 15000,
-            });
-
-            const signed = await wallet.signTransaction(tx);
-            const sig = await connection.sendRawTransaction(signed.serialize(), {
-                skipPreflight: false,
-            });
-            await connection.confirmTransaction(
-                { signature: sig, ...latestBlockhash },
-                "confirmed",
-            );
-
-            // 2. Record registration in Firestore
+            await sendSol(amount);
             const res = await fetch("/api/jurors", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    walletAddress: wallet.publicKey.toBase58(),
-                    stakeSol: stake,
+                    walletAddress: wallet.publicKey?.toBase58() ?? "",
+                    stakeSol: amount,
                 }),
             });
             if (!res.ok) {
                 const b = (await res.json()) as { error?: string };
-                throw new Error(b.error ?? "Registration failed");
+                throw new Error(b.error ?? "Failed");
             }
-
+            const result = (await res.json()) as { stakeSol: number };
             toast({
-                title: isRegistered ? "Stake Updated" : "Registered as Juror!",
-                description: `${stake} SOL staked. Tx: ${sig.slice(0, 8)}…`,
+                title: myRecord ? "Stake Added!" : "Registered as Juror!",
+                description: `Total stake: ${result.stakeSol} SOL`,
             });
             await fetchJurors();
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : "Unknown error";
             const rejected =
-                msg.toLowerCase().includes("rejected") ||
-                msg.toLowerCase().includes("cancelled") ||
-                msg.toLowerCase().includes("user denied");
+                msg.toLowerCase().includes("rejected") || msg.toLowerCase().includes("cancelled");
             toast({
-                title: rejected ? "Transaction Cancelled" : "Registration Failed",
-                description: rejected ? "You rejected the wallet request." : msg,
+                title: rejected ? "Cancelled" : "Failed",
+                description: rejected ? "Transaction rejected." : msg,
                 variant: "destructive",
             });
         } finally {
-            setRegistering(false);
+            setBusy(false);
+        }
+    }
+
+    async function handleUnstake() {
+        if (!walletAddress || !canUnstake) return;
+        setBusy(true);
+        try {
+            const res = await fetch("/api/jurors", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ walletAddress }),
+            });
+            const data = (await res.json()) as { error?: string };
+            if (!res.ok) throw new Error(data.error ?? "Failed");
+            toast({ title: "Unstaked", description: "Your stake has been withdrawn." });
+            await fetchJurors();
+        } catch (e: unknown) {
+            toast({
+                title: "Unstake Failed",
+                description: e instanceof Error ? e.message : "Unknown error",
+                variant: "destructive",
+            });
+        } finally {
+            setBusy(false);
         }
     }
 
@@ -146,24 +194,25 @@ export function JurorRegistrationPanel() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-xs text-muted-foreground">
-                    Stake SOL to register as a juror. When a dispute escalates to a 3-panelist
-                    arbitration, registered jurors are eligible for selection based on their stake.
+                    Stake SOL to join the arbitration panel pool. Higher stake = higher selection
+                    probability. A 7-day cooldown applies before you can withdraw.
                 </p>
 
-                {/* Registration form */}
                 {wallet.connected ? (
                     <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                             <p className="text-sm font-semibold">
-                                {isRegistered ? "Update Your Stake" : "Register as Juror"}
+                                {myRecord ? "Manage Your Stake" : "Register as Juror"}
                             </p>
-                            {isRegistered && (
+                            {myRecord && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                                     <UserCheck className="h-3 w-3" />
-                                    Registered · {existingRecord.stakeSol} SOL
+                                    {myRecord.stakeSol} SOL staked
                                 </span>
                             )}
                         </div>
+
+                        {/* Add stake */}
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
                                 <Coins className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -171,35 +220,58 @@ export function JurorRegistrationPanel() {
                                     type="number"
                                     min="0.01"
                                     step="0.1"
-                                    value={stakeSol}
+                                    value={addSol}
                                     onChange={(e) => {
-                                        setStakeSol(e.target.value);
+                                        setAddSol(e.target.value);
                                     }}
                                     placeholder="1"
                                     className="w-full rounded-md border border-input bg-background pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                    disabled={registering}
+                                    disabled={busy}
                                 />
                             </div>
                             <span className="text-sm font-medium text-muted-foreground">SOL</span>
-                        </div>
-                        <Button
-                            className="w-full gap-2"
-                            size="sm"
-                            onClick={() => void handleRegister()}
-                            disabled={registering}
-                        >
-                            {registering ? (
-                                <>
+                            <Button
+                                size="sm"
+                                className="gap-1.5 shrink-0"
+                                onClick={() => void handleAddStake()}
+                                disabled={busy}
+                            >
+                                {busy ? (
                                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    {isRegistered ? "Updating…" : "Staking & Registering…"}
-                                </>
-                            ) : (
-                                <>
+                                ) : myRecord ? (
+                                    <Plus className="h-3.5 w-3.5" />
+                                ) : (
                                     <ShieldCheck className="h-3.5 w-3.5" />
-                                    {isRegistered ? "Update Stake" : "Stake SOL & Register"}
-                                </>
-                            )}
-                        </Button>
+                                )}
+                                {myRecord ? "Add Stake" : "Stake & Register"}
+                            </Button>
+                        </div>
+
+                        {/* Unstake row */}
+                        {myRecord && (
+                            <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/50">
+                                {cooldownLeft > 0 ? (
+                                    <span className="inline-flex items-center gap-1.5 text-xs text-amber-700">
+                                        <Clock className="h-3.5 w-3.5" />
+                                        Unstake in {formatCooldown(cooldownLeft)}
+                                    </span>
+                                ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                        Cooldown complete
+                                    </span>
+                                )}
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
+                                    onClick={() => void handleUnstake()}
+                                    disabled={busy || !canUnstake}
+                                >
+                                    <Minus className="h-3.5 w-3.5" />
+                                    Unstake All
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <p className="text-xs text-muted-foreground italic px-1">
@@ -251,7 +323,7 @@ export function JurorRegistrationPanel() {
                                                     {juror.walletAddress.slice(-4)}
                                                 </span>
                                                 {juror.walletAddress === walletAddress && (
-                                                    <span className="text-xs text-primary font-semibold flex-shrink-0">
+                                                    <span className="text-xs text-primary font-semibold">
                                                         You
                                                     </span>
                                                 )}
