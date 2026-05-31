@@ -30,15 +30,37 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const field = role === "landlord" ? "landlordSignature" : "tenantSignature";
-    await db
-        .doc(`leases/${leaseId}`)
-        .set(
-            { [field]: { walletPubkey, signatureB64, signedMessage, signedAt: ts } },
-            { merge: true },
-        );
+    const sigField = role === "landlord" ? "landlordSignature" : "tenantSignature";
+    const signedFlag = role === "landlord" ? "landlordSigned" : "tenantSigned";
+    const leaseRef = db.doc(`leases/${leaseId}`);
+
+    // Record the signature, flip the per-role signed flag, and advance the lease
+    // to "Active" once both parties have signed. Done in a transaction so the
+    // both-signed check reads a consistent view of the counterparty's flag.
+    const newStatus = await db.runTransaction(async (tx) => {
+        const leaseSnap = await tx.get(leaseRef);
+        const data = leaseSnap.data() ?? {};
+
+        const update: Record<string, unknown> = {
+            [sigField]: { walletPubkey, signatureB64, signedMessage, signedAt: ts },
+            [signedFlag]: true,
+        };
+
+        const landlordSigned = role === "landlord" || data["landlordSigned"] === true;
+        const tenantSigned = role === "tenant" || data["tenantSigned"] === true;
+        const currentStatus = (data["status"] as string | undefined) ?? "Created";
+
+        let status = currentStatus;
+        if (landlordSigned && tenantSigned && currentStatus === "Created") {
+            status = "Active";
+            update["status"] = status;
+        }
+
+        tx.set(leaseRef, update, { merge: true });
+        return status;
+    });
 
     await tokenRef.update({ used: true });
 
-    return NextResponse.json({ recorded: true });
+    return NextResponse.json({ recorded: true, status: newStatus });
 }

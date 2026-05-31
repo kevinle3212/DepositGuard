@@ -1,5 +1,23 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { verify } from "jsonwebtoken";
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+
+function isAuthenticated(req: NextRequest): boolean {
+    const secret = process.env["JWT_SIGNING_SECRET"];
+    if (!secret) return false;
+
+    const cookie = req.cookies.get("dg-session")?.value;
+    if (cookie) {
+        try { verify(cookie, secret); return true; } catch { /* fall through */ }
+    }
+
+    const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/, "");
+    if (bearer) {
+        try { verify(bearer, secret); return true; } catch { /* fall through */ }
+    }
+
+    return false;
+}
 
 // ── Gemini model ────────────────────────────────────────────────────────────
 // Use a current Gemini image-capable model. gemini-2.0-flash was retired for
@@ -61,6 +79,10 @@ export interface DamageEstimateResponse {
 // ── Route handler ───────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+    if (!isAuthenticated(req)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const apiKey = process.env["GEMINI_API_KEY"];
     if (!apiKey) {
         return NextResponse.json({ error: "GEMINI_API_KEY is not configured." }, { status: 500 });

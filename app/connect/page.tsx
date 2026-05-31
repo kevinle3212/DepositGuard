@@ -57,7 +57,7 @@ const WALLET_CATEGORIES: WalletCategory[] = [
         id: "solana",
         label: "Solana",
         description: "Connect a Solana wallet. Deposits are held in on-chain escrow programs.",
-        wallets: ["Phantom", "Solflare", "Backpack"],
+        wallets: ["Phantom", "Solflare", "+ Standard wallets"],
         icon: Zap,
         accent: "bg-violet-50 text-violet-700",
         border: "border-violet-200 hover:border-violet-400",
@@ -89,7 +89,7 @@ function ConnectInner() {
 
     // Solana wallet
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const { signMessage, publicKey, connected, connecting, wallet, select, connect } = useWallet();
+    const { signMessage, publicKey, connected, connecting, select, connect, wallet } = useWallet();
     const { setVisible } = useWalletModal();
 
     // EVM wallet (wagmi + RainbowKit)
