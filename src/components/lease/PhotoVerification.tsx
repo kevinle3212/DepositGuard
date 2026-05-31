@@ -229,7 +229,7 @@ export function PhotoVerification({ phase, title, onComplete }: PhotoVerificatio
 
         try {
             setStage("uploading");
-            const uploaded = await Promise.all(photos.map((p) => uploadPhoto(p.file, phase)));
+            const uploaded = await Promise.all(photos.map(async (p) => uploadPhoto(p.file, phase)));
 
             setStage("hashing");
             await new Promise((r) => setTimeout(r, 300));
@@ -306,9 +306,7 @@ export function PhotoVerification({ phase, title, onComplete }: PhotoVerificatio
                 </div>
             )}
 
-            {uploadError && (
-                <p className="text-sm text-destructive">{uploadError}</p>
-            )}
+            {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
 
             {/* Submit button */}
             {stage === "idle" && (

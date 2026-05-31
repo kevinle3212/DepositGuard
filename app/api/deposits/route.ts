@@ -1,48 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
-
-interface LeaseDoc {
-    status?: string;
-    depositAmount?: number;
-    currency?: string;
-    landlordAddress?: string;
-    tenantAddress?: string;
-    propertyAddress?: string;
-    escrowAddress?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    leaseStart?: string;
-    leaseEnd?: string;
-    contractHash?: string;
-    contractStorageUrl?: string;
-    timeline?: unknown[];
-}
-
-// Maps a Firestore lease document to the Deposit shape used by the UI
-function leaseToDeposit(id: string, raw: FirebaseFirestore.DocumentData) {
-    const data = raw as LeaseDoc;
-    const now = new Date().toISOString();
-    return {
-        id,
-        status: data.status ?? "Created",
-        amountSol: data.depositAmount ?? 0,
-        denomination: data.currency ?? "USDC",
-        landlordAddress: data.landlordAddress ?? "",
-        tenantAddress: data.tenantAddress ?? "",
-        propertyAddress: data.propertyAddress ?? "",
-        escrowAddress: data.escrowAddress ?? "",
-        createdAt: data.createdAt ?? now,
-        updatedAt: data.updatedAt ?? data.createdAt ?? now,
-        moveInDate: data.leaseStart,
-        moveOutDate: data.leaseEnd,
-        contractHash: data.contractHash,
-        contractStorageUrl: data.contractStorageUrl,
-        timeline: data.timeline ?? [
-            { status: data.status ?? "Created", timestamp: data.createdAt ?? now, actor: "System" },
-        ],
-    };
-}
+import { leaseToDeposit } from "@/lib/deposit-mapper";
 
 export async function GET(req: NextRequest) {
     initFirebaseAdmin();

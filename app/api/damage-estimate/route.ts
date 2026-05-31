@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 // ── Gemini model ────────────────────────────────────────────────────────────
@@ -86,7 +86,9 @@ export async function POST(req: NextRequest) {
     const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
     if (!allowedMimeTypes.includes(mimeType)) {
         return NextResponse.json(
-            { error: `Unsupported image type: ${mimeType}. Accepted: ${allowedMimeTypes.join(", ")}` },
+            {
+                error: `Unsupported image type: ${mimeType}. Accepted: ${allowedMimeTypes.join(", ")}`,
+            },
             { status: 400 },
         );
     }
