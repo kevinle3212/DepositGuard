@@ -52,7 +52,7 @@ async function handleSend(req: Request, res: Response): Promise<void> {
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[notify] failed leaseId=${leaseId} event=${event}:`, err);
-        res.status(500).json({ error: "Failed to queue email", detail: msg });
+        res.status(500).json({ error: "Failed to send email", detail: msg });
         return;
     }
 

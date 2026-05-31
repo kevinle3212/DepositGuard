@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{EscrowState, EscrowStatus};
 
 /// Relayer calls this after `deadline_ts` has passed.
@@ -13,11 +13,11 @@ pub fn handler(ctx: Context<ClaimTimeout>) -> Result<()> {
     require!(
         escrow.status == EscrowStatus::Active
             || escrow.status == EscrowStatus::PendingApproval,
-        DepositGuardError::InvalidStatusTransition
+        NestCrowError::InvalidStatusTransition
     );
 
     let now = Clock::get()?.unix_timestamp;
-    require!(now >= escrow.deadline_ts, DepositGuardError::DeadlineNotPassed);
+    require!(now >= escrow.deadline_ts, NestCrowError::DeadlineNotPassed);
 
     let vault_balance = ctx.accounts.vault.amount;
     let lease_id = escrow.lease_id;
@@ -55,7 +55,7 @@ pub struct ClaimTimeout<'info> {
         mut,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

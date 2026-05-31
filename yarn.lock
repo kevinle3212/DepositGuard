@@ -7575,9 +7575,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"depositguard@workspace:.":
+"nestcrow@workspace:.":
   version: 0.0.0-use.local
-  resolution: "depositguard@workspace:."
+  resolution: "nestcrow@workspace:."
   dependencies:
     "@anchor-lang/core": "npm:^0.0.0"
     "@commitlint/cli": "npm:^19.8.1"

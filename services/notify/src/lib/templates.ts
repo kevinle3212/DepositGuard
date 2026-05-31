@@ -22,14 +22,14 @@ export interface EmailTemplate {
 
 export type TemplateVariables = Record<string, string>
 
-const BASE_URL = process.env.APP_BASE_URL ?? 'https://depositguard.tech'
+const BASE_URL = process.env.APP_BASE_URL ?? 'https://nestcrow.tech'
 const SOLSCAN = (sig: string) =>
   `https://solscan.io/tx/${sig}?cluster=${process.env.SOLANA_CLUSTER ?? 'devnet'}`
 
 function wrap(leaseId: string, body: string): string {
   return `
     <div style="font-family:sans-serif;max-width:600px;margin:auto">
-      <h3 style="color:#1a1a1a">DepositGuard</h3>
+      <h3 style="color:#1a1a1a">NestCrow</h3>
       ${body}
       <hr/>
       <p style="font-size:12px;color:#666">
@@ -50,7 +50,7 @@ export function buildTemplate(
       const role = vars.role ?? 'party'
       const link = vars.signingLink ?? `${BASE_URL}/lease/${leaseId}/sign`
       return {
-        subject: 'DepositGuard: Sign Your Lease',
+        subject: 'NestCrow: Sign Your Lease',
         text: [
           `You have been invited to review and sign a lease as the ${role}.`,
           '',
@@ -67,7 +67,7 @@ export function buildTemplate(
 
     case 'both_parties_signed': {
       return {
-        subject: 'DepositGuard: Both Parties Have Signed',
+        subject: 'NestCrow: Both Parties Have Signed',
         text: [
           `Both the landlord and tenant have signed the lease for lease ID ${leaseId}.`,
           'The tenant may now fund the security deposit escrow.',
@@ -85,7 +85,7 @@ export function buildTemplate(
     case 'move_in_photo_required': {
       const role = vars.role ?? 'your party'
       return {
-        subject: 'DepositGuard: Move-In Photos Required',
+        subject: 'NestCrow: Move-In Photos Required',
         text: [
           `Action required: ${role} must upload move-in photos for lease ${leaseId}.`,
           'Both parties must complete photo upload before the lease becomes active.',
@@ -102,7 +102,7 @@ export function buildTemplate(
 
     case 'move_out_complete': {
       return {
-        subject: 'DepositGuard: Move-Out Photos Submitted',
+        subject: 'NestCrow: Move-Out Photos Submitted',
         text: [
           `Move-out photos have been submitted for lease ${leaseId}.`,
           'The Gemini damage assessment will run shortly.',
@@ -120,7 +120,7 @@ export function buildTemplate(
     case 'assessment_ready': {
       const total = vars.totalEstimate ?? 'N/A'
       return {
-        subject: 'DepositGuard: Damage Assessment Ready',
+        subject: 'NestCrow: Damage Assessment Ready',
         text: [
           `The AI damage assessment for lease ${leaseId} is ready.`,
           `Estimated total (advisory only, not legally binding): $${total} USDC`,
@@ -140,7 +140,7 @@ export function buildTemplate(
       const landlordTotal = vars.landlordTotal ?? 'N/A'
       const items = vars.deductionItems ?? '(see dashboard for details)'
       return {
-        subject: 'DepositGuard: Landlord Deduction Statement Issued',
+        subject: 'NestCrow: Landlord Deduction Statement Issued',
         text: [
           `The landlord has issued a deduction statement for lease ${leaseId}.`,
           `Total deduction claimed: $${landlordTotal} USDC`,
@@ -162,7 +162,7 @@ export function buildTemplate(
 
     case 'dispute_opened': {
       return {
-        subject: 'DepositGuard: Dispute Opened',
+        subject: 'NestCrow: Dispute Opened',
         text: [
           `A dispute has been opened for lease ${leaseId}.`,
           'The undisputed portion has been released to the tenant.',
@@ -181,7 +181,7 @@ export function buildTemplate(
     case 'arbitration_fee_due': {
       const deadline = vars.paymentDeadline ?? '72 hours'
       return {
-        subject: 'DepositGuard: Arbitration Fee Due',
+        subject: 'NestCrow: Arbitration Fee Due',
         text: [
           `Arbitration has been initiated for lease ${leaseId}.`,
           `Each party owes a $50 USDC arbitration fee. Payment deadline: ${deadline}.`,
@@ -202,7 +202,7 @@ export function buildTemplate(
     case 'arbitration_fee_refunded': {
       const amount = vars.amount ?? '$50'
       return {
-        subject: 'DepositGuard: Arbitration Fee Refunded',
+        subject: 'NestCrow: Arbitration Fee Refunded',
         text: [
           `Your arbitration fee of ${amount} USDC has been refunded for lease ${leaseId}.`,
           'The dispute was resolved before an arbitrator was assigned.',
@@ -221,7 +221,7 @@ export function buildTemplate(
       const adoptedFine = vars.adoptedFine ?? 'N/A'
       const sig = vars.txSignature
       return {
-        subject: 'DepositGuard: Arbitration Ruling Issued',
+        subject: 'NestCrow: Arbitration Ruling Issued',
         text: [
           `An arbitration ruling has been issued for lease ${leaseId}.`,
           `Adopted fine: $${adoptedFine} USDC`,
@@ -242,7 +242,7 @@ export function buildTemplate(
       const dissenterRole = vars.dissenterRole ?? 'a panelist'
       const dissentAmount = vars.dissentAmount ?? 'N/A'
       return {
-        subject: 'DepositGuard: Minority Dissent Filed',
+        subject: 'NestCrow: Minority Dissent Filed',
         text: [
           `A minority dissent has been filed by ${dissenterRole} for lease ${leaseId}.`,
           `Dissenting ruling amount: $${dissentAmount} USDC`,
@@ -263,7 +263,7 @@ export function buildTemplate(
       const amount = vars.amount ?? 'N/A'
       const sig = vars.txSignature
       return {
-        subject: 'DepositGuard: Deposit Released',
+        subject: 'NestCrow: Deposit Released',
         text: [
           `The security deposit has been released for lease ${leaseId}.`,
           `Amount: $${amount} USDC`,
@@ -285,7 +285,7 @@ export function buildTemplate(
         ? new Date(Number(vars.deadlineTs) * 1000).toUTCString()
         : 'soon'
       return {
-        subject: 'DepositGuard: Review Deadline Approaching',
+        subject: 'NestCrow: Review Deadline Approaching',
         text: [
           `The review deadline for lease ${leaseId} is approaching.`,
           `Deadline: ${deadline}`,
@@ -305,7 +305,7 @@ export function buildTemplate(
     case 'claim_timeout_executed': {
       const sig = vars.txSignature
       return {
-        subject: 'DepositGuard: Deposit Released — Deadline Passed',
+        subject: 'NestCrow: Deposit Released — Deadline Passed',
         text: [
           `The review deadline for lease ${leaseId} has passed without a mutual agreement.`,
           'The full deposit has been automatically released to the tenant.',

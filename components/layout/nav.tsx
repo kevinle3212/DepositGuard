@@ -24,7 +24,7 @@ export function Nav() {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
                 <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="hidden sm:inline">DepositGuard</span>
+              <span className="hidden sm:inline">NestCrow</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">

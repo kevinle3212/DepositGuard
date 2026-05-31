@@ -143,7 +143,7 @@ function ConnectInner() {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('')
       const unix_ts = Math.floor(Date.now() / 1000)
-      const message = `DepositGuard identity verification ${nonce} ${unix_ts}`
+      const message = `NestCrow identity verification ${nonce} ${unix_ts}`
       const sigBytes = await signMessage(new TextEncoder().encode(message))
       const signature = Buffer.from(sigBytes).toString('base64')
       setStep('verifying')
@@ -161,7 +161,7 @@ function ConnectInner() {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('')
       const unix_ts = Math.floor(Date.now() / 1000)
-      const message = `DepositGuard identity verification ${nonce} ${unix_ts}`
+      const message = `NestCrow identity verification ${nonce} ${unix_ts}`
       const signature = await signMessageAsync({ message })
       setStep('verifying')
       await verifyMutation.mutateAsync({ signature, pubkey, message, chain: 'evm' })
@@ -216,7 +216,7 @@ function ConnectInner() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
             <Shield className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold">DepositGuard</span>
+          <span className="font-semibold">NestCrow</span>
         </div>
       </header>
 
@@ -228,7 +228,7 @@ function ConnectInner() {
             </div>
             <h1 className="text-2xl font-bold tracking-tight">Connect your wallet</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose a wallet architecture to verify your identity and access DepositGuard.
+              Choose a wallet architecture to verify your identity and access NestCrow.
             </p>
           </div>
 
@@ -300,7 +300,7 @@ function ConnectInner() {
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            By connecting, you agree to the DepositGuard Terms of Service. Running on <strong>Devnet</strong>.
+            By connecting, you agree to the NestCrow Terms of Service. Running on <strong>Devnet</strong>.
           </p>
         </div>
       </main>

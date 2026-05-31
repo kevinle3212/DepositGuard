@@ -10,7 +10,7 @@ import {
 import bs58 from 'bs58'
 
 const PROGRAM_ID = new PublicKey(
-  process.env.DEPOSIT_GUARD_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a',
+  process.env.NEST_CROW_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a',
 )
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
 

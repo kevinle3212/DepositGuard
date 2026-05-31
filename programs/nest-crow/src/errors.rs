@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum DepositGuardError {
+pub enum NestCrowError {
     // ── Authorization ──────────────────────────────────────────────────────────
     #[msg("Caller is not the landlord of this lease")]
     NotLandlord,

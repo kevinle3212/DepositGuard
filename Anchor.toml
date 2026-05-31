@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-deposit_guard = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
+nest_crow = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
 
 [programs.devnet]
-deposit_guard = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
+nest_crow = "F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a"
 
 [provider]
 cluster = "localnet"

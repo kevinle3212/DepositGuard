@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Stores the SHA-256 hash of a party's move-in photo set in the ClaimRecord.
@@ -16,19 +16,19 @@ pub fn handler(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()
     // Authorize caller before checking state (prevents state-machine information leakage).
     require!(
         caller == escrow.landlord || caller == escrow.tenant,
-        DepositGuardError::NotParty
+        NestCrowError::NotParty
     );
 
     require!(
         escrow.status == EscrowStatus::Funded
             || escrow.status == EscrowStatus::PendingDocumentation,
-        DepositGuardError::InvalidStatusTransition
+        NestCrowError::InvalidStatusTransition
     );
 
     if caller == escrow.landlord {
         require!(
             !claim.landlord_photos_submitted,
-            DepositGuardError::LandlordPhotosAlreadySubmitted
+            NestCrowError::LandlordPhotosAlreadySubmitted
         );
         claim.landlord_photo_hash = photo_hash;
         claim.landlord_photos_submitted = true;
@@ -36,7 +36,7 @@ pub fn handler(ctx: Context<RecordPhotoHash>, photo_hash: [u8; 32]) -> Result<()
         // caller == escrow.tenant (validated above)
         require!(
             !claim.tenant_photos_submitted,
-            DepositGuardError::TenantPhotosAlreadySubmitted
+            NestCrowError::TenantPhotosAlreadySubmitted
         );
         claim.tenant_photo_hash = photo_hash;
         claim.tenant_photos_submitted = true;

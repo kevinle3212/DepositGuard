@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{
     ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, PANEL_UPGRADE_FEE_USDC,
 };
@@ -16,7 +16,7 @@ pub fn handler(ctx: Context<RefundArbitrationFees>) -> Result<()> {
     require!(
         arb.status == ArbitrationFeeStatus::AwaitingPayment
             || arb.status == ArbitrationFeeStatus::BothPaid,
-        DepositGuardError::FeesAlreadyFinalized
+        NestCrowError::FeesAlreadyFinalized
     );
 
     let landlord_refund = fee_total(arb.landlord_paid, arb.landlord_fee_amount, arb.landlord_panel_paid)?;
@@ -64,7 +64,7 @@ fn fee_total(base_paid: bool, base_amount: u64, panel_paid: bool) -> Result<u64>
     if panel_paid {
         total = total
             .checked_add(PANEL_UPGRADE_FEE_USDC)
-            .ok_or(DepositGuardError::ArithmeticOverflow)?;
+            .ok_or(NestCrowError::ArithmeticOverflow)?;
     }
     Ok(total)
 }
@@ -77,7 +77,7 @@ pub struct RefundArbitrationFees<'info> {
     #[account(
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 
@@ -105,7 +105,7 @@ pub struct RefundArbitrationFees<'info> {
     pub landlord_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: landlord pubkey validated against escrow_state.
-    #[account(address = escrow_state.landlord @ DepositGuardError::NotLandlord)]
+    #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
     pub landlord: UncheckedAccount<'info>,
 
     #[account(
@@ -116,7 +116,7 @@ pub struct RefundArbitrationFees<'info> {
     pub tenant_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: tenant pubkey validated against escrow_state.
-    #[account(address = escrow_state.tenant @ DepositGuardError::NotTenant)]
+    #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
     pub tenant: UncheckedAccount<'info>,
 
     pub token_mint: Account<'info, Mint>,

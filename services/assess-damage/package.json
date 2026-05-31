@@ -1,26 +1,26 @@
 {
-  "name": "@depositguard/assess-damage",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@google-cloud/vertexai": "^1.7.0",
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.4.0",
-    "firebase-admin": "^13.10.0",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.0.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.8.0",
-    "vitest": "^4.1.7"
-  }
+    "name": "@nestcrow/assess-damage",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "ts-node src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@google-cloud/vertexai": "^1.7.0",
+        "express": "^4.19.2",
+        "express-rate-limit": "^7.4.0",
+        "firebase-admin": "^13.10.0",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/node": "^22.0.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.8.0",
+        "vitest": "^4.1.7"
+    }
 }

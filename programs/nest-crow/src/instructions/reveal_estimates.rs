@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Computes `max_fine = (tenant_estimate + landlord_estimate) / 2` once both
@@ -10,23 +10,23 @@ pub fn handler(ctx: Context<RevealEstimates>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(
         escrow.status == EscrowStatus::Disputed,
-        DepositGuardError::NotDisputed
+        NestCrowError::NotDisputed
     );
 
     let claim = &mut ctx.accounts.claim_record;
     require!(
         claim.tenant_estimate_submitted && claim.landlord_estimate_submitted,
-        DepositGuardError::EstimatesNotSubmitted
+        NestCrowError::EstimatesNotSubmitted
     );
     require!(
         !claim.estimates_revealed,
-        DepositGuardError::EstimatesAlreadyRevealed
+        NestCrowError::EstimatesAlreadyRevealed
     );
 
     let sum = claim
         .tenant_estimate
         .checked_add(claim.landlord_estimate)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
     claim.max_fine = sum / 2;
     claim.estimates_revealed = true;
 

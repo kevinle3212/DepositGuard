@@ -1,5 +1,5 @@
 {
-    "name": "@depositguard/notify",
+    "name": "@nestcrow/notify",
     "version": "0.1.0",
     "private": true,
     "scripts": {

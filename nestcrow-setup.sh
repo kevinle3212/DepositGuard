@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  DepositGuard / Team Quack Quack  -  QuackHacks dev environment setup
+#  NestCrow / Team Quack Quack  -  QuackHacks dev environment setup
 # =============================================================================
 #
 #  PLEASE READ THIS WHOLE BLOCK BEFORE RUNNING. It is written for everyone on
@@ -61,7 +61,7 @@
 #  Example: if you want the project on your Desktop, first run:
 #         cd ~/Desktop
 #  Then run the script. The code ends up in:
-#         ~/Desktop/DepositGuard
+#         ~/Desktop/NestCrow
 #
 #  The "cd" command means "change directory" (move into a folder). The exact
 #  "cd" command for each operating system is shown in the steps below.
@@ -69,7 +69,7 @@
 # -----------------------------------------------------------------------------
 #  HOW TO RUN IT  -  IF YOU ARE ON A MAC
 # -----------------------------------------------------------------------------
-#  1. Put this file (depositguard-setup.sh) somewhere easy to find, like your
+#  1. Put this file (nestcrow-setup.sh) somewhere easy to find, like your
 #     Desktop.
 #  2. Open the "Terminal" app. (Press Cmd+Space, type "Terminal", press Enter.)
 #  3. Move into the folder where you want the project downloaded. To use the
@@ -77,7 +77,7 @@
 #         cd ~/Desktop
 #     (If you want it elsewhere, use that folder's path instead.)
 #  4. Run the script by typing this and pressing Enter:
-#         bash depositguard-setup.sh
+#         bash nestcrow-setup.sh
 #  5. When it asks "Continue? [y/N]", type the letter  y  and press Enter.
 #  6. Wait. See the "WHAT TO EXPECT" section below.
 #
@@ -101,7 +101,7 @@
 #  1. Open the "Ubuntu" app from your Start menu.
 #  2. Copy this file into your Ubuntu home folder. The easy way: in the Ubuntu
 #     window, type  explorer.exe .  and press Enter. A normal Windows folder
-#     window opens. Drag depositguard-setup.sh into it.
+#     window opens. Drag nestcrow-setup.sh into it.
 #  3. Back in the Ubuntu window, decide where the project should go. To put it
 #     in your Ubuntu home folder (recommended), you are already there, so you
 #     can skip ahead. To use a specific folder, "cd" into it first, e.g.:
@@ -109,7 +109,7 @@
 #     (Create that folder first with  mkdir -p ~/projects  if it does not
 #     exist yet.)
 #  4. Run the script by typing this and pressing Enter:
-#         bash depositguard-setup.sh
+#         bash nestcrow-setup.sh
 #  5. When it asks "Continue? [y/N]", type the letter  y  and press Enter.
 #  6. Wait. See the "WHAT TO EXPECT" section below.
 #
@@ -122,7 +122,7 @@
 #    working.
 #  - You will see lines marked [ok], [warn], or [FAIL] as it goes.
 #  - On a Mac, a popup may appear asking to install developer tools. Click to
-#    allow it, let it finish, then run  ./depositguard-setup.sh  again.
+#    allow it, let it finish, then run  ./nestcrow-setup.sh  again.
 #  - If your computer asks for your password, that is the normal login password
 #    for your computer. Type it and press Enter (it stays hidden as you type).
 #
@@ -132,7 +132,7 @@
 #  - It prints a summary. If it says "All tools installed and verified", you
 #    are done.
 #  - If it lists items "needing attention", do not panic. Just run
-#    ./depositguard-setup.sh  one more time. It is safe to re-run and will
+#    ./nestcrow-setup.sh  one more time. It is safe to re-run and will
 #    retry only what failed. If something still fails after two tries, send
 #    Kevin the red [FAIL] lines.
 #  - IMPORTANT: close the Terminal or Ubuntu window and open a NEW one before
@@ -148,7 +148,7 @@
 #  Kevin if this applies to you.
 #
 #  Advanced note for whoever wants it: to skip the "Continue?" question, run
-#  bash depositguard-setup.sh -y  instead.
+#  bash nestcrow-setup.sh -y  instead.
 # =============================================================================
 
 # We deliberately do NOT use 'set -e'. If one step fails, we want to keep going,
@@ -182,8 +182,8 @@ SKIP_PROMPT="no"
 # The repository to clone, and the folder name it will be cloned into. We use
 # the HTTPS URL (not SSH) because it works for everyone without first setting
 # up SSH keys.
-REPO_URL="https://github.com/kevinle3212/DepositGuard.git"
-REPO_NAME="DepositGuard"
+REPO_URL="https://github.com/kevinle3212/NestCrow.git"
+REPO_NAME="NestCrow"
 
 # ---------- small helper functions -----------------------------------------
 # step()  prints a bold blue heading for each numbered stage.
@@ -232,7 +232,7 @@ fi
 
 # ---------- intro ----------------------------------------------------------
 printf "%s\n" "${BOLD}=============================================================${RESET}"
-printf "%s\n" "${BOLD}  DepositGuard dev setup  -  Team Quack Quack${RESET}"
+printf "%s\n" "${BOLD}  NestCrow dev setup  -  Team Quack Quack${RESET}"
 printf "%s\n" "${BOLD}=============================================================${RESET}"
 printf "Detected OS: %s\n" "$OS"
 printf "This installs: build tools, Git, Node.js, Rust, Solana CLI,\n"
@@ -872,12 +872,12 @@ if ! grep -qsF "# <<< quackhacks setup <<<" "$RC_FILE"; then
 fi
 
 # =============================================================================
-#  STEP 12  -  Clone the DepositGuard project
+#  STEP 12  -  Clone the NestCrow project
 # =============================================================================
 # This downloads the project code into the folder you ran the script from. It
 # is safe to run more than once: if the project is already here, we leave it
 # alone (and try a quick update) instead of overwriting your work.
-step "Step 12/12  Download the DepositGuard project code"
+step "Step 12/12  Download the NestCrow project code"
 TARGET_DIR="$PWD/$REPO_NAME"
 if ! have git; then
     fail "Git is not available, so the project could not be downloaded. Fix Step 3 first."
@@ -892,7 +892,7 @@ elif [ -d "$TARGET_DIR/.git" ]; then
         warn "You can update later with: cd $REPO_NAME && git pull"
     fi
 elif [ -e "$TARGET_DIR" ]; then
-    # Something named DepositGuard is already here but is not a Git clone. We do
+    # Something named NestCrow is already here but is not a Git clone. We do
     # NOT touch it, to avoid overwriting anything the user might care about.
     fail "A folder named '$REPO_NAME' already exists here but is not a Git clone."
     warn "Move or rename it, then re-run this script to download the project."

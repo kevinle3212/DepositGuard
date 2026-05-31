@@ -14,7 +14,7 @@ const BodySchema = z.object({
   chain: z.enum(['solana', 'evm', 'hardware']),
 })
 
-const MSG_PREFIX = 'DepositGuard identity verification '
+const MSG_PREFIX = 'NestCrow identity verification '
 
 verifyRouter.post('/', async (req: Request, res: Response) => {
   const parsed = BodySchema.safeParse(req.body)

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ArbitrationEscrow, ArbitrationFeeStatus, EscrowState};
 
 /// The assigned arbitrator claims the fee pool after both parties have paid.
@@ -10,11 +10,11 @@ pub fn handler(ctx: Context<ConsumeArbitrationFees>) -> Result<()> {
     let arb = &ctx.accounts.arbitration_escrow;
     require!(
         ctx.accounts.arbitrator.key() == arb.arbitrator_pubkey,
-        DepositGuardError::NotArbitrator
+        NestCrowError::NotArbitrator
     );
     require!(
         arb.status == ArbitrationFeeStatus::BothPaid,
-        DepositGuardError::FeesNotBothPaid
+        NestCrowError::FeesNotBothPaid
     );
 
     let amount = ctx.accounts.arb_vault.amount;
@@ -49,7 +49,7 @@ pub struct ConsumeArbitrationFees<'info> {
     #[account(
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

@@ -2,7 +2,7 @@ import type { Part } from '@google-cloud/vertexai'
 
 // Temperature 0.0 enforced in gemini.ts; system prompt enforces advisory-only scope.
 export const SYSTEM_PROMPT = `\
-You are a property damage assessment assistant for DepositGuard, a residential security deposit management platform.
+You are a property damage assessment assistant for NestCrow, a residential security deposit management platform.
 
 YOUR ROLE IS STRICTLY LIMITED TO:
 1. Visually comparing move-in and move-out photographs of a rental property.

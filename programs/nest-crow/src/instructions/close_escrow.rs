@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, CloseAccount, Mint, Token, TokenAccount};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus, LeaseConfig};
 
 /// Closes all PDA accounts and the vault token account, reclaiming rent
@@ -12,9 +12,9 @@ pub fn handler(ctx: Context<CloseEscrow>) -> Result<()> {
 
     require!(
         escrow.status == EscrowStatus::Released || escrow.status == EscrowStatus::Resolved,
-        DepositGuardError::NotFinalStatus
+        NestCrowError::NotFinalStatus
     );
-    require!(ctx.accounts.vault.amount == 0, DepositGuardError::VaultNotEmpty);
+    require!(ctx.accounts.vault.amount == 0, NestCrowError::VaultNotEmpty);
 
     let lease_id = escrow.lease_id;
     let bump = escrow.bump;
@@ -50,7 +50,7 @@ pub struct CloseEscrow<'info> {
         close = landlord,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = landlord @ DepositGuardError::NotLandlord,
+        has_one = landlord @ NestCrowError::NotLandlord,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

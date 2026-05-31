@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ArbitrationPanel, EscrowState};
 
 /// A panelist submits a sealed ruling: a fine amount, the intended recipient,
@@ -15,23 +15,23 @@ pub fn handler(
     let escrow = &ctx.accounts.escrow_state;
     require!(
         recipient == escrow.landlord || recipient == escrow.tenant,
-        DepositGuardError::InvalidRecipient
+        NestCrowError::InvalidRecipient
     );
 
     let panelist = ctx.accounts.panelist.key();
     let panel = &mut ctx.accounts.arbitration_panel;
-    require!(!panel.resolved, DepositGuardError::PanelAlreadyResolved);
+    require!(!panel.resolved, NestCrowError::PanelAlreadyResolved);
 
     // Locate this signer's panel slot.
     let idx = panel
         .panelists
         .iter()
         .position(|p| *p == panelist)
-        .ok_or(DepositGuardError::NotPanelist)?;
+        .ok_or(NestCrowError::NotPanelist)?;
 
     require!(
         !panel.rulings[idx].submitted,
-        DepositGuardError::RulingAlreadySubmitted
+        NestCrowError::RulingAlreadySubmitted
     );
 
     let ruling = &mut panel.rulings[idx];

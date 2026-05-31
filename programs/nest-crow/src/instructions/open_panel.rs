@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{
     ArbitrationEscrow, ArbitrationPanel, EscrowState, EscrowStatus, PanelOutcome, PanelRuling,
 };
@@ -11,18 +11,18 @@ pub fn handler(ctx: Context<OpenPanel>, panelists: [Pubkey; 3]) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(
         escrow.status == EscrowStatus::Disputed,
-        DepositGuardError::NotDisputed
+        NestCrowError::NotDisputed
     );
 
     let signer = ctx.accounts.signer.key();
     require!(
         signer == escrow.landlord || signer == escrow.tenant,
-        DepositGuardError::NotParty
+        NestCrowError::NotParty
     );
 
     require!(
         ctx.accounts.arbitration_escrow.panel_upgrade_paid,
-        DepositGuardError::PanelUpgradeNotPaid
+        NestCrowError::PanelUpgradeNotPaid
     );
 
     let panel = &mut ctx.accounts.arbitration_panel;

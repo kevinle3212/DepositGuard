@@ -157,12 +157,12 @@ export function TopNav() {
             <Link
               href="/"
               className="flex items-center gap-2 font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-              aria-label="DepositGuard home"
+              aria-label="NestCrow home"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary flex-shrink-0">
                 <Shield className="h-4 w-4 text-primary-foreground" aria-hidden />
               </div>
-              <span className="hidden sm:inline">DepositGuard</span>
+              <span className="hidden sm:inline">NestCrow</span>
             </Link>
 
             {/* Desktop nav */}

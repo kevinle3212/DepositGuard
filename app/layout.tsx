@@ -12,12 +12,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'DepositGuard',
-    template: '%s · DepositGuard',
+    default: 'NestCrow',
+    template: '%s · NestCrow',
   },
   description:
     'Trustless security deposit escrow on Solana with AI-assisted damage assessment.',
-  applicationName: 'DepositGuard',
+  applicationName: 'NestCrow',
 }
 
 export const viewport: Viewport = {

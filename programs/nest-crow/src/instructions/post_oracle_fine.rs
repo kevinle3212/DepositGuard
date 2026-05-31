@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// The designated oracle relays the Gemini-computed fine on-chain. This value is
@@ -10,19 +10,19 @@ pub fn handler(ctx: Context<PostOracleFine>, fine: u64) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(
         escrow.status == EscrowStatus::Disputed,
-        DepositGuardError::NotDisputed
+        NestCrowError::NotDisputed
     );
 
     let claim = &mut ctx.accounts.claim_record;
     require!(
         ctx.accounts.oracle.key() == claim.oracle,
-        DepositGuardError::NotOracle
+        NestCrowError::NotOracle
     );
     require!(
         claim.estimates_revealed,
-        DepositGuardError::EstimatesNotRevealed
+        NestCrowError::EstimatesNotRevealed
     );
-    require!(fine <= claim.max_fine, DepositGuardError::FineExceedsMaxFine);
+    require!(fine <= claim.max_fine, NestCrowError::FineExceedsMaxFine);
 
     claim.oracle_fine = fine;
     claim.oracle_fine_posted = true;

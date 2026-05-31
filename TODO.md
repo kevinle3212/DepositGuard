@@ -1,4 +1,4 @@
-# DepositGuard — To-Do List
+# NestCrow — To-Do List
 
 > Each item is a single, self-contained task. When you ask me to "do TODO item X"
 > or "work on the <section> tasks," this list is the source of truth.
@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Setup Script (`depositguard-setup.sh`) — DONE
+## 1. Setup Script (`nestcrow-setup.sh`) — DONE
 
 - [x] Support both macOS and Windows users in the script and its instructions.
 - [x] Clone the repo into the directory the user runs the script from (no hardcoded path); document the `cd` step beforehand.
@@ -21,7 +21,7 @@
 
 > Start here. Everything else depends on a working escrow contract.
 
-- [x] Scaffold Anchor workspace: `programs/deposit-guard/`, `tests/`, `Anchor.toml`, `Cargo.toml`.
+- [x] Scaffold Anchor workspace: `programs/nest-crow/`, `tests/`, `Anchor.toml`, `Cargo.toml`.
 - [x] Define the `EscrowState` PDA account struct: `lease_id`, `landlord`, `tenant`, `token_mint`, `deposit_amount`, `status` enum, `deadline_ts`, `jurisdiction_code`.
 - [x] Define the `LeaseConfig` PDA account struct: landlord and tenant pubkeys, token mint, deposit amount, `dispute_threshold_pct`, `contract_hash`, `landlord_signed`, `tenant_signed`.
 - [x] Define the `ClaimRecord` PDA account struct: itemized damage list hashes, `disputed_total`, `undisputed_total`, `tenant_estimate`, `landlord_estimate`, `tenant_estimate_sealed_ts`, `landlord_estimate_sealed_ts`, `max_fine`.
@@ -206,7 +206,7 @@
 - [ ] Wire ElevenLabs voice triggers into all relevant frontend pages: wallet connect prompt, contract signing, arbitration fee payment, dispute initiation, minority dissent surface, deposit release confirmation, deadline warning.
 - [x] Scaffold the ElevenLabs Conversational Agent module (`agent/`): `agents.ts` defines the `platform-guide` voice assistant ("Eryn") config and `getAgent()`; `context.ts` builds per-lease `dynamicVariables`; `client-tools.ts` exposes `openLeasePage`; `index.ts` barrel re-exports. (Conversational-agent approach; the `/api/tts` script-template items above remain open.)
 
-> Note: the Gemini fine-calculation oracle was split out of `agent/` into a separate `oracle/` folder (`agent.ts` + program `.rs` files) — it is unrelated to the ElevenLabs voice assistant. The `.rs` files are not yet wired into `programs/deposit-guard`.
+> Note: the Gemini fine-calculation oracle was split out of `agent/` into a separate `oracle/` folder (`agent.ts` + program `.rs` files) — it is unrelated to the ElevenLabs voice assistant. The `.rs` files are not yet wired into `programs/nest-crow`.
 
 ---
 
@@ -214,7 +214,7 @@
 
 > Depends on Section 7.
 
-- [x] Create the `/api/notify` Cloud Run route: accept `{ leaseId, event, recipients }` and dispatch transactional emails via Firebase Extensions (Trigger Email).
+- [x] Create the `/api/notify` Cloud Run route: accept `{ leaseId, event, recipients }` and dispatch transactional emails via SendGrid (`SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL`).
 - [x] Write email templates for all notification events: magic link invite, both-parties-signed confirmation, move-in photo required, move-out complete, assessment ready, deduction statement, dispute opened, arbitration fee due, arbitration fee refunded, ruling issued, minority dissent filed, deposit released, deadline warning, claim timeout executed.
 - [x] Ensure every on-chain event that affects a party's funds triggers an email notification.
 
@@ -263,7 +263,7 @@
 
 - [ ] Write Terraform HCL for all Google Cloud resources: Cloud Run services, Cloud Load Balancer, Cloud DNS zone (redirect-only), Cloud Armor policies, Cloud Scheduler job, Secret Manager secrets, Artifact Registry, Cloud Build triggers.
 - [ ] Configure Google Cloud Build: trigger on GitHub push to `main`; run tests; build Docker images; push to Artifact Registry; deploy to Cloud Run.
-- [ ] Set up Google-managed TLS certificate on the HTTPS load balancer for `depositguard.tech`.
+- [ ] Set up Google-managed TLS certificate on the HTTPS load balancer for `nestcrow.tech`.
 - [ ] Configure Cloud DNS: `A @ → Load Balancer IP`, `A www → same IP`, `CNAME api → Cloud Run service URL`.
 - [ ] Configure Cloud Armor: rate limit 100 req/min per IP; enable OWASP Core Rule Set; configure geo-blocking per compliance requirements.
 - [ ] Store all secrets (relayer keypair, Gemini API key, Firebase service account, JWT signing secret, ElevenLabs API key) in Secret Manager; verify no secrets exist in env files or source control.

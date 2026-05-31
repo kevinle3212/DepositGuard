@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 
-const PROGRAM_ID = process.env.DEPOSIT_GUARD_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a'
+const PROGRAM_ID = process.env.NEST_CROW_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a'
 const RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
 
 // record_contract_hash requires the caller to be the landlord or tenant (enforced on-chain).
@@ -17,7 +17,7 @@ export async function buildRecordContractHashTx(
   const { Program, AnchorProvider } = anchor
   // IDL loaded at runtime from the repo root; path is relative to the compiled dist/ output.
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const idl = require('../../../../target/idl/deposit_guard.json') as ConstructorParameters<typeof Program>[0]
+  const idl = require('../../../../target/idl/nest_crow.json') as ConstructorParameters<typeof Program>[0]
 
   const connection = new Connection(RPC_URL, 'confirmed')
   const programId = new PublicKey(PROGRAM_ID)

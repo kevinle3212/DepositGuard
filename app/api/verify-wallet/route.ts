@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { PublicKey } from '@solana/web3.js'
 const CLOCK_SKEW_SECS = 300
 
-const MSG_PREFIX = 'DepositGuard identity verification '
+const MSG_PREFIX = 'NestCrow identity verification '
 
 async function verifySolanaSignature(pubkey: string, signature: string, message: string): Promise<boolean> {
   try {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
     }
 
-    // Expected format: "DepositGuard identity verification <nonce> <unix_ts>"
+    // Expected format: "NestCrow identity verification <nonce> <unix_ts>"
     const payload = message.slice(MSG_PREFIX.length).trim()
     const parts = payload.split(' ')
     if (parts.length !== 2) {

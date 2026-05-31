@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
 /// Landlord proposes a deduction split after move-out.
@@ -11,15 +11,15 @@ pub fn handler(ctx: Context<ProposeRelease>, deduction_amount: u64) -> Result<()
 
     require!(
         escrow.status == EscrowStatus::Active,
-        DepositGuardError::NotActive
+        NestCrowError::NotActive
     );
     require!(
         ctx.accounts.landlord.key() == escrow.landlord,
-        DepositGuardError::NotLandlord
+        NestCrowError::NotLandlord
     );
     require!(
         deduction_amount <= escrow.deposit_amount,
-        DepositGuardError::DeductionExceedsDeposit
+        NestCrowError::DeductionExceedsDeposit
     );
 
     let undisputed = escrow.deposit_amount
@@ -46,7 +46,7 @@ pub struct ProposeRelease<'info> {
         mut,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = landlord @ DepositGuardError::NotLandlord,
+        has_one = landlord @ NestCrowError::NotLandlord,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

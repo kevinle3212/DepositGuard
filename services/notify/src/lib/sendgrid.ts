@@ -7,7 +7,7 @@ export async function sendEmail(recipients: string[], template: EmailTemplate): 
 
     sgMail.setApiKey(apiKey);
 
-    const from = process.env.SENDGRID_FROM_EMAIL ?? "noreply@depositguard.tech";
+    const from = process.env.SENDGRID_FROM_EMAIL ?? "noreply@nestcrow.tech";
 
     const [response] = await sgMail.send({
         to: recipients,

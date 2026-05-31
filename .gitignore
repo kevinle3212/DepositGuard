@@ -1,5 +1,5 @@
 # =============================================================================
-#  DepositGuard .gitignore
+#  NestCrow .gitignore
 #  Covers: Anchor/Rust program, Next.js/React + TypeScript frontend, Firebase,
 #  and the usual editor and OS clutter.
 # =============================================================================
@@ -124,6 +124,9 @@ TODO.local.md
 
 # Temporary files
 .tmp/
+
+# Accidental Husky mis-install (e.g. `husky --version` sets hooksPath to `--version/_`)
+--version/
 
 # Root uses Yarn; ignore only the root npm lockfile. Cloud Run services
 # under services/* are standalone npm packages and keep their own lockfiles.

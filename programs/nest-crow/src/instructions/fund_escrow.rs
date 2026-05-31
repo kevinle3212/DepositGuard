@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{EscrowState, EscrowStatus, LeaseConfig};
 
 /// Transfers the full deposit from the tenant's token account into the
@@ -13,11 +13,11 @@ pub fn handler(ctx: Context<FundEscrow>) -> Result<()> {
 
     require!(
         escrow.status == EscrowStatus::Created,
-        DepositGuardError::NotCreated
+        NestCrowError::NotCreated
     );
     require!(
         config.landlord_signed && config.tenant_signed,
-        DepositGuardError::LeaseNotSigned
+        NestCrowError::LeaseNotSigned
     );
 
     let amount = escrow.deposit_amount;
@@ -44,8 +44,8 @@ pub struct FundEscrow<'info> {
         mut,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = tenant @ DepositGuardError::NotTenant,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = tenant @ NestCrowError::NotTenant,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

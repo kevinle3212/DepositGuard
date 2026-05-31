@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{
     ArbitrationEscrow, ArbitrationFeeStatus, EscrowState, EscrowStatus, ARBITRATION_FEE_USDC,
     ARBITRATION_PAYMENT_WINDOW_SECS,
@@ -15,13 +15,13 @@ pub fn handler(ctx: Context<OpenArbitration>, arbitrator: Pubkey) -> Result<()> 
     let escrow = &ctx.accounts.escrow_state;
     require!(
         escrow.status == EscrowStatus::Disputed,
-        DepositGuardError::NotDisputed
+        NestCrowError::NotDisputed
     );
 
     let signer = ctx.accounts.signer.key();
     require!(
         signer == escrow.landlord || signer == escrow.tenant,
-        DepositGuardError::NotParty
+        NestCrowError::NotParty
     );
 
     let now = Clock::get()?.unix_timestamp;
@@ -41,7 +41,7 @@ pub fn handler(ctx: Context<OpenArbitration>, arbitrator: Pubkey) -> Result<()> 
     arb.arbitrator_pubkey = arbitrator;
     arb.payment_deadline_ts = now
         .checked_add(ARBITRATION_PAYMENT_WINDOW_SECS)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
     arb.bump = ctx.bumps.arbitration_escrow;
 
     Ok(())
@@ -55,7 +55,7 @@ pub struct OpenArbitration<'info> {
     #[account(
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 

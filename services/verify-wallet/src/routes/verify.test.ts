@@ -21,7 +21,7 @@ const app = express()
 app.use(express.json())
 app.use('/verify', verifyRouter)
 
-const MSG_PREFIX = 'DepositGuard identity verification '
+const MSG_PREFIX = 'NestCrow identity verification '
 
 function makeKeypair() {
   return nacl.sign.keyPair()

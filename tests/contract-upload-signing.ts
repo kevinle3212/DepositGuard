@@ -1,7 +1,7 @@
 /**
- * Section 9 — Contract Upload and Magic Link Signing
+ * Contract upload and magic-link signing (Anchor integration tests).
  *
- * End-to-end tests covering:
+ * Covers:
  *  - PDF upload, SHA-256 hash match, GCS versioning
  *  - DOCX → PDF conversion and hash consistency
  *  - Signing flow for landlord and tenant
@@ -26,10 +26,10 @@ function sha256(data: Buffer): Buffer {
   return createHash('sha256').update(data).digest()
 }
 
-describe('Section 9 — Contract Upload and Magic Link Signing', () => {
+describe('contract upload and magic-link signing', () => {
   const provider = AnchorProvider.env()
   anchor.setProvider(provider)
-  const program = anchor.workspace.DepositGuard as Program
+  const program = anchor.workspace.NestCrow as Program
 
   const landlord = Keypair.generate()
   const tenant = Keypair.generate()

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{EscrowState, LeaseConfig};
 
 /// Stores the SHA-256 hash of the lease PDF on-chain.
@@ -14,18 +14,18 @@ pub fn handler(ctx: Context<RecordContractHash>, contract_hash: [u8; 32]) -> Res
     let caller = ctx.accounts.caller.key();
 
     if caller == escrow.landlord {
-        require!(!config.landlord_signed, DepositGuardError::ContractHashAlreadySet);
+        require!(!config.landlord_signed, NestCrowError::ContractHashAlreadySet);
         config.contract_hash = contract_hash;
         config.landlord_signed = true;
     } else if caller == escrow.tenant {
-        require!(config.landlord_signed, DepositGuardError::ContractHashNotSet);
+        require!(config.landlord_signed, NestCrowError::ContractHashNotSet);
         require!(
             config.contract_hash == contract_hash,
-            DepositGuardError::ContractHashMismatch
+            NestCrowError::ContractHashMismatch
         );
         config.tenant_signed = true;
     } else {
-        return err!(DepositGuardError::NotParty);
+        return err!(NestCrowError::NotParty);
     }
 
     Ok(())

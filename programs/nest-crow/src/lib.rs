@@ -1,4 +1,4 @@
-/// DepositGuard — security deposit escrow on Solana.
+/// NestCrow — security deposit escrow on Solana.
 ///
 /// State machine:
 ///   CREATED → FUNDED → PENDING_DOCUMENTATION → ACTIVE →
@@ -17,7 +17,7 @@ use instructions::*;
 declare_id!("F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a");
 
 #[program]
-pub mod deposit_guard {
+pub mod nest_crow {
     use super::*;
 
     /// Creates EscrowState, LeaseConfig, ClaimRecord PDAs and the vault token

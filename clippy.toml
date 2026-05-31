@@ -20,7 +20,7 @@ too-many-lines-threshold = 80
 
 # Domain-specific identifiers that clippy should not flag as misspellings
 doc-valid-idents = [
-    "DepositGuard",
+    "NestCrow",
     "USDC",
     "PDA",
     "PDAs",

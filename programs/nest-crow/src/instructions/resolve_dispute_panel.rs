@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{
     ArbitrationEscrow, ArbitrationFeeStatus, ArbitrationPanel, ClaimRecord, EscrowState,
     EscrowStatus, PanelOutcome, PANEL_DISSENT_THRESHOLD_PCT, PANEL_ESCALATION_WINDOW_SECS,
@@ -21,20 +21,20 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
     require!(
         escrow.status == EscrowStatus::Disputed,
-        DepositGuardError::NotDisputed
+        NestCrowError::NotDisputed
     );
 
     {
         let panel = &ctx.accounts.arbitration_panel;
-        require!(!panel.resolved, DepositGuardError::PanelAlreadyResolved);
+        require!(!panel.resolved, NestCrowError::PanelAlreadyResolved);
         require!(
             panel.rulings.iter().all(|r| r.submitted),
-            DepositGuardError::PanelNotComplete
+            NestCrowError::PanelNotComplete
         );
     }
     require!(
         ctx.accounts.claim_record.estimates_revealed,
-        DepositGuardError::EstimatesNotRevealed
+        NestCrowError::EstimatesNotRevealed
     );
 
     // The panel track must have been funded (both upgrade fees paid).
@@ -43,7 +43,7 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
             ctx.accounts.arbitration_escrow.status,
             ArbitrationFeeStatus::BothPaid | ArbitrationFeeStatus::Consumed
         ),
-        DepositGuardError::FeesNotBothPaid
+        NestCrowError::FeesNotBothPaid
     );
 
     let fines = [
@@ -61,16 +61,16 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     let claim = &ctx.accounts.claim_record;
     require!(
         adopted_fine <= claim.max_fine,
-        DepositGuardError::FineExceedsMaxFine
+        NestCrowError::FineExceedsMaxFine
     );
     require!(
         adopted_fine <= claim.disputed_total,
-        DepositGuardError::FineExceedsDisputed
+        NestCrowError::FineExceedsDisputed
     );
     let disputed_total = claim.disputed_total;
     let to_other = disputed_total
         .checked_sub(adopted_fine)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
 
     // Minority-protection: in a 2-1 majority, evaluate the dissent magnitude.
     let mut dissent_flag = false;
@@ -93,7 +93,7 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     let recipient_is_landlord = adopted_recipient == escrow.landlord;
     require!(
         recipient_is_landlord || adopted_recipient == escrow.tenant,
-        DepositGuardError::InvalidRecipient
+        NestCrowError::InvalidRecipient
     );
 
     let (fine_to, remainder_to) = if recipient_is_landlord {
@@ -141,7 +141,7 @@ pub fn handler(ctx: Context<ResolveDisputePanel>) -> Result<()> {
     panel.minority_dissent_flag = dissent_flag;
     panel.escalation_deadline_ts = now
         .checked_add(PANEL_ESCALATION_WINDOW_SECS)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
     panel.resolved = true;
 
     // Persist minority protection on the immutable claim record.
@@ -219,10 +219,10 @@ fn dissent_exceeds_threshold(majority_fine: u64, minority_fine: u64) -> Result<b
     }
     let lhs = (diff as u128)
         .checked_mul(100)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
     let rhs = (majority_fine as u128)
         .checked_mul(PANEL_DISSENT_THRESHOLD_PCT as u128)
-        .ok_or(DepositGuardError::ArithmeticOverflow)?;
+        .ok_or(NestCrowError::ArithmeticOverflow)?;
     Ok(lhs > rhs)
 }
 
@@ -235,7 +235,7 @@ pub struct ResolveDisputePanel<'info> {
         mut,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 
@@ -277,7 +277,7 @@ pub struct ResolveDisputePanel<'info> {
     pub landlord_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: landlord pubkey validated against escrow_state.
-    #[account(address = escrow_state.landlord @ DepositGuardError::NotLandlord)]
+    #[account(address = escrow_state.landlord @ NestCrowError::NotLandlord)]
     pub landlord: UncheckedAccount<'info>,
 
     #[account(
@@ -288,7 +288,7 @@ pub struct ResolveDisputePanel<'info> {
     pub tenant_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: tenant pubkey validated against escrow_state.
-    #[account(address = escrow_state.tenant @ DepositGuardError::NotTenant)]
+    #[account(address = escrow_state.tenant @ NestCrowError::NotTenant)]
     pub tenant: UncheckedAccount<'info>,
 
     pub token_mint: Account<'info, Mint>,

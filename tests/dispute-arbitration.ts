@@ -14,7 +14,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { assert } from "chai";
-import type { DepositGuard } from "../target/types/deposit_guard";
+import type { NestCrow } from "../target/types/nest_crow";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,11 +42,11 @@ async function expectError(
 
 // ── Suite ─────────────────────────────────────────────────────────────────────
 
-describe("deposit-guard: dispute & arbitration (Sections 4-6)", () => {
+describe("nest-crow: dispute & arbitration (Sections 4-6)", () => {
   const provider = AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.DepositGuard as Program<DepositGuard>;
+  const program = anchor.workspace.NestCrow as Program<NestCrow>;
   const connection = provider.connection;
 
   // Actors

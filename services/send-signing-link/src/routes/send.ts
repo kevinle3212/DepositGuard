@@ -6,7 +6,7 @@ import { storeSigningToken, dispatchMagicLinkEmail } from '../lib/firestore.js'
 
 export const sendRouter = Router()
 
-const APP_BASE_URL = process.env.APP_BASE_URL ?? 'https://depositguard.tech'
+const APP_BASE_URL = process.env.APP_BASE_URL ?? 'https://nestcrow.tech'
 
 const BodySchema = z.object({
   leaseId: z.string().min(1),

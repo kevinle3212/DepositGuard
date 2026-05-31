@@ -1,33 +1,36 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::errors::DepositGuardError;
+use crate::errors::NestCrowError;
 use crate::state::{ClaimRecord, EscrowState, EscrowStatus};
 
-/// Tenant approves the landlord's proposed deduction split.
-/// Releases the undisputed amount to the tenant and the deduction to the landlord.
-/// Status transitions: PENDING_APPROVAL → RELEASED.
-pub fn handler(ctx: Context<ApproveRelease>) -> Result<()> {
+/// Tenant rejects the landlord's proposed deduction and opens a formal dispute.
+/// The undisputed portion is released to the tenant immediately; the contested
+/// remainder stays locked in the vault. The assigned solo `arbitrator` and the
+/// fine `oracle` (which relays the Gemini-computed fine) are recorded here.
+/// Status transitions: PENDING_APPROVAL → DISPUTED.
+pub fn handler(ctx: Context<OpenDispute>, arbitrator: Pubkey, oracle: Pubkey) -> Result<()> {
     let escrow = &ctx.accounts.escrow_state;
 
     require!(
         escrow.status == EscrowStatus::PendingApproval,
-        DepositGuardError::NotPendingApproval
+        NestCrowError::NotPendingApproval
     );
     require!(
         ctx.accounts.tenant.key() == escrow.tenant,
-        DepositGuardError::NotTenant
+        NestCrowError::NotTenant
     );
 
+    // The contested amount is exactly what the landlord proposed to deduct.
+    let disputed = ctx.accounts.claim_record.landlord_estimate;
     let undisputed = ctx.accounts.claim_record.undisputed_total;
-    let deduction = ctx.accounts.claim_record.landlord_estimate;
+
     let lease_id = escrow.lease_id;
     let bump = escrow.bump;
-
     let seeds: &[&[u8]] = &[b"escrow", lease_id.as_ref(), &[bump]];
     let signer_seeds = &[seeds];
 
-    // Transfer undisputed portion to tenant.
+    // Release the undisputed portion to the tenant right away.
     if undisputed > 0 {
         let cpi_accounts = Transfer {
             from: ctx.accounts.vault.to_account_info(),
@@ -40,27 +43,28 @@ pub fn handler(ctx: Context<ApproveRelease>) -> Result<()> {
         )?;
     }
 
-    // Transfer deduction to landlord.
-    if deduction > 0 {
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.vault.to_account_info(),
-            to: ctx.accounts.landlord_token_account.to_account_info(),
-            authority: ctx.accounts.escrow_state.to_account_info(),
-        };
-        token::transfer(
-            CpiContext::new_with_signer(token::ID, cpi_accounts, signer_seeds),
-            deduction,
-        )?;
-    }
+    let claim = &mut ctx.accounts.claim_record;
+    claim.disputed_total = disputed;
+    claim.arbitrator = arbitrator;
+    claim.oracle = oracle;
+    // Clear the propose_release estimate so the sealed-estimate phase starts fresh.
+    claim.tenant_estimate = 0;
+    claim.landlord_estimate = 0;
+    claim.tenant_estimate_sealed_ts = 0;
+    claim.landlord_estimate_sealed_ts = 0;
+    claim.tenant_estimate_submitted = false;
+    claim.landlord_estimate_submitted = false;
+    claim.estimates_revealed = false;
+    claim.max_fine = 0;
 
     let escrow = &mut ctx.accounts.escrow_state;
-    escrow.status = EscrowStatus::Released;
+    escrow.status = EscrowStatus::Disputed;
 
     Ok(())
 }
 
 #[derive(Accounts)]
-pub struct ApproveRelease<'info> {
+pub struct OpenDispute<'info> {
     #[account(mut)]
     pub tenant: Signer<'info>,
 
@@ -68,13 +72,13 @@ pub struct ApproveRelease<'info> {
         mut,
         seeds = [b"escrow", escrow_state.lease_id.as_ref()],
         bump = escrow_state.bump,
-        has_one = tenant @ DepositGuardError::NotTenant,
-        has_one = token_mint @ DepositGuardError::VaultBalanceMismatch,
+        has_one = tenant @ NestCrowError::NotTenant,
+        has_one = token_mint @ NestCrowError::VaultBalanceMismatch,
     )]
     pub escrow_state: Account<'info, EscrowState>,
 
-    /// Boxed to keep the instruction's stack frame within the 4096-byte limit.
     #[account(
+        mut,
         seeds = [b"claim-record", escrow_state.lease_id.as_ref()],
         bump = claim_record.bump,
     )]
@@ -89,20 +93,12 @@ pub struct ApproveRelease<'info> {
     )]
     pub vault: Account<'info, TokenAccount>,
 
-    /// Tenant's token account to receive undisputed funds.
     #[account(
         mut,
         token::mint = token_mint,
         token::authority = tenant,
     )]
     pub tenant_token_account: Account<'info, TokenAccount>,
-
-    /// CHECK: Landlord's token account; validated via escrow_state.landlord constraint.
-    #[account(
-        mut,
-        token::mint = token_mint,
-    )]
-    pub landlord_token_account: Account<'info, TokenAccount>,
 
     pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
