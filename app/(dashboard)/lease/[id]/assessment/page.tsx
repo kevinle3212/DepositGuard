@@ -251,7 +251,7 @@ export default function AssessmentPage() {
                                                             aria-label="Accept item"
                                                         >
                                                             <Check className="h-3 w-3" />
-                                                            Accept
+                                                            <span className="hidden sm:inline">Accept</span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -266,7 +266,7 @@ export default function AssessmentPage() {
                                                             aria-label="Modify cost"
                                                         >
                                                             <Edit3 className="h-3 w-3" />
-                                                            Modify
+                                                            <span className="hidden sm:inline">Modify</span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -281,7 +281,7 @@ export default function AssessmentPage() {
                                                             aria-label="Reject item"
                                                         >
                                                             <X className="h-3 w-3" />
-                                                            Reject
+                                                            <span className="hidden sm:inline">Reject</span>
                                                         </button>
                                                     </div>
                                                 </td>

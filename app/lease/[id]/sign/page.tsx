@@ -270,21 +270,20 @@ export default function SignPage() {
                     </div>
                 )}
 
-                <div className="border rounded-lg overflow-hidden bg-muted/20" style={{ minHeight: 500 }}>
+                <div className="border rounded-lg overflow-hidden bg-muted/20">
                     {contractUrl && pdfProxyUrl ? (
                         <iframe
                             src={pdfProxyUrl}
-                            className="w-full"
-                            style={{ height: 600 }}
+                            className="w-full h-[55vh] min-h-[320px]"
                             title="Lease contract"
                         />
                     ) : contractFetched ? (
-                        <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-2 p-6">
+                        <div className="flex flex-col items-center justify-center h-[30vh] min-h-[180px] text-center space-y-2 p-6">
                             <p className="text-muted-foreground text-sm">No contract PDF uploaded.</p>
                             <p className="text-xs text-muted-foreground">You can still sign to confirm the lease terms.</p>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center min-h-[500px]">
+                        <div className="flex items-center justify-center h-[30vh] min-h-[180px]">
                             <p className="text-muted-foreground">Loading contract PDF…</p>
                         </div>
                     )}

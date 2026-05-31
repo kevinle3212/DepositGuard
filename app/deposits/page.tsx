@@ -56,7 +56,7 @@ export default function DepositsPage() {
             <Nav />
             <WalletGate>
                 <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-                    <div className="mb-6 flex items-center justify-between">
+                    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <h1 className="text-2xl font-bold text-foreground">Deposits</h1>
                             <p className="mt-1 text-sm text-muted-foreground">
