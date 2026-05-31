@@ -30,6 +30,9 @@ env:
       value: uoo-quackathon26eug-8200.firebaseapp.com
     - variable: NEST_CROW_PROGRAM_ID
       value: F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a
+    # WalletConnect / RainbowKit project ID (public — safe to inline)
+    - variable: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+      value: 6c6170df7553a4a46bc21e4dee335e8c
     # Client-side Solana network config (mirrors server-side SOLANA_* vars above)
     - variable: NEXT_PUBLIC_RPC_URL
       value: https://api.devnet.solana.com
