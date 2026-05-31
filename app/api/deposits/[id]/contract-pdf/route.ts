@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const storage = getStorage()
   const [pdfBytes] = await storage.bucket(bucketName).file(filePath).download()
 
-  return new NextResponse(pdfBytes, {
+  return new NextResponse(new Uint8Array(pdfBytes), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="lease-${params.id}.pdf"`,
