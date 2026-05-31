@@ -47,6 +47,8 @@
 - [x] Replace fake hash generation in `PhotoVerification.tsx` with real SHA-256 (`crypto.subtle.digest`) and Firebase Storage upload.
 - [x] Remove hardcoded `counterpartyValue: 875` from assessment page; replace with `0` (value comes from Firestore when both parties submit).
 - [x] Remove `mockReveal()` function and its "[Demo] Simulate" button from assessment page.
+- [x] Delete the dead `lib/mock-data.ts` (`MOCK_DEPOSITS`) and `src/lib/lease-mock-data.ts` (`MOCK_LEASES`); move the still-used `getActiveLeases`/`getHistoricLeases` helpers into `src/lib/lease-filters.ts`.
+- [x] Remove the hardcoded `ARBITRATORS` panel and fabricated split amounts from the dispute page; drive it from the real lease (`useFetchLeaseById`) with a pending state for not-yet-convened panels.
 
 ---
 
