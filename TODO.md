@@ -222,10 +222,10 @@
 
 ## 16. Tooling and Code Quality
 
-- [ ] Add config files with the strictest practical settings: `tsconfig.json` (TypeScript), `.eslintrc` (ESLint flat config), Prettier config.
-- [ ] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
-- [ ] Set up Husky Git hooks to run linters and tests before commit and push.
-- [ ] Set up commitlint to enforce a consistent commit-message format (e.g. Conventional Commits).
+- [x] Add config files that are missing and update any existing ones with the strictest practical settings, e.g. `tsconfig.json` (TypeScript), `.eslintrc` (ESLint flat config), Prettier config. Add the appropriate ignore files for each configration. Make sure the commands to run linters and formatters are added to `package.json` scripts.
+- [x] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
+- [x] Set up Husky Git hooks to run linters, tests, and build commands, ensuring they run successfully before commit and push.
+- [x] Set up commitlint to enforce a consistent commit-message format (e.g. Conventional Commits).
 
 ---
 

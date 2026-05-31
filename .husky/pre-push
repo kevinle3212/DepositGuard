@@ -1,0 +1,6 @@
+#!/bin/sh
+# Full Clippy check before push (heavier than pre-commit)
+cargo lint
+
+# Run Anchor/TypeScript tests
+yarn test:anchor

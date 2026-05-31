@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "uoo-quackathon26eug-8200"
+  },
+  "targets": {},
+  "etags": {
+    "uoo-quackathon26eug-8200": {
+      "extensionInstances": {
+        "firestore-send-email": "61dc1ee4b9ba2701450f7345b4c892814a971b859c899821ac32fd7f1bb8d50c",
+        "firestore-send-email-kzwf": "31d3f2e9086f52acc9f4acc36ad307b46ece8b66906889ed229dee546d4a3efc"
+      }
+    }
   }
 }

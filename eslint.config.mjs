@@ -18,10 +18,7 @@ export default tseslint.config(
     // ── TypeScript files ──────────────────────────────────────────────────────
     {
         files: ["**/*.ts", "**/*.tsx"],
-        extends: [
-            ...tseslint.configs.strictTypeChecked,
-            ...tseslint.configs.stylisticTypeChecked,
-        ],
+        extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
         languageOptions: {
             parserOptions: {
                 project: true,
@@ -70,13 +67,13 @@ export default tseslint.config(
             "@typescript-eslint/no-redundant-type-constituents": "error",
 
             // General JavaScript
-            "eqeqeq": ["error", "always", { null: "ignore" }],
+            eqeqeq: ["error", "always", { null: "ignore" }],
             "no-console": "warn",
             "no-var": "error",
             "prefer-const": "error",
             "prefer-template": "error",
             "object-shorthand": "error",
-            "no-throw-literal": "off",              // replaced by @typescript-eslint version
+            "no-throw-literal": "off", // replaced by @typescript-eslint version
             "@typescript-eslint/only-throw-error": "error",
             "no-shadow": "off",
             "@typescript-eslint/no-shadow": "error",
@@ -86,11 +83,11 @@ export default tseslint.config(
     // ── JavaScript / config files (type-checking not available) ───────────────
     {
         files: ["**/*.js", "**/*.cjs"],
-        extends: [...tseslint.configs.disableTypeChecked],
+        extends: [tseslint.configs.disableTypeChecked],
         rules: {
             "no-var": "error",
             "prefer-const": "error",
-            "eqeqeq": ["error", "always"],
+            eqeqeq: ["error", "always"],
         },
     },
 
