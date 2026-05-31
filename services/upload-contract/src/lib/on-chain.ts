@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import { Connection, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js'
 
 const PROGRAM_ID = process.env.NEST_CROW_PROGRAM_ID ?? 'F1UroT66B49zt8kMCr8oRo89AsBo4BWebEJjDRH5wZ9a'
 const RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com'
@@ -46,11 +46,14 @@ export async function buildRecordContractHashTx(
     .instruction()
 
   const { blockhash } = await connection.getLatestBlockhash()
-  const tx = new Transaction({ recentBlockhash: blockhash, feePayer: caller })
-  tx.add(ix)
+  const message = new TransactionMessage({
+    payerKey: caller,
+    recentBlockhash: blockhash,
+    instructions: [ix],
+  }).compileToV0Message()
+  const tx = new VersionedTransaction(message)
 
-  const serialized = tx.serialize({ requireAllSignatures: false, verifySignatures: false })
-  return Buffer.from(serialized).toString('base64')
+  return Buffer.from(tx.serialize()).toString('base64')
 }
 
 export async function submitSignedTx(serializedTx: string): Promise<string> {

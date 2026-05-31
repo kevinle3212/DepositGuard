@@ -18,6 +18,9 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
         [],
     );
 
+    // Phantom and Solflare are explicitly registered. Backpack and other
+    // Wallet Standard-compliant wallets are auto-detected by the adapter at runtime
+    // if the extension is installed — no explicit adapter needed.
     const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
 
     return (

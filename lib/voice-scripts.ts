@@ -90,5 +90,11 @@ export const VOICE_SCRIPTS: Record<string, string> = {
 
 /** Replace {{key}} placeholders with values from the variables map. */
 export function interpolateScript(template: string, variables: Record<string, string>): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => variables[key] ?? "");
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => {
+        const val = variables[key];
+        if (val === undefined) {
+            console.warn(`[voice-scripts] Missing template variable "${key}"`);
+        }
+        return val ?? "";
+    });
 }

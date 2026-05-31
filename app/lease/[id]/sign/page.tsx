@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useWalletStore } from "@/src/store/useWalletStore";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Transaction } from "@solana/web3.js";
+import { VersionedTransaction } from "@solana/web3.js";
 import { getConnection } from "@/lib/solana";
 import { useVoice } from "@/src/hooks/useVoice";
 import { LeaseAgreementSummary } from "@/components/ui/LeaseAgreementSummary";
@@ -35,7 +35,6 @@ export default function SignPage() {
     const [contractFetched, setContractFetched] = useState(false);
     const [signStatus, setSignStatus] = useState<SignStatus>("idle");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const _canvasRef = useRef<HTMLCanvasElement>(null);
     const pdfProxyUrl = payload ? `/api/deposits/${payload.leaseId}/contract-pdf` : null;
 
     // Redirect to /connect if wallet is not connected — but never interrupt a
@@ -115,7 +114,7 @@ export default function SignPage() {
             .catch(() => {
                 setTokenStatus("invalid");
             });
-    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [token, params.id, userRole, router]);
 
     // Fetch the contract storage URL and hash from Firestore via Next.js API
     useEffect(() => {
@@ -137,8 +136,6 @@ export default function SignPage() {
                 setContractFetched(true);
             });
     }, [tokenStatus, payload]);
-
-    // canvasRef kept for potential future use but PDF is now rendered via iframe
 
     async function handleSign() {
         if (!wallet.signMessage || !wallet.publicKey || !payload || !contractHash) return;
@@ -195,11 +192,10 @@ export default function SignPage() {
                 const { unsignedTx } = (await txRes.json()) as { unsignedTx?: string };
                 if (unsignedTx && wallet.signTransaction) {
                     const txBytes = Buffer.from(unsignedTx, "base64");
-                    const tx = Transaction.from(txBytes);
+                    const tx = VersionedTransaction.deserialize(txBytes);
                     const connection = getConnection();
                     const { blockhash } = await connection.getLatestBlockhash();
-                    tx.recentBlockhash = blockhash;
-                    tx.feePayer = wallet.publicKey;
+                    tx.message.recentBlockhash = blockhash;
                     const signed = await wallet.signTransaction(tx);
                     const rawTx = signed.serialize();
                     await connection.sendRawTransaction(rawTx, { skipPreflight: false });
