@@ -39,6 +39,7 @@
         "NestCrow",
         "services",
         "**/services/**",
-        "oracle"
+        "oracle",
+        "agent"
     ]
 }

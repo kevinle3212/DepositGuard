@@ -1,259 +1,292 @@
-'use client'
+"use client";
 
-import { useState, useCallback } from 'react'
-import { useDropzone } from 'react-dropzone'
-import { Upload, X, ImageIcon, Loader2, CheckCircle2, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { Upload, X, ImageIcon, Loader2, CheckCircle2, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type PhotoPhase = 'move-in' | 'move-out'
+export type PhotoPhase = "move-in" | "move-out";
 
 interface StagedPhoto {
-  id: string
-  file: File
-  preview: string
-  description: string
+    id: string;
+    file: File;
+    preview: string;
+    description: string;
 }
 
-type SubmitStage = 'idle' | 'uploading' | 'hashing' | 'confirming' | 'waiting'
+type SubmitStage = "idle" | "uploading" | "hashing" | "confirming" | "waiting";
 
 interface PhotoVerificationProps {
-  phase: PhotoPhase
-  title?: string
-  onComplete?: (photos: Array<{ description: string; hash: string }>) => void
+    phase: PhotoPhase;
+    title?: string;
+    onComplete?: (photos: { description: string; hash: string }[]) => void;
 }
 
 // ── Dropzone ───────────────────────────────────────────────────────────────
 
 function PhotoDropzone({ onFiles }: { onFiles: (files: File[]) => void }) {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/png': ['.png'], 'image/jpeg': ['.jpg', '.jpeg'] },
-    onDrop: onFiles,
-    multiple: true,
-  })
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        accept: { "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] },
+        onDrop: onFiles,
+        multiple: true,
+    });
 
-  return (
-    <div
-      {...getRootProps()}
-      className={cn(
-        'flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors',
-        isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/40'
-      )}
-    >
-      <input {...getInputProps()} aria-label="Photo upload" />
-      <Upload className="h-7 w-7 text-muted-foreground mb-3" />
-      <p className="text-sm font-medium">
-        {isDragActive ? 'Drop images here' : 'Drag photos or click to browse'}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">PNG / JPEG · Multiple files accepted</p>
-    </div>
-  )
+    return (
+        <div
+            {...getRootProps()}
+            className={cn(
+                "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
+                isDragActive
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50 hover:bg-muted/40",
+            )}
+        >
+            <input {...getInputProps()} aria-label="Photo upload" />
+            <Upload className="h-7 w-7 text-muted-foreground mb-3" />
+            <p className="text-sm font-medium">
+                {isDragActive ? "Drop images here" : "Drag photos or click to browse"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+                PNG / JPEG · Multiple files accepted
+            </p>
+        </div>
+    );
 }
 
 // ── Thumbnail card ─────────────────────────────────────────────────────────
 
 function ThumbnailCard({
-  photo,
-  onDescriptionChange,
-  onDelete,
-  disabled,
+    photo,
+    onDescriptionChange,
+    onDelete,
+    disabled,
 }: {
-  photo: StagedPhoto
-  onDescriptionChange: (id: string, desc: string) => void
-  onDelete: (id: string) => void
-  disabled: boolean
+    photo: StagedPhoto;
+    onDescriptionChange: (id: string, desc: string) => void;
+    onDelete: (id: string) => void;
+    disabled: boolean;
 }) {
-  return (
-    <div className="group relative rounded-xl border border-border bg-card overflow-hidden">
-      {/* Thumbnail */}
-      <div className="aspect-square relative bg-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={photo.preview}
-          alt={photo.description || 'Property photo'}
-          className="h-full w-full object-cover"
-        />
-        {!disabled && (
-          <button
-            type="button"
-            onClick={() => onDelete(photo.id)}
-            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
-            aria-label="Delete photo"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-      {/* Description input */}
-      <div className="p-2">
-        <Input
-          value={photo.description}
-          onChange={(e) => onDescriptionChange(photo.id, e.target.value)}
-          placeholder="e.g. Living room wall near baseboard"
-          className="text-xs h-8"
-          disabled={disabled}
-          aria-label="Photo description"
-        />
-      </div>
-    </div>
-  )
+    return (
+        <div className="group relative rounded-xl border border-border bg-card overflow-hidden">
+            {/* Thumbnail */}
+            <div className="aspect-square relative bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={photo.preview}
+                    alt={photo.description || "Property photo"}
+                    className="h-full w-full object-cover"
+                />
+                {!disabled && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onDelete(photo.id);
+                        }}
+                        className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                        aria-label="Delete photo"
+                    >
+                        <X className="h-3.5 w-3.5" />
+                    </button>
+                )}
+            </div>
+            {/* Description input */}
+            <div className="p-2">
+                <Input
+                    value={photo.description}
+                    onChange={(e) => {
+                        onDescriptionChange(photo.id, e.target.value);
+                    }}
+                    placeholder="e.g. Living room wall near baseboard"
+                    className="text-xs h-8"
+                    disabled={disabled}
+                    aria-label="Photo description"
+                />
+            </div>
+        </div>
+    );
 }
 
 // ── Progress stages ────────────────────────────────────────────────────────
 
 const STAGE_LABELS: Record<SubmitStage, string> = {
-  idle: '',
-  uploading: 'Uploading images to Firebase Storage…',
-  hashing: 'Generating verification hashes…',
-  confirming: 'Recording hashes on-chain…',
-  waiting: 'Awaiting counterparty verification hash receipt…',
-}
+    idle: "",
+    uploading: "Uploading images to Firebase Storage…",
+    hashing: "Generating verification hashes…",
+    confirming: "Recording hashes on-chain…",
+    waiting: "Awaiting counterparty verification hash receipt…",
+};
 
-const STAGE_ORDER: SubmitStage[] = ['uploading', 'hashing', 'confirming', 'waiting']
+const STAGE_ORDER: SubmitStage[] = ["uploading", "hashing", "confirming", "waiting"];
 
 function ProgressTracker({ stage }: { stage: SubmitStage }) {
-  const activeIdx = STAGE_ORDER.indexOf(stage)
+    const activeIdx = STAGE_ORDER.indexOf(stage);
 
-  return (
-    <div className="space-y-3">
-      {STAGE_ORDER.map((s, i) => {
-        const done = i < activeIdx
-        const active = i === activeIdx
-        return (
-          <div key={s} className="flex items-center gap-3">
-            <div className={cn(
-              'flex h-6 w-6 items-center justify-center rounded-full flex-shrink-0 text-xs font-bold',
-              done ? 'bg-emerald-500 text-white' : active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            )}>
-              {done ? <CheckCircle2 className="h-4 w-4" /> : active ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : i + 1}
-            </div>
-            <span className={cn('text-sm', active ? 'font-semibold text-foreground' : done ? 'text-muted-foreground line-through' : 'text-muted-foreground')}>
-              {STAGE_LABELS[s]}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
+    return (
+        <div className="space-y-3">
+            {STAGE_ORDER.map((s, i) => {
+                const done = i < activeIdx;
+                const active = i === activeIdx;
+                return (
+                    <div key={s} className="flex items-center gap-3">
+                        <div
+                            className={cn(
+                                "flex h-6 w-6 items-center justify-center rounded-full flex-shrink-0 text-xs font-bold",
+                                done
+                                    ? "bg-emerald-500 text-white"
+                                    : active
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground",
+                            )}
+                        >
+                            {done ? (
+                                <CheckCircle2 className="h-4 w-4" />
+                            ) : active ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                i + 1
+                            )}
+                        </div>
+                        <span
+                            className={cn(
+                                "text-sm",
+                                active
+                                    ? "font-semibold text-foreground"
+                                    : done
+                                      ? "text-muted-foreground line-through"
+                                      : "text-muted-foreground",
+                            )}
+                        >
+                            {STAGE_LABELS[s]}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 // ── Main export ────────────────────────────────────────────────────────────
 
 export function PhotoVerification({ phase, title, onComplete }: PhotoVerificationProps) {
-  const [photos, setPhotos] = useState<StagedPhoto[]>([])
-  const [stage, setStage] = useState<SubmitStage>('idle')
+    const [photos, setPhotos] = useState<StagedPhoto[]>([]);
+    const [stage, setStage] = useState<SubmitStage>("idle");
 
-  const heading = title ?? (phase === 'move-in' ? 'Move-In Photo Documentation' : 'Move-Out Photo Documentation')
+    const heading =
+        title ??
+        (phase === "move-in" ? "Move-In Photo Documentation" : "Move-Out Photo Documentation");
 
-  const onDrop = useCallback((files: File[]) => {
-    const newPhotos: StagedPhoto[] = files.map((file) => ({
-      id: `${file.name}-${Date.now()}-${Math.random()}`,
-      file,
-      preview: URL.createObjectURL(file),
-      description: '',
-    }))
-    setPhotos((prev) => [...prev, ...newPhotos])
-  }, [])
+    const onDrop = useCallback((files: File[]) => {
+        const newPhotos: StagedPhoto[] = files.map((file) => ({
+            id: `${file.name}-${Date.now()}-${Math.random()}`,
+            file,
+            preview: URL.createObjectURL(file),
+            description: "",
+        }));
+        setPhotos((prev) => [...prev, ...newPhotos]);
+    }, []);
 
-  const handleDescriptionChange = (id: string, desc: string) => {
-    setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, description: desc } : p)))
-  }
+    const handleDescriptionChange = (id: string, desc: string) => {
+        setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, description: desc } : p)));
+    };
 
-  const handleDelete = (id: string) => {
-    setPhotos((prev) => {
-      const removed = prev.find((p) => p.id === id)
-      if (removed) URL.revokeObjectURL(removed.preview)
-      return prev.filter((p) => p.id !== id)
-    })
-  }
+    const handleDelete = (id: string) => {
+        setPhotos((prev) => {
+            const removed = prev.find((p) => p.id === id);
+            if (removed) URL.revokeObjectURL(removed.preview);
+            return prev.filter((p) => p.id !== id);
+        });
+    };
 
-  async function handleSubmit() {
-    if (photos.length === 0) return
-    const stages: SubmitStage[] = ['uploading', 'hashing', 'confirming', 'waiting']
+    async function handleSubmit() {
+        if (photos.length === 0) return;
+        const stages: SubmitStage[] = ["uploading", "hashing", "confirming", "waiting"];
 
-    for (const s of stages) {
-      setStage(s)
-      const delay = s === 'waiting' ? 400 : 900
-      await new Promise((r) => setTimeout(r, delay))
-      if (s !== 'waiting') continue
-      // Arrive at waiting state — call onComplete with mock hashes
-      const results = photos.map((p) => ({
-        description: p.description || p.file.name,
-        hash: Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-      }))
-      onComplete?.(results)
+        for (const s of stages) {
+            setStage(s);
+            const delay = s === "waiting" ? 400 : 900;
+            await new Promise((r) => setTimeout(r, delay));
+            if (s !== "waiting") continue;
+            // Arrive at waiting state — call onComplete with mock hashes
+            const results = photos.map((p) => ({
+                description: p.description || p.file.name,
+                hash: Array.from({ length: 16 }, () =>
+                    Math.floor(Math.random() * 16).toString(16),
+                ).join(""),
+            }));
+            onComplete?.(results);
+        }
     }
-  }
 
-  const isSubmitting = stage !== 'idle' && stage !== 'waiting'
-  const isWaiting = stage === 'waiting'
+    const isSubmitting = stage !== "idle" && stage !== "waiting";
+    const isWaiting = stage === "waiting";
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold tracking-tight">{heading}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Upload photos with descriptive labels. All images are hashed and recorded on-chain.
-        </p>
-      </div>
+    return (
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-lg font-bold tracking-tight">{heading}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Upload photos with descriptive labels. All images are hashed and recorded
+                    on-chain.
+                </p>
+            </div>
 
-      {/* Dropzone — hide after submission */}
-      {stage === 'idle' && (
-        <PhotoDropzone onFiles={onDrop} />
-      )}
+            {/* Dropzone — hide after submission */}
+            {stage === "idle" && <PhotoDropzone onFiles={onDrop} />}
 
-      {/* Photo grid */}
-      {photos.length > 0 && !isWaiting && (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          {photos.map((photo) => (
-            <ThumbnailCard
-              key={photo.id}
-              photo={photo}
-              onDescriptionChange={handleDescriptionChange}
-              onDelete={handleDelete}
-              disabled={isSubmitting}
-            />
-          ))}
+            {/* Photo grid */}
+            {photos.length > 0 && !isWaiting && (
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                    {photos.map((photo) => (
+                        <ThumbnailCard
+                            key={photo.id}
+                            photo={photo}
+                            onDescriptionChange={handleDescriptionChange}
+                            onDelete={handleDelete}
+                            disabled={isSubmitting}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Progress tracker */}
+            {stage !== "idle" && (
+                <div className="rounded-xl border border-border bg-card p-5">
+                    <p className="text-sm font-semibold mb-4">Upload Progress</p>
+                    <ProgressTracker stage={stage} />
+                </div>
+            )}
+
+            {/* Waiting state */}
+            {isWaiting && (
+                <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+                    <Clock className="h-6 w-6 text-amber-600 flex-shrink-0" />
+                    <div>
+                        <p className="text-sm font-bold text-amber-800">
+                            Awaiting counterparty verification hash receipt…
+                        </p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                            {photos.length} photo{photos.length !== 1 ? "s" : ""} submitted. The
+                            other party must acknowledge your documentation.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Submit button */}
+            {stage === "idle" && (
+                <Button
+                    onClick={handleSubmit}
+                    disabled={photos.length === 0}
+                    className="w-full gap-2"
+                >
+                    <ImageIcon className="h-4 w-4" />
+                    Submit Property Records ({photos.length} photo{photos.length !== 1 ? "s" : ""})
+                </Button>
+            )}
         </div>
-      )}
-
-      {/* Progress tracker */}
-      {stage !== 'idle' && (
-        <div className="rounded-xl border border-border bg-card p-5">
-          <p className="text-sm font-semibold mb-4">Upload Progress</p>
-          <ProgressTracker stage={stage} />
-        </div>
-      )}
-
-      {/* Waiting state */}
-      {isWaiting && (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-          <Clock className="h-6 w-6 text-amber-600 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-bold text-amber-800">
-              Awaiting counterparty verification hash receipt…
-            </p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              {photos.length} photo{photos.length !== 1 ? 's' : ''} submitted. The other party must acknowledge your documentation.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Submit button */}
-      {stage === 'idle' && (
-        <Button
-          onClick={handleSubmit}
-          disabled={photos.length === 0}
-          className="w-full gap-2"
-        >
-          <ImageIcon className="h-4 w-4" />
-          Submit Property Records ({photos.length} photo{photos.length !== 1 ? 's' : ''})
-        </Button>
-      )}
-    </div>
-  )
+    );
 }
