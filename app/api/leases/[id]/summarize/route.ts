@@ -81,17 +81,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const result = await model.generateContent([
-        {
-            inlineData: {
-                mimeType: "application/pdf",
-                data: pdfBase64,
+    let raw: string;
+    try {
+        const result = await model.generateContent([
+            {
+                inlineData: {
+                    mimeType: "application/pdf",
+                    data: pdfBase64,
+                },
             },
-        },
-        SUMMARIZE_PROMPT(language),
-    ]);
-
-    const raw = result.response.text().trim();
+            SUMMARIZE_PROMPT(language),
+        ]);
+        raw = result.response.text().trim();
+    } catch (err) {
+        // Always return JSON so the client never hits "Unexpected end of JSON input".
+        const message = err instanceof Error ? err.message : "Gemini request failed";
+        return NextResponse.json({ error: `AI summarization failed: ${message}` }, { status: 502 });
+    }
 
     if (!raw) {
         return NextResponse.json(

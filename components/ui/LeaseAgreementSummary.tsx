@@ -56,15 +56,32 @@ export function LeaseAgreementSummary({ leaseId, hasPdf }: Props) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ lang }),
                 });
-                if (!res.ok) {
-                    const { error: msg } = (await res.json()) as { error?: string };
-                    throw new Error(msg ?? "Summarization failed");
+
+                // Read the body as text first, then parse defensively. The server
+                // can occasionally respond with an empty or non-JSON body (gateway
+                // timeout, crashed handler), and res.json() would otherwise throw
+                // "Unexpected end of JSON input".
+                const rawBody = await res.text();
+                let parsed: { error?: string; summary?: SummaryData } = {};
+                if (rawBody) {
+                    try {
+                        parsed = JSON.parse(rawBody) as typeof parsed;
+                    } catch {
+                        parsed = {};
+                    }
                 }
-                const { summary } = (await res.json()) as { summary: SummaryData };
+
+                if (!res.ok) {
+                    throw new Error(parsed.error ?? `Summarization failed (${res.status})`);
+                }
+                if (!parsed.summary) {
+                    throw new Error("The AI returned an unreadable summary. Please try again.");
+                }
+                const summary = parsed.summary;
                 setCache((prev) => ({ ...prev, [lang]: summary }));
                 setActiveLang(lang);
             } catch (err) {
-                setError(String(err));
+                setError(err instanceof Error ? err.message : "Summarization failed");
             } finally {
                 setLoadingLang(null);
             }
