@@ -43,10 +43,22 @@ env:
     # Example: https://notify-<hash>-uc.a.run.app
     - variable: PORT
       value: "8080"
+    # ElevenLabs voice IDs — defaults are baked into the code but can be overridden here
+    - variable: ELEVENLABS_VOICE_ID_PLATFORM_GUIDE
+      value: DXFkLCBUTmvXpp2QwZjA
+    - variable: ELEVENLABS_VOICE_ID_DISPUTE_ADVISOR
+      value: pNInz6obpgDQGcFmaJgB
+    # ElevenLabs conversational AI agent ID (sent to browser — safe to inline)
+    - variable: NEXT_PUBLIC_ELEVEN_AGENT_PLATFORM_GUIDE
+      value: agent_3501ksy9mmx5fzmvsrqbx2g0p3by
 
     # ── Secrets (stored in Secret Manager) ──────────────────────────────────
     - variable: GEMINI_API_KEY
       secret: GEMINI_API_KEY
+    # ElevenLabs server-side API key — used by /api/tts for voice generation
+    # Create in Secret Manager: gcloud secrets create ELEVENLABS_API_KEY --project=uoo-quackathon26eug-8200
+    - variable: ELEVENLABS_API_KEY
+      secret: ELEVENLABS_API_KEY
     - variable: JWT_SIGNING_SECRET
       secret: JWT_SIGNING_SECRET
     - variable: SENDGRID_API_KEY
