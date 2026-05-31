@@ -98,7 +98,7 @@ function EmptyState({ role }: { role: 'landlord' | 'tenant' }) {
 
 export default function DashboardPage() {
   const { walletPubkey, userRole, setUserRole } = useWalletStore()
-  const [devRole, setDevRole] = useState<'landlord' | 'tenant'>(userRole ?? 'landlord')
+  const [devRole, setDevRole] = useState<'landlord' | 'tenant'>((userRole === 'arbitrator' ? 'landlord' : userRole) ?? 'landlord')
 
   const { data: leases, isLoading, isError } = useFetchLeases(walletPubkey ?? '')
 

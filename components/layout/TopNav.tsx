@@ -26,7 +26,7 @@ const NAV_LINKS = [
   { href: '/deposits', label: 'Deposits', icon: FileText },
 ]
 
-function RoleBadge({ role }: { role: 'landlord' | 'tenant' | null }) {
+function RoleBadge({ role }: { role: 'landlord' | 'tenant' | 'arbitrator' | null }) {
   if (!role) return null
   return (
     <span

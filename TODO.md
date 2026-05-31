@@ -157,13 +157,13 @@
 
 > Depends on Sections 7, 8, and 9.
 
-- [ ] Scaffold Next.js 14 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui.
-- [ ] Configure `@solana/wallet-adapter-react` and `@solana/wallet-adapter-phantom`; configure RainbowKit and `wagmi` for EVM wallets; configure Tangem SDK.
-- [ ] Build the `/connect` page: unified wallet modal for Solana, EVM, and hardware wallets; on connect, call `/api/verify-wallet` with the challenge signature; store `walletConnected = true` in Zustand on success.
-- [ ] Implement Next.js middleware that checks `walletConnected` in session and redirects to `/connect` for all routes except `/connect` and `/login`.
-- [ ] Build the role-aware `/dashboard` page: different views and actions for landlord vs. tenant based on Firebase Auth JWT.
-- [ ] Set up `zustand` store for wallet state and lease status; set up `@tanstack/react-query` for all server state fetching and caching.
-- [ ] Integrate `firebase` client SDK for Auth, Firestore, and Storage.
+- [x] Scaffold Next.js 14 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui.
+- [x] Configure `@solana/wallet-adapter-react` and `@solana/wallet-adapter-phantom`; configure RainbowKit and `wagmi` for EVM wallets; configure Tangem SDK. (`@tangem/tangem-sdk-web` is not on npm; placeholder + comment in `/connect` page.)
+- [x] Build the `/connect` page: unified wallet modal for Solana, EVM, and hardware wallets; on connect, call `/api/verify-wallet` with the challenge signature; store `walletConnected = true` in Zustand on success.
+- [x] Implement Next.js middleware that checks `walletConnected` in session and redirects to `/connect` for all routes except `/connect` and `/login`.
+- [x] Build the role-aware `/dashboard` page: different views and actions for landlord vs. tenant based on Firebase Auth JWT.
+- [x] Set up `zustand` store for wallet state and lease status; set up `@tanstack/react-query` for all server state fetching and caching.
+- [x] Integrate `firebase` client SDK for Auth, Firestore, and Storage.
 
 ---
 
@@ -171,11 +171,11 @@
 
 > Depends on Section 11.
 
-- [ ] Build the `/lease/[id]/setup` page: landlord creates a new lease (deposit amount, jurisdiction, tenant email); triggers `initialize_escrow` on-chain.
-- [ ] Build the contract upload UI using `react-dropzone`; call `/api/upload-contract`; display upload status and contract hash confirmation.
-- [ ] Build the move-in photo upload UI: `react-dropzone` for both parties; call Firebase Cloud Storage upload directly from client; trigger `record_photo_hash` on-chain after both parties upload.
-- [ ] Build the move-out photo upload UI following the same pattern as move-in.
-- [ ] Show wallet balance and USDC balance before any payment step; surface clear errors if insufficient funds.
+- [x] Build the `/lease/[id]/setup` page: landlord creates a new lease (deposit amount, jurisdiction, tenant email); triggers `initialize_escrow` on-chain.
+- [x] Build the contract upload UI using `react-dropzone`; call `/api/upload-contract`; display upload status and contract hash confirmation.
+- [x] Build the move-in photo upload UI: `react-dropzone` for both parties; call Firebase Cloud Storage upload directly from client; trigger `record_photo_hash` on-chain after both parties upload.
+- [x] Build the move-out photo upload UI following the same pattern as move-in.
+- [x] Show wallet balance and USDC balance before any payment step; surface clear errors if insufficient funds.
 
 ---
 
@@ -183,12 +183,12 @@
 
 > Depends on Sections 3, 4, 5, 6, and 12.
 
-- [ ] Build the `/lease/[id]/assessment` page: display Gemini's itemized estimate with the "Estimate Only" advisory label; allow landlord to accept, modify, or reject each line item; surface the 15% auto-flag warning if triggered.
-- [ ] Build the deposit return flow: landlord issues deduction statement; tenant reviews; "Agree" calls `approve_release()`; "Dispute" calls `open_dispute()`.
-- [ ] Build the `/lease/[id]/dispute` page: direct negotiation UI (both parties propose revised splits); tier indicators (Negotiation → Mediation → Arbitration → Court); sealed estimate submission form (neither party sees the other's until both submit).
-- [ ] Build the arbitration fee payment UI: show $50 USDC fee per party; connect to `pay_arbitration_fee()` on-chain; show 72-hour countdown; show refund-if-unused disclaimer.
-- [ ] Build the panel upgrade UI: show optional $25 each; connect to `pay_panel_upgrade_fee()`; require both parties to confirm.
-- [ ] Build the `/lease/[id]/arbitration` page: show panel composition (with conflict-of-interest disclosures); show sealed ruling status per panelist; reveal all three rulings simultaneously after all are submitted; display adopted ruling, minority dissent notice (if any), and 14-day escalation countdown.
+- [x] Build the `/lease/[id]/assessment` page: display Gemini's itemized estimate with the "Estimate Only" advisory label; allow landlord to accept, modify, or reject each line item; surface the 15% auto-flag warning if triggered.
+- [x] Build the deposit return flow: landlord issues deduction statement; tenant reviews; "Agree" calls `approve_release()`; "Dispute" calls `open_dispute()`.
+- [x] Build the `/lease/[id]/dispute` page: direct negotiation UI (both parties propose revised splits); tier indicators (Negotiation → Mediation → Arbitration → Court); sealed estimate submission form (neither party sees the other's until both submit).
+- [x] Build the arbitration fee payment UI: show $50 USDC fee per party; connect to `pay_arbitration_fee()` on-chain; show 72-hour countdown; show refund-if-unused disclaimer.
+- [x] Build the panel upgrade UI: show optional $25 each; connect to `pay_panel_upgrade_fee()`; require both parties to confirm.
+- [x] Build the `/lease/[id]/arbitration` page: show panel composition (with conflict-of-interest disclosures); show sealed ruling status per panelist; reveal all three rulings simultaneously after all are submitted; display adopted ruling, minority dissent notice (if any), and 14-day escalation countdown.
 
 ---
 
@@ -226,6 +226,7 @@
 - [x] Add a Rust linter config for Clippy (`clippy.toml` or workspace-level `deny.toml`); enforce on `anchor build`.
 - [x] Set up Husky Git hooks to run linters, tests, and build commands, ensuring they run successfully before commit and push.
 - [x] Set up commitlint to enforce a consistent commit-message format (e.g. Conventional Commits).
+- [x] Standardize package-manager conventions: root uses Yarn (`yarn.lock`); each `services/*` Cloud Run package uses npm with its own `package-lock.json`. Removed the stray root `package-lock.json`, scoped the `.gitignore` rule to `/package-lock.json` (root only), and added the missing lockfile for `services/tts` so every service has a reproducible build.
 
 ---
 
@@ -241,7 +242,7 @@
 
 ## 18. Project Docs (Root-Level Markdown)
 
-- [ ] `README.md` — project overview, purpose, setup instructions, and contribution pointer.
+- [x] `README.md` — project overview, purpose, setup instructions, and contribution pointer.
 - [ ] `CONTRIBUTING.md` — coding standards, commit-message conventions, PR process.
 - [ ] `SECURITY.md` — security policy, how to report vulnerabilities, and handling process.
 

@@ -124,4 +124,7 @@ TODO.local.md
 
 # Temporary files
 .tmp/
-package-lock.json
+
+# Root uses Yarn; ignore only the root npm lockfile. Cloud Run services
+# under services/* are standalone npm packages and keep their own lockfiles.
+/package-lock.json
