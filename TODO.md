@@ -157,7 +157,7 @@
 
 > Depends on Sections 7, 8, and 9.
 
-- [x] Scaffold Next.js 14 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui.
+- [x] Scaffold Next.js 14.2 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui. (Pinned at 14.2.35; Next 15 migration tracked in §22.)
 - [x] Configure `@solana/wallet-adapter-react` and `@solana/wallet-adapter-phantom`; configure RainbowKit and `wagmi` for EVM wallets; configure Tangem SDK. (`@tangem/tangem-sdk-web` is not on npm; placeholder + comment in `/connect` page.)
 - [x] Build the `/connect` page: unified wallet modal for Solana, EVM, and hardware wallets; on connect, call `/api/verify-wallet` with the challenge signature; store `walletConnected = true` in Zustand on success.
 - [x] Implement Next.js middleware that checks `walletConnected` in session and redirects to `/connect` for all routes except `/connect` and `/login`.
