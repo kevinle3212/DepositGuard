@@ -288,8 +288,7 @@ export default function LeaseSetupPage() {
             });
 
             // Announce to the landlord that the lease was sent to the tenant
-            const shortTenant =
-                data.tenantAddress.slice(0, 4) + "…" + data.tenantAddress.slice(-4);
+            const shortTenant = `${data.tenantAddress.slice(0, 4)}…${data.tenantAddress.slice(-4)}`;
             void speak("lease.sent", { tenantAddress: shortTenant });
 
             // Generate a landlord signing token so the sign page validates correctly

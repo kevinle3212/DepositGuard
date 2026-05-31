@@ -17,8 +17,8 @@ export function DepositCard({ deposit, myAddress }: DepositCardProps) {
     const counterpartyLabel = isLandlord ? "Tenant" : "Landlord";
 
     // Show a pending pill when signatures are still outstanding
-    const signaturesComplete = deposit.landlordSigned && deposit.tenantSigned;
-    const needsMySignature = isLandlord ? !deposit.landlordSigned : !deposit.tenantSigned;
+    const signaturesComplete = deposit.landlordSigned === true && deposit.tenantSigned === true;
+    const needsMySignature = isLandlord ? deposit.landlordSigned !== true : deposit.tenantSigned !== true;
     const showSignaturePending =
         deposit.landlordSigned !== undefined &&
         !signaturesComplete &&
