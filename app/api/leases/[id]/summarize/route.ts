@@ -82,7 +82,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // gemini-2.0-flash was retired for new projects; default to a current model
     // and allow an env override so the model can be bumped without a code change.
     const modelName = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+            temperature: 0.2,
+            // Force clean JSON output. Without this, gemini-2.5-flash (a thinking
+            // model) tends to wrap the response in markdown fences or prose, which
+            // breaks JSON.parse and surfaces as an AI-summary error in the UI.
+            responseMimeType: "application/json",
+            // Generous ceiling so thinking tokens + the JSON body are not truncated.
+            maxOutputTokens: 8192,
+        },
+    });
 
     let raw: string;
     try {
