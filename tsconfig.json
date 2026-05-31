@@ -18,5 +18,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "programs", "tests", "target", "DepositGuard", "services", "**/services/**"]
+  "exclude": ["node_modules", "programs", "tests", "target", "DepositGuard", "services", "**/services/**", "oracle"]
 }
