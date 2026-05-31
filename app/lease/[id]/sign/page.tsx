@@ -31,6 +31,7 @@ export default function SignPage() {
     const [payload, setPayload] = useState<TokenPayload | null>(null);
     const [contractUrl, setContractUrl] = useState<string | null>(null);
     const [contractHash, setContractHash] = useState<string | null>(null);
+    const [contractFetched, setContractFetched] = useState(false);
     const [signStatus, setSignStatus] = useState<SignStatus>("idle");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,12 +98,14 @@ export default function SignPage() {
                         contractHash?: string;
                     };
                     setContractUrl(data.contractStorageUrl ?? null);
-                    setContractHash(data.contractHash ?? null);
+                    // Fall back to lease ID so the sign button is never permanently blocked
+                    setContractHash(data.contractHash ?? payload.leaseId);
                 }
             })
             .catch((_e: unknown) => {
-                /* intentional */
-            });
+                setContractHash(payload.leaseId);
+            })
+            .finally(() => setContractFetched(true));
     }, [tokenStatus, payload]);
 
     // Render PDF using pdfjs-dist when contractUrl is available
@@ -286,6 +289,11 @@ export default function SignPage() {
                 >
                     {contractUrl ? (
                         <canvas ref={canvasRef} className="shadow" />
+                    ) : contractFetched ? (
+                        <div className="self-center text-center space-y-2">
+                            <p className="text-muted-foreground text-sm">No contract PDF uploaded.</p>
+                            <p className="text-xs text-muted-foreground">You can still sign to confirm the lease terms.</p>
+                        </div>
                     ) : (
                         <p className="text-muted-foreground self-center">Loading contract PDF…</p>
                     )}

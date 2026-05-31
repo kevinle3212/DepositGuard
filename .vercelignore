@@ -1,0 +1,13 @@
+target/
+.cargo/
+.yarn/
+.serena/
+.sixth/
+.agents/
+.claude/
+base44/
+programs/
+tests/
+coverage/
+.nyc_output/
+*.tsbuildinfo
