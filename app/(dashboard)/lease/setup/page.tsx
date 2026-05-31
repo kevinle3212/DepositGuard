@@ -31,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { cn } from "@/lib/utils";
 import { useCreateLease } from "@/src/hooks/useLeaseApi";
 import { useWalletStore } from "@/src/store/useWalletStore";
+import { useVoice } from "@/src/hooks/useVoice";
 import { storage } from "@/src/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -250,6 +251,7 @@ export default function LeaseSetupPage() {
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const createLease = useCreateLease();
+    const { speak } = useVoice();
 
     const {
         register,
@@ -284,6 +286,11 @@ export default function LeaseSetupPage() {
                       }
                     : {}),
             });
+
+            // Announce to the landlord that the lease was sent to the tenant
+            const shortTenant =
+                data.tenantAddress.slice(0, 4) + "…" + data.tenantAddress.slice(-4);
+            void speak("lease.sent", { tenantAddress: shortTenant });
 
             // Generate a landlord signing token so the sign page validates correctly
             const tokenRes = await fetch("/api/sign/generate", {

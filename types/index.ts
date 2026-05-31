@@ -2,6 +2,7 @@ export type DepositStatus =
   | 'Created'
   | 'Funded'
   | 'Pending Documentation'
+  | 'Pending Signature'
   | 'Active'
   | 'Move-Out Pending'
   | 'Assessed'
@@ -30,6 +31,8 @@ export interface Deposit {
   moveOutDate?: string
   assessmentNotes?: string
   claimAmount?: number
+  landlordSigned?: boolean
+  tenantSigned?: boolean
   timeline: TimelineEvent[]
 }
 
@@ -67,6 +70,7 @@ export const DEPOSIT_STATUS_ORDER: DepositStatus[] = [
   'Created',
   'Funded',
   'Pending Documentation',
+  'Pending Signature',
   'Active',
   'Move-Out Pending',
   'Assessed',

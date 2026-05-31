@@ -57,10 +57,10 @@ export const STATUS_CONFIG: Record<
   { label: string; color: string; bg: string; dot: string }
 > = {
   Created: {
-    label: 'Created',
-    color: 'text-slate-600',
-    bg: 'bg-slate-100',
-    dot: 'bg-slate-400',
+    label: 'Awaiting Signatures',
+    color: 'text-yellow-700',
+    bg: 'bg-yellow-50',
+    dot: 'bg-yellow-500',
   },
   Funded: {
     label: 'Funded',
@@ -73,6 +73,12 @@ export const STATUS_CONFIG: Record<
     color: 'text-amber-700',
     bg: 'bg-amber-50',
     dot: 'bg-amber-500',
+  },
+  'Pending Signature': {
+    label: 'Pending Signature',
+    color: 'text-yellow-700',
+    bg: 'bg-yellow-50',
+    dot: 'bg-yellow-500',
   },
   Active: {
     label: 'Active',

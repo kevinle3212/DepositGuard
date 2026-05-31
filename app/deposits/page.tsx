@@ -24,12 +24,11 @@ import { DEPOSIT_STATUS_ORDER } from "@/types";
 const ALL_STATUSES: DepositStatus[] = DEPOSIT_STATUS_ORDER;
 
 export default function DepositsPage() {
-    const { walletPubkey: publicKey } = useWalletStore();
+    const { walletPubkey: publicKey, userRole } = useWalletStore();
     const { data: deposits, isLoading } = useDeposits(publicKey ?? undefined);
 
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
-    const [roleFilter, setRoleFilter] = useState<string>("all");
 
     const filtered = useMemo(() => {
         if (!deposits) return [];
@@ -42,14 +41,18 @@ export default function DepositsPage() {
 
             const matchesStatus = statusFilter === "all" || d.status === statusFilter;
 
+            // Hard-filter by the user's role — landlords only see contracts they
+            // own; tenants only see contracts they're invited to.
             const matchesRole =
-                roleFilter === "all" ||
-                (roleFilter === "landlord" && d.landlordAddress === publicKey) ||
-                (roleFilter === "tenant" && d.tenantAddress === publicKey);
+                userRole === "landlord"
+                    ? d.landlordAddress === publicKey
+                    : userRole === "tenant"
+                      ? d.tenantAddress === publicKey
+                      : true;
 
             return matchesSearch && matchesStatus && matchesRole;
         });
-    }, [deposits, search, statusFilter, roleFilter, publicKey]);
+    }, [deposits, search, statusFilter, userRole, publicKey]);
 
     return (
         <>
@@ -102,16 +105,6 @@ export default function DepositsPage() {
                                 </SelectContent>
                             </Select>
 
-                            <Select value={roleFilter} onValueChange={setRoleFilter}>
-                                <SelectTrigger className="w-36">
-                                    <SelectValue placeholder="Role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All roles</SelectItem>
-                                    <SelectItem value="landlord">Landlord</SelectItem>
-                                    <SelectItem value="tenant">Tenant</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
                     </div>
 

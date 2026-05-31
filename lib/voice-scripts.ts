@@ -19,12 +19,19 @@ export const VOICE_SCRIPTS: Record<string, string> = {
         "NestCrow holds security deposits in on-chain escrow so neither party can touch the funds until both agree. " +
         "Let me walk you through the next steps.",
 
+    // Lease creation / sending to tenant
+    "lease.sent":
+        "Lease agreement successfully sent to {{tenantAddress}}. " +
+        "Please review and sign the contract below to complete your side of the agreement.",
+
     // Contract signing
     "contract.signing":
         "Please review the lease agreement and sign with your wallet to confirm your identity. " +
         "Your signature is recorded on-chain and cannot be altered.",
+    "contract.landlord.signed":
+        "Your signature has been recorded. A signing link has been issued for the tenant to review and confirm the agreement.",
     "contract.signed":
-        "Both parties have signed the contract. The lease is now active and the deposit window is open.",
+        "Both parties have now signed the contract. The lease is now active and the deposit window is open.",
 
     // Escrow funding
     "escrow.funded":
