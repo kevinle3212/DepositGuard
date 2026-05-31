@@ -28,7 +28,7 @@ function normalizeLeaseDoc(
 
 export async function GET(req: NextRequest) {
     initFirebaseAdmin();
-    const wallet = req.nextUrl.searchParams.get("wallet");
+    const wallet = req.nextUrl.searchParams.get("wallet")?.trim();
     if (!wallet) {
         return NextResponse.json({ error: "wallet query param required" }, { status: 400 });
     }

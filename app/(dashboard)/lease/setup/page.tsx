@@ -94,7 +94,7 @@ const leaseSetupSchema = z.object({
     city: z.string().min(2, "City required"),
     state: z.string().length(2, "Select a US state"),
     zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP"),
-    tenantAddress: z.string().min(32, "Invalid wallet address").max(44),
+    tenantAddress: z.string().trim().min(32, "Invalid wallet address").max(44),
     depositAmount: z.number().min(1, "Minimum $1").max(100_000, "Maximum $100,000"),
     currency: z.enum(["USDC", "SOL"]),
     leaseStart: z.string().min(1, "Required"),
