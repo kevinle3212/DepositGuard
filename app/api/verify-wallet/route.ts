@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
         // Validate that the nonce was issued by our server and hasn't been used before.
         // This prevents replay attacks: once consumed, the same nonce cannot be reused.
-        if (!consume(pubkey, nonce)) {
+        if (!(await consume(pubkey, nonce))) {
             return NextResponse.json({ error: "Invalid or expired nonce" }, { status: 401 });
         }
 
