@@ -79,7 +79,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // gemini-2.0-flash was retired for new projects; default to a current model
+    // and allow an env override so the model can be bumped without a code change.
+    const modelName = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     let raw: string;
     try {

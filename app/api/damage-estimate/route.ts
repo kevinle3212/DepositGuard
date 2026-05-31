@@ -2,8 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 // ── Gemini model ────────────────────────────────────────────────────────────
-// Use the latest Gemini image-capable model.
-const GEMINI_MODEL = "gemini-2.0-flash";
+// Use a current Gemini image-capable model. gemini-2.0-flash was retired for
+// new projects; default to gemini-2.5-flash and allow an env override.
+const GEMINI_MODEL = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
 
 // ── Guardrailed system prompt ───────────────────────────────────────────────
 //
