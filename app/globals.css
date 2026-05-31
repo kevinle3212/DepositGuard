@@ -3,107 +3,209 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Calm fintech palette — slate · emerald · amber */
+    :root {
+        /* Calm fintech palette — slate · emerald · amber */
 
-    /* Backgrounds */
-    --background: 210 20% 98%;        /* slate-50 tint */
-    --foreground: 215 25% 12%;        /* slate-900 */
+        /* Backgrounds */
+        --background: 210 20% 98%; /* slate-50 tint */
+        --foreground: 215 25% 12%; /* slate-900 */
 
-    /* Card surfaces */
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 12%;
+        /* Card surfaces */
+        --card: 0 0% 100%;
+        --card-foreground: 215 25% 12%;
 
-    /* Popover */
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 12%;
+        /* Popover */
+        --popover: 0 0% 100%;
+        --popover-foreground: 215 25% 12%;
 
-    /* Primary — slate-700 (trustworthy, calm) */
-    --primary: 215 28% 30%;
-    --primary-foreground: 210 40% 98%;
+        /* Primary — slate-700 (trustworthy, calm) */
+        --primary: 215 28% 30%;
+        --primary-foreground: 210 40% 98%;
 
-    /* Secondary — slate-100 */
-    --secondary: 210 20% 94%;
-    --secondary-foreground: 215 25% 25%;
+        /* Secondary — slate-100 */
+        --secondary: 210 20% 94%;
+        --secondary-foreground: 215 25% 25%;
 
-    /* Muted */
-    --muted: 210 18% 93%;
-    --muted-foreground: 215 16% 47%;
+        /* Muted */
+        --muted: 210 18% 93%;
+        --muted-foreground: 215 16% 47%;
 
-    /* Accent — emerald tint */
-    --accent: 152 60% 94%;
-    --accent-foreground: 152 55% 20%;
+        /* Accent — emerald tint */
+        --accent: 152 60% 94%;
+        --accent-foreground: 152 55% 20%;
 
-    /* Destructive */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+        /* Destructive */
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
 
-    /* Borders & inputs */
-    --border: 214 22% 88%;
-    --input: 214 22% 88%;
-    --ring: 215 28% 30%;
+        /* Borders & inputs */
+        --border: 214 22% 88%;
+        --input: 214 22% 88%;
+        --ring: 215 28% 30%;
 
-    --radius: 0.75rem;
-  }
+        --radius: 0.75rem;
+    }
 
-  .dark {
-    --background: 215 30% 8%;
-    --foreground: 210 40% 96%;
-    --card: 215 28% 11%;
-    --card-foreground: 210 40% 96%;
-    --popover: 215 28% 11%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 152 50% 48%;           /* emerald in dark mode */
-    --primary-foreground: 215 30% 8%;
-    --secondary: 215 26% 18%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 215 26% 18%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 152 40% 18%;
-    --accent-foreground: 152 55% 80%;
-    --destructive: 0 63% 42%;
-    --destructive-foreground: 210 40% 96%;
-    --border: 215 26% 20%;
-    --input: 215 26% 20%;
-    --ring: 152 50% 48%;
-  }
+    .dark {
+        --background: 215 30% 8%;
+        --foreground: 210 40% 96%;
+        --card: 215 28% 11%;
+        --card-foreground: 210 40% 96%;
+        --popover: 215 28% 11%;
+        --popover-foreground: 210 40% 96%;
+        --primary: 152 50% 48%; /* emerald in dark mode */
+        --primary-foreground: 215 30% 8%;
+        --secondary: 215 26% 18%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 215 26% 18%;
+        --muted-foreground: 215 20% 55%;
+        --accent: 152 40% 18%;
+        --accent-foreground: 152 55% 80%;
+        --destructive: 0 63% 42%;
+        --destructive-foreground: 210 40% 96%;
+        --border: 215 26% 20%;
+        --input: 215 26% 20%;
+        --ring: 152 50% 48%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+    body {
+        @apply bg-background text-foreground antialiased;
+        font-feature-settings:
+            "rlig" 1,
+            "calt" 1;
+    }
 
-  /* Generous whitespace defaults for fintech feel */
-  h1, h2, h3, h4 {
-    @apply tracking-tight;
-  }
+    /* Generous whitespace defaults for fintech feel */
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply tracking-tight;
+    }
 }
 
 /* Mobile-first: prevent horizontal overflow at 320px */
-html, body {
-  min-width: 320px;
-  overflow-x: hidden;
+html,
+body {
+    min-width: 320px;
+    overflow-x: hidden;
 }
 
 /* Responsive typography scaling */
 @media (max-width: 400px) {
-  .text-2xl { font-size: 1.25rem; }
-  .text-3xl { font-size: 1.5rem; }
+    .text-2xl {
+        font-size: 1.25rem;
+    }
+    .text-3xl {
+        font-size: 1.5rem;
+    }
 }
 
 /* Solana wallet modal — blend with our theme */
 .wallet-adapter-modal-wrapper {
-  border-radius: 1rem !important;
-  font-family: inherit !important;
+    border-radius: 1rem !important;
+    font-family: inherit !important;
 }
 
 .wallet-adapter-button {
-  font-family: inherit !important;
-  border-radius: 0.75rem !important;
+    font-family: inherit !important;
+    border-radius: 0.75rem !important;
+}
+
+/* ── Landing page (app/page.tsx) — decorative animations & accents ── */
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
+}
+@keyframes floatSlow {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-7px);
+    }
+}
+@keyframes driftLeft {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-120vw);
+    }
+}
+@keyframes driftRight {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(120vw);
+    }
+}
+
+.icon-float {
+    animation: float 4s ease-in-out infinite;
+}
+.icon-float-slow {
+    animation: floatSlow 6s ease-in-out infinite;
+}
+.cloud-drift-l {
+    animation: driftLeft 60s linear infinite;
+}
+.cloud-drift-r {
+    animation: driftRight 80s linear infinite;
+}
+
+/* Skyline window accents */
+.window-lit {
+    fill: #fef9c3;
+    opacity: 0.9;
+}
+.window-dim {
+    fill: #e0eef8;
+    opacity: 0.6;
+}
+
+.hero-btn {
+    box-shadow: 0 4px 24px rgba(37, 99, 235, 0.35);
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+.hero-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.45);
+}
+.hero-btn:active {
+    transform: translateY(0);
+}
+
+.nav-link {
+    transition: opacity 0.15s ease;
+    opacity: 0.85;
+}
+.nav-link:hover {
+    opacity: 1;
+}
+
+.outline-btn {
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+.outline-btn:hover {
+    background: white;
+    color: #2563eb;
 }

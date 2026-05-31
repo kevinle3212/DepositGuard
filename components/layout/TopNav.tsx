@@ -21,7 +21,7 @@ import { useWalletStore } from "@/src/store/useWalletStore";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/deposits", label: "Deposits", icon: FileText },
 ];
 
@@ -165,7 +165,7 @@ export function TopNav() {
                     {/* Brand */}
                     <div className="flex items-center gap-6">
                         <Link
-                            href="/"
+                            href="/dashboard"
                             className="flex items-center gap-2 font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                             aria-label="NestCrow home"
                         >

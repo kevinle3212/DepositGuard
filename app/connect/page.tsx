@@ -85,7 +85,8 @@ const WALLET_CATEGORIES: WalletCategory[] = [
 function ConnectInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const from = searchParams.get("from") ?? "/";
+    // Default post-connect destination is the dashboard ('/' is the public landing).
+    const from = searchParams.get("from") ?? "/dashboard";
 
     // Solana wallet
     const { signMessage, publicKey, connected } = useWallet();

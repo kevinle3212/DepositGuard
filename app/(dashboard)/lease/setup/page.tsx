@@ -247,7 +247,7 @@ export default function LeaseSetupPage() {
         <main className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
             <div className="mb-6">
                 <Link
-                    href="/"
+                    href="/dashboard"
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
                 >
                     <ArrowLeft className="h-3.5 w-3.5" />
@@ -534,7 +534,7 @@ export default function LeaseSetupPage() {
                         disabled={submitting}
                         className="flex-1"
                     >
-                        <Link href="/">Cancel</Link>
+                        <Link href="/dashboard">Cancel</Link>
                     </Button>
                     <Button type="submit" disabled={submitting} className="flex-1 gap-2">
                         {submitting ? (
