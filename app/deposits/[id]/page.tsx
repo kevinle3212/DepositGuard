@@ -25,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn, formatAmount } from "@/lib/utils";
 
 const RPC_URL = process.env["NEXT_PUBLIC_RPC_URL"] ?? "https://api.devnet.solana.com";
+const SOLANA_NETWORK = process.env["NEXT_PUBLIC_SOLANA_NETWORK"] ?? "devnet";
 
 function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -65,7 +66,7 @@ export default function DepositDetailPage() {
 
             toast({
                 title: "Confirming Block on Chain…",
-                description: "Broadcasting signed transaction to Solana devnet.",
+                description: `Broadcasting signed transaction to Solana ${SOLANA_NETWORK}.`,
                 duration: 15000,
             });
 
@@ -168,8 +169,7 @@ export default function DepositDetailPage() {
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 Sign the on-chain transaction to lock{" "}
-                                {formatAmount(deposit.amountSol, deposit.denomination)} into
-                                escrow.
+                                {formatAmount(deposit.amountSol, deposit.denomination)} into escrow.
                             </p>
                         </div>
                         <Button
