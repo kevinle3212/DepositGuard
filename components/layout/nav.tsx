@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Shield, LayoutDashboard, FileText, PlusCircle } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WalletButton } from "@/components/wallet/wallet-button";
 import { VoiceToggle } from "@/components/ui/VoiceToggle";
@@ -21,14 +22,15 @@ export function Nav() {
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
                 <div className="flex h-14 items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 font-semibold text-foreground"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-                                <Shield className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                            <span className="hidden sm:inline">NestCrow</span>
+                        <Link href="/" className="flex items-center font-semibold text-foreground">
+                            <Image
+                                src="/nestcrow-logo.png"
+                                alt="NestCrow — Secure Rental Transactions"
+                                width={528}
+                                height={355}
+                                priority
+                                className="h-9 w-auto"
+                            />
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-1">

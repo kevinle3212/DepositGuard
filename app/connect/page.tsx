@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useMutation } from "@tanstack/react-query";
@@ -283,20 +284,29 @@ function ConnectInner() {
     return (
         <div className="flex min-h-screen flex-col">
             <header className="border-b border-border px-6 py-4">
-                <div className="mx-auto max-w-7xl flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-                        <Shield className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <span className="font-semibold">NestCrow</span>
+                <div className="mx-auto max-w-7xl flex items-center">
+                    <Image
+                        src="/nestcrow-logo.png"
+                        alt="NestCrow — Secure Rental Transactions"
+                        width={528}
+                        height={355}
+                        priority
+                        className="h-9 w-auto"
+                    />
                 </div>
             </header>
 
             <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
                 <div className="w-full max-w-lg">
                     <div className="text-center mb-10">
-                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-                            <Shield className="h-7 w-7 text-primary" />
-                        </div>
+                        <Image
+                            src="/nestcrow-logo.png"
+                            alt="NestCrow — Secure Rental Transactions"
+                            width={528}
+                            height={355}
+                            priority
+                            className="mx-auto mb-5 h-20 w-auto"
+                        />
                         <h1 className="text-2xl font-bold tracking-tight">Connect your wallet</h1>
                         <p className="mt-2 text-sm text-muted-foreground">
                             Choose a wallet architecture to verify your identity and access
