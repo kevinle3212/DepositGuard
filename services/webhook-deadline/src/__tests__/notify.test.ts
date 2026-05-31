@@ -16,7 +16,12 @@ describe("notifyTimeoutExecuted", () => {
     test("POSTs to notify service /send", async () => {
         (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
 
-        await notifyTimeoutExecuted("lease-1", "landlord@example.com", "tenant@example.com", "sig-abc");
+        await notifyTimeoutExecuted(
+            "lease-1",
+            "landlord@example.com",
+            "tenant@example.com",
+            "sig-abc",
+        );
 
         expect(global.fetch).toHaveBeenCalledWith("http://notify.test/send", {
             method: "POST",
@@ -39,7 +44,11 @@ describe("notifyTimeoutExecuted", () => {
     });
 
     test("throws when notify service returns non-OK", async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500, text: async () => "error" });
+        (global.fetch as jest.Mock).mockResolvedValue({
+            ok: false,
+            status: 500,
+            text: async () => "error",
+        });
 
         await expect(
             notifyTimeoutExecuted("lease-1", "a@example.com", "b@example.com", "sig"),

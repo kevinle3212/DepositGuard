@@ -1,4 +1,4 @@
-import type { Part } from '@google-cloud/vertexai'
+import type { Part } from "@google-cloud/vertexai";
 
 // Temperature 0.0 enforced in gemini.ts; system prompt enforces advisory-only scope.
 export const SYSTEM_PROMPT = `\
@@ -32,30 +32,27 @@ OUTPUT FORMAT — respond with valid JSON only, matching this exact schema:
   "summary": "string — brief overall summary of findings, 1-3 sentences"
 }
 
-Do not include any text outside the JSON object. Do not include legal conclusions, liability opinions, or advice.`
+Do not include any text outside the JSON object. Do not include legal conclusions, liability opinions, or advice.`;
 
 function gcsUriMimeType(uri: string): string {
-  if (/\.png$/i.test(uri)) return 'image/png'
-  if (/\.webp$/i.test(uri)) return 'image/webp'
-  return 'image/jpeg'
+    if (/\.png$/i.test(uri)) return "image/png";
+    if (/\.webp$/i.test(uri)) return "image/webp";
+    return "image/jpeg";
 }
 
-export function buildUserPromptParts(
-  moveInGcsUris: string[],
-  moveOutGcsUris: string[],
-): Part[] {
-  const parts: Part[] = [
-    { text: 'MOVE-IN PHOTOS (condition at the start of the tenancy):' },
-    ...moveInGcsUris.map(uri => ({
-      fileData: { mimeType: gcsUriMimeType(uri), fileUri: uri },
-    })),
-    { text: 'MOVE-OUT PHOTOS (condition at the end of the tenancy):' },
-    ...moveOutGcsUris.map(uri => ({
-      fileData: { mimeType: gcsUriMimeType(uri), fileUri: uri },
-    })),
-    {
-      text: 'Compare the move-in and move-out photos and assess any damage. Respond with the JSON object only.',
-    },
-  ]
-  return parts
+export function buildUserPromptParts(moveInGcsUris: string[], moveOutGcsUris: string[]): Part[] {
+    const parts: Part[] = [
+        { text: "MOVE-IN PHOTOS (condition at the start of the tenancy):" },
+        ...moveInGcsUris.map((uri) => ({
+            fileData: { mimeType: gcsUriMimeType(uri), fileUri: uri },
+        })),
+        { text: "MOVE-OUT PHOTOS (condition at the end of the tenancy):" },
+        ...moveOutGcsUris.map((uri) => ({
+            fileData: { mimeType: gcsUriMimeType(uri), fileUri: uri },
+        })),
+        {
+            text: "Compare the move-in and move-out photos and assess any damage. Respond with the JSON object only.",
+        },
+    ];
+    return parts;
 }

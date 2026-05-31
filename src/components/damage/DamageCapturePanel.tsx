@@ -254,7 +254,7 @@ export function DamageCapturePanel({
             const txBytes = Buffer.from(transaction, "base64");
             const tx = VersionedTransaction.deserialize(txBytes);
             const connection = getConnection();
-            const { blockhash } = await connection.getLatestBlockhash();
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
             tx.message.recentBlockhash = blockhash;
             const signed = await wallet.signTransaction(tx);
 
@@ -265,7 +265,10 @@ export function DamageCapturePanel({
             try {
                 const rawTx = signed.serialize();
                 txSig = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
-                await connection.confirmTransaction(txSig, "confirmed");
+                await connection.confirmTransaction(
+                    { signature: txSig, blockhash, lastValidBlockHeight },
+                    "confirmed",
+                );
             } catch (chainErr) {
                 // Non-fatal if the escrow isn't in Disputed state yet — still record off-chain
                 console.warn("[DamageCapturePanel] On-chain submit failed (non-fatal):", chainErr);

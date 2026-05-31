@@ -8,12 +8,22 @@ function isAuthenticated(req: NextRequest): boolean {
 
     const cookie = req.cookies.get("dg-session")?.value;
     if (cookie) {
-        try { verify(cookie, secret); return true; } catch { /* fall through */ }
+        try {
+            verify(cookie, secret);
+            return true;
+        } catch {
+            /* fall through */
+        }
     }
 
     const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/, "");
     if (bearer) {
-        try { verify(bearer, secret); return true; } catch { /* fall through */ }
+        try {
+            verify(bearer, secret);
+            return true;
+        } catch {
+            /* fall through */
+        }
     }
 
     return false;

@@ -251,7 +251,9 @@ export default function AssessmentPage() {
                                                             aria-label="Accept item"
                                                         >
                                                             <Check className="h-3 w-3" />
-                                                            <span className="hidden sm:inline">Accept</span>
+                                                            <span className="hidden sm:inline">
+                                                                Accept
+                                                            </span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -266,7 +268,9 @@ export default function AssessmentPage() {
                                                             aria-label="Modify cost"
                                                         >
                                                             <Edit3 className="h-3 w-3" />
-                                                            <span className="hidden sm:inline">Modify</span>
+                                                            <span className="hidden sm:inline">
+                                                                Modify
+                                                            </span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -281,7 +285,9 @@ export default function AssessmentPage() {
                                                             aria-label="Reject item"
                                                         >
                                                             <X className="h-3 w-3" />
-                                                            <span className="hidden sm:inline">Reject</span>
+                                                            <span className="hidden sm:inline">
+                                                                Reject
+                                                            </span>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -330,7 +336,11 @@ export default function AssessmentPage() {
                         role={isLandlord ? "landlord" : "tenant"}
                         leaseId={id}
                         onCommitted={(txSig, estimateUsdc) => {
-                            setEstimate((p) => ({ ...p, mySubmitted: true, myValue: String(estimateUsdc) }));
+                            setEstimate((p) => ({
+                                ...p,
+                                mySubmitted: true,
+                                myValue: String(estimateUsdc),
+                            }));
                             void speak("assessment.ready");
                         }}
                     />

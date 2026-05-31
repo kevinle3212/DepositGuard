@@ -2,12 +2,12 @@ import sgMail from "@sendgrid/mail";
 import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import type { EmailTemplate } from "./templates.js";
 
-let _secretClient: SecretManagerServiceClient | null = null
-let _cachedApiKey: string | null = null
+let _secretClient: SecretManagerServiceClient | null = null;
+let _cachedApiKey: string | null = null;
 
 function secretClient(): SecretManagerServiceClient {
-    if (!_secretClient) _secretClient = new SecretManagerServiceClient()
-    return _secretClient
+    if (!_secretClient) _secretClient = new SecretManagerServiceClient();
+    return _secretClient;
 }
 
 /**
@@ -16,30 +16,33 @@ function secretClient(): SecretManagerServiceClient {
  * Falls back to SENDGRID_API_KEY env var for local dev.
  */
 async function getSendGridApiKey(): Promise<string> {
-    if (_cachedApiKey) return _cachedApiKey
+    if (_cachedApiKey) return _cachedApiKey;
 
-    const projectId = process.env.GCP_PROJECT_ID
+    const projectId = process.env.GCP_PROJECT_ID;
     if (projectId) {
         try {
-            const name = `projects/${projectId}/secrets/sendgrid-api-key/versions/latest`
-            const [version] = await secretClient().accessSecretVersion({ name })
-            const value = version.payload?.data?.toString() ?? ""
+            const name = `projects/${projectId}/secrets/sendgrid-api-key/versions/latest`;
+            const [version] = await secretClient().accessSecretVersion({ name });
+            const value = version.payload?.data?.toString() ?? "";
             if (value) {
-                _cachedApiKey = value
-                return value
+                _cachedApiKey = value;
+                return value;
             }
         } catch (err) {
-            console.warn("[sendgrid] Could not fetch sendgrid-api-key from Secret Manager, falling back to env:", err)
+            console.warn(
+                "[sendgrid] Could not fetch sendgrid-api-key from Secret Manager, falling back to env:",
+                err,
+            );
         }
     }
 
-    const envKey = process.env.SENDGRID_API_KEY ?? ""
-    _cachedApiKey = envKey
-    return envKey
+    const envKey = process.env.SENDGRID_API_KEY ?? "";
+    _cachedApiKey = envKey;
+    return envKey;
 }
 
 export async function sendEmail(recipients: string[], template: EmailTemplate): Promise<string> {
-    const apiKey = await getSendGridApiKey()
+    const apiKey = await getSendGridApiKey();
     if (!apiKey) throw new Error("SENDGRID_API_KEY not set");
 
     sgMail.setApiKey(apiKey);

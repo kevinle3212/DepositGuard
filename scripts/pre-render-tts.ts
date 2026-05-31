@@ -87,7 +87,10 @@ async function main() {
     }
 
     if (!getApps().length) {
-        initializeApp({ credential: cert(process.env["GOOGLE_APPLICATION_CREDENTIALS"] ?? ""), storageBucket: bucket });
+        initializeApp({
+            credential: cert(process.env["GOOGLE_APPLICATION_CREDENTIALS"] ?? ""),
+            storageBucket: bucket,
+        });
     }
     const storage = getStorage().bucket(bucket);
 
@@ -100,7 +103,9 @@ async function main() {
     let failed = 0;
 
     for (const [scriptKey, text] of staticKeys) {
-        const voiceRole = DISPUTE_ADVISOR_KEYS.has(scriptKey) ? "dispute-advisor" : "platform-guide";
+        const voiceRole = DISPUTE_ADVISOR_KEYS.has(scriptKey)
+            ? "dispute-advisor"
+            : "platform-guide";
         const storagePath = `tts-cache/${voiceRole}/${scriptKey}.mp3`;
         const file = storage.file(storagePath);
 

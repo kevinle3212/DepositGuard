@@ -18,7 +18,9 @@ export function DepositCard({ deposit, myAddress }: DepositCardProps) {
 
     // Show a pending pill when signatures are still outstanding
     const signaturesComplete = deposit.landlordSigned === true && deposit.tenantSigned === true;
-    const needsMySignature = isLandlord ? deposit.landlordSigned !== true : deposit.tenantSigned !== true;
+    const needsMySignature = isLandlord
+        ? deposit.landlordSigned !== true
+        : deposit.tenantSigned !== true;
     const showSignaturePending =
         deposit.landlordSigned !== undefined &&
         !signaturesComplete &&
@@ -36,7 +38,9 @@ export function DepositCard({ deposit, myAddress }: DepositCardProps) {
                                 {showSignaturePending && (
                                     <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700">
                                         <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
-                                        {needsMySignature ? "Your signature needed" : "Awaiting tenant signature"}
+                                        {needsMySignature
+                                            ? "Your signature needed"
+                                            : "Awaiting tenant signature"}
                                     </span>
                                 )}
                             </div>
