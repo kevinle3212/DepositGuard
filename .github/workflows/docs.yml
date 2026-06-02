@@ -20,7 +20,7 @@ jobs:
         name: Deploy to GitHub Pages
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -50,7 +50,7 @@ jobs:
         # Run after pages deploy so both finish on the same push
         needs: deploy-pages
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Sync docs to wiki
               env:
