@@ -71,7 +71,7 @@
         "firebase": "^12.14.0",
         "firebase-admin": "^13.10.0",
         "jsonwebtoken": "^9.0.2",
-        "lucide-react": "^0.400.0",
+        "lucide-react": "^1.17.0",
         "next": "14.2.35",
         "pdfjs-dist": "^4.4.168",
         "react": "^18",
