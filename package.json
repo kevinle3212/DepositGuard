@@ -39,7 +39,7 @@
         ]
     },
     "dependencies": {
-        "@coral-xyz/anchor": "^0.31.1",
+        "@coral-xyz/anchor": "^0.32.1",
         "@elevenlabs/client": "^1.9.0",
         "@elevenlabs/react": "^1.6.4",
         "@google-cloud/secret-manager": "^6.1.2",
