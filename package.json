@@ -39,7 +39,7 @@
         ]
     },
     "dependencies": {
-        "@coral-xyz/anchor": "^0.31.1",
+        "@coral-xyz/anchor": "^0.32.1",
         "@elevenlabs/client": "^1.9.0",
         "@elevenlabs/react": "^1.6.4",
         "@google-cloud/secret-manager": "^6.1.2",
@@ -58,7 +58,7 @@
         "@radix-ui/react-tabs": "^1.1.0",
         "@radix-ui/react-toast": "^1.2.1",
         "@rainbow-me/rainbowkit": "^2.2.11",
-        "@solana/spl-token": "^0.4.14",
+        "@solana/spl-token": "^0.4.15",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-adapter-react": "^0.15.35",
         "@solana/wallet-adapter-react-ui": "^0.9.35",
